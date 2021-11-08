@@ -42,9 +42,15 @@
 (straight-normalize-all)
 (add-hook 'after-init-hook 'straight-prune-build)
 (add-hook 'after-init-hook 'straight-remove-unused-repos)
-(defun straight-update-all ()
+(defun straight-maintain ()
+  "Maintain straight packages and repositories."
+  (interactive)
+  (straight-pull-all)
   (straight-fetch-all)
-  (straight-merge-all))
+  (straight-merge-all)
+  (straight-normalize-all)
+  (straight-prune-build)
+  (straight-remove-unused-repos))
 
 ;; emacs config
 (use-package emacs
@@ -97,7 +103,6 @@
   (add-hook 'tty-setup-hook #'xterm-mouse-mode)
   ;; disable bells
   (setq ring-bell-function 'ignore)
-  (setq visible-bell nil)
   ;; add padding to compensate for rounded corners
   (setq-default left-margin-width 1 right-margin-width 1)
   (set-window-buffer nil (current-buffer))
@@ -159,8 +164,8 @@
   (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
   (setq dashboard-banner-logo-title (concat "Hi " (user-full-name) "! Welcome to Chika Emacs!"))
   (setq dashboard-center-content t)
-  (setq dashboard-items '((recents  . 5)
-                          (agenda . 10)))
+  (setq dashboard-items '((recents . 5)
+			  (agenda . 10)))
   :config
   (dashboard-setup-startup-hook)
   (if (< (length command-line-args) 2)
@@ -353,10 +358,10 @@
     (let ((base/dir (shrink-path-prompt default-directory)))
       (concat (propertize (car base/dir)
                           'face 'font-lock-comment-face)
-              (propertize (cdr base/dir)
+	      (propertize (cdr base/dir)
                           'face 'font-lock-constant-face)
-              (propertize " λ" 'face 'eshell-prompt-face)
-              (propertize " " 'face 'default)))))
+	      (propertize " λ" 'face 'eshell-prompt-face)
+	      (propertize " " 'face 'default)))))
 (use-package shrink-path)
 (use-package fish-completion
   :hook
@@ -461,16 +466,16 @@
   :config
   ;; Enable all JetBrains Mono ligatures in programming modes
   (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-                                       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-                                       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-                                       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-                                       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-                                       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-                                       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-                                       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-                                       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-                                       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-                                       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+				       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+				       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+				       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+				       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+				       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+				       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+				       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+				       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+				       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+				       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
   ;; Enables ligature checks globally in all buffers. You can also do it
   ;; per mode with `ligature-mode'.
   (global-ligature-mode t))
