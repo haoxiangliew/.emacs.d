@@ -170,9 +170,26 @@
       (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
 
 ;; dracula-theme
-(use-package dracula-theme
+;; (use-package dracula-theme
+;;   :init
+;;   (load-theme 'dracula t))
+
+;; modus-themes
+(use-package modus-themes
+  :bind
+  ("<f5>" . (lambda () (interactive) (modus-themes-toggle)(powerline-reset)))
   :init
-  (load-theme 'dracula t))
+  (setq modus-themes-italic-constructs t
+	modus-themes-bold-constructs nil
+	modus-themes-region '(bg-only no-extend))
+  (if (daemonp)
+      (add-hook 'after-make-frame-functions
+		(lambda (frame)
+		  (with-selected-frame frame
+		    (modus-themes-load-themes))))
+    (modus-themes-load-themes))
+  :config
+  (modus-themes-load-vivendi))
 
 ;; all-the-icons
 (use-package all-the-icons
@@ -234,6 +251,7 @@
 ;; spaceline
 (use-package spaceline
   :init
+  (setq powerline-default-separator 'bar)
   (spaceline-emacs-theme))
 
 ;; company
@@ -575,11 +593,6 @@
   (setq pdf-view-use-scaling t
         pdf-view-use-imagemagick nil))
 
-;; smudge
-(use-package smudge
-  :config
-  (define-key smudge-mode-map (kbd "C-c .") 'smudge-command-map))
-
 ;; hl-todo
 (use-package hl-todo
   :config
@@ -608,7 +621,7 @@
 
 ;; c/c++
 ;; requires clangd v9+
-(use-package ccls
+(use-package lsp-mode
   :init
   (add-hook 'c-mode-hook 'lsp)
   (add-hook 'c++-mode-hook 'lsp)
