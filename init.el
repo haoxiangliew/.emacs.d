@@ -78,10 +78,17 @@
     (call-process "sh" nil nil nil "-c" "emacs &"))
   (defun restart-emacs ()
     (interactive)
-    (let ((kill-emacs-hook (append kill-emacs-hook (list (if (display-graphic-p)
-                                                             #'launch-separate-emacs-under-x
-                                                           #'launch-separate-emacs-in-terminal)))))
-      (save-buffers-kill-emacs)))
+    (if (daemonp)
+	(kill-daemon)
+      (let ((kill-emacs-hook (append kill-emacs-hook (list (if (display-graphic-p
+								#'launch-separate-emacs-under-x
+								#'launch-separate-emacs-in-terminal))))))
+	(save-buffers-kill-emacs))))
+  (defun kill-daemon ()
+    (interactive)
+    (message "We are in a daemon, killing in 10 seconds...")
+    (sit-for 10)
+    (save-buffers-kill-emacs))
   ;; load secrets
   (defun load-if-exists (f)
     (if (file-exists-p (expand-file-name f))
@@ -632,6 +639,21 @@
                                   "--completion-style=detailed"
                                   "--header-insertion=never"
                                   "--header-insertion-decorators=0")))
+
+;; nix
+;; requires nixfmt, rnix-lsp
+(use-package lsp-mode
+  :after
+  nix-mode
+  :init
+  (add-hook 'nix-mode-hook 'lsp))
+(use-package nix-mode
+  :interpreter
+  ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
+  :mode
+  "\\.nix\\'")
+(use-package nix-update)
+(use-package company-nixos-options)
 
 ;; verilog
 ;; requires pip3 install hdl-checker
