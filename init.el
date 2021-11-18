@@ -16,6 +16,12 @@
 
 ;;; Code:
 
+;; define internet check
+(defun internet-check (&optional host)
+  "Check for internet connection with ping HOST."
+  (= 0 (call-process "ping" nil nil nil "-c" "1" "-W" "1"
+		     (if host host "www.google.com"))))
+
 ;; bootstrap straight and use-package
 (setq package-enable-at-startup nil)
 (defvar bootstrap-version)
@@ -24,9 +30,9 @@
       (bootstrap-version 5))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
+	(url-retrieve-synchronously
+	 "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+	 'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
@@ -38,10 +44,14 @@
 (setq native-comp-async-report-warnings-errors nil)
 
 ;; straight management
-(straight-pull-all)
-(straight-normalize-all)
-(add-hook 'after-init-hook 'straight-prune-build)
-(add-hook 'after-init-hook 'straight-remove-unused-repos)
+(if (internet-check)
+    (if (daemonp)
+	(progn (straight-pull-all)
+	       (straight-normalize-all)
+	       (add-hook 'after-init-hook 'straight-prune-build)
+	       (add-hook 'after-init-hook 'straight-remove-unused-repos))
+      (message "In order to reduce startup delay, we are not going to update straight on startup. Run straight-maintain to do so."))
+  (message "There is no internet connection, we are unable to update straight."))
 (defun straight-maintain ()
   "Maintain straight packages and repositories."
   (interactive)
@@ -80,14 +90,22 @@
     (interactive)
     (if (daemonp)
 	(kill-daemon)
-      (let ((kill-emacs-hook (append kill-emacs-hook (list (if (display-graphic-p
-								#'launch-separate-emacs-under-x
-								#'launch-separate-emacs-in-terminal))))))
+      (let ((kill-emacs-hook (append kill-emacs-hook (list (if (display-graphic-p)
+                                                               #'launch-separate-emacs-under-x
+                                                             #'launch-separate-emacs-in-terminal)))))
 	(save-buffers-kill-emacs))))
   (defun kill-daemon ()
     (interactive)
-    (message "We are in a daemon, killing in 10 seconds...")
-    (sit-for 10)
+    (message "We are in a daemon, killing in 5 seconds...")
+    (sit-for 1)
+    (message "We are in a daemon, killing in 4 seconds...")
+    (sit-for 1)
+    (message "We are in a daemon, killing in 3 seconds...")
+    (sit-for 1)
+    (message "We are in a daemon, killing in 2 seconds...")
+    (sit-for 1)
+    (message "We are in a daemon, killing in 1 seconds...")
+    (sit-for 1)
     (save-buffers-kill-emacs))
   ;; load secrets
   (defun load-if-exists (f)
@@ -104,7 +122,7 @@
   (menu-bar-mode -1)
   (scroll-bar-mode -1)
   ;; highlight current line
-  (global-hl-line-mode 1)
+  ;; (global-hl-line-mode 1)
   ;; use bar cursor
   (setq-default cursor-type 'bar)
   ;; optimize terminal use
@@ -156,6 +174,9 @@
 
 ;; dashboard
 (use-package dashboard
+  :after
+  all-the-icons
+  page-break-lines
   :init
   (add-hook 'after-init-hook 'dashboard-refresh-buffer)
   (setq dashboard-set-heading-icons t)
@@ -169,34 +190,52 @@
   (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
   (setq dashboard-banner-logo-title (concat "Hi " (user-full-name) "! Welcome to Chika Emacs!"))
   (setq dashboard-center-content t)
+  (setq dashboard-page-separator "\n\f\n")
+  (setq dashboard-week-agenda nil)
   (setq dashboard-items '((recents . 5)
 			  (agenda . 10)))
+  (setq dashboard-set-navigator t)
+  (setq dashboard-navigator-buttons
+	`((
+	   (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
+	    "Browse Repository"
+	    "Browse configuration repository"
+	    (lambda (&rest _) (browse-url "https://github.com/haoxiangliew/.emacs.d")))
+	   (,(all-the-icons-octicon "gear" :height 1.1 :v-adjust 0.0)
+	    "Edit Config"
+	    "Edit current configuration"
+	    (lambda (&rest _) (open-config)))
+	   (,(all-the-icons-octicon "cloud-download" :height 1.1 :v-adjust 0.0)
+	    "Update"
+	    "Updates and cleans all packages"
+	    (lambda (&rest _) (straight-maintain)))
+	   (,(all-the-icons-octicon "sync" :height 1.1 :v-adjust 0.0)
+	    "Restart"
+	    "Restart Emacs"
+	    (lambda (&rest _) (restart-emacs)))
+	   )))
   :config
   (dashboard-setup-startup-hook)
   (if (< (length command-line-args) 2)
       (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
 
 ;; dracula-theme
-;; (use-package dracula-theme
-;;   :init
-;;   (load-theme 'dracula t))
-
-;; modus-themes
-(use-package modus-themes
-  :bind
-  ("<f5>" . (lambda () (interactive) (modus-themes-toggle)(powerline-reset)))
-  :init
-  (setq modus-themes-italic-constructs t
-	modus-themes-bold-constructs nil
-	modus-themes-region '(bg-only no-extend))
-  (if (daemonp)
-      (add-hook 'after-make-frame-functions
-		(lambda (frame)
-		  (with-selected-frame frame
-		    (modus-themes-load-themes))))
-    (modus-themes-load-themes))
+(use-package doom-themes
   :config
-  (modus-themes-load-vivendi))
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
+    (load-theme 'doom-dracula t))
+  (doom-themes-visual-bell-config)
+  (setq doom-themes-treemacs-theme "doom-colors")
+  (doom-themes-treemacs-config)
+  (doom-themes-org-config))
+
+(use-package solaire-mode
+  :config
+  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+  (solaire-global-mode +1))
 
 ;; all-the-icons
 (use-package all-the-icons
@@ -212,6 +251,9 @@
   all-the-icons
   :config
   (all-the-icons-completion-mode))
+
+;; page-break-lines
+(use-package page-break-lines)
 
 ;; emojify
 (use-package emojify
