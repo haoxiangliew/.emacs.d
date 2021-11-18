@@ -89,24 +89,21 @@
   (defun restart-emacs ()
     (interactive)
     (if (daemonp)
-	(kill-daemon)
+	(progn (restart-counter)
+	       (save-buffers-kill-emacs))
       (let ((kill-emacs-hook (append kill-emacs-hook (list (if (display-graphic-p)
-                                                               #'launch-separate-emacs-under-x
-                                                             #'launch-separate-emacs-in-terminal)))))
+							       #'launch-separate-emacs-under-x
+							     #'launch-separate-emacs-in-terminal)))))
+	(restart-counter)
 	(save-buffers-kill-emacs))))
-  (defun kill-daemon ()
-    (interactive)
-    (message "We are in a daemon, killing in 5 seconds...")
-    (sit-for 1)
-    (message "We are in a daemon, killing in 4 seconds...")
-    (sit-for 1)
-    (message "We are in a daemon, killing in 3 seconds...")
-    (sit-for 1)
-    (message "We are in a daemon, killing in 2 seconds...")
-    (sit-for 1)
-    (message "We are in a daemon, killing in 1 seconds...")
-    (sit-for 1)
-    (save-buffers-kill-emacs))
+  (defun restart-counter ()
+    (setq restart-count 5)
+    (while (> restart-count 0)
+      (if (daemonp)
+	  (message "We are in a daemon, killing in %d seconds..." . (restart-count))
+	(message "Restarting in %d seconds..." . (restart-count)))
+      (sleep-for 1)
+      (setq restart-count (- restart-count 1))))
   ;; load secrets
   (defun load-if-exists (f)
     (if (file-exists-p (expand-file-name f))
@@ -121,8 +118,6 @@
   (tool-bar-mode -1)
   (menu-bar-mode -1)
   (scroll-bar-mode -1)
-  ;; highlight current line
-  ;; (global-hl-line-mode 1)
   ;; use bar cursor
   (setq-default cursor-type 'bar)
   ;; optimize terminal use
@@ -213,6 +208,21 @@
 	    "Restart"
 	    "Restart Emacs"
 	    (lambda (&rest _) (restart-emacs)))
+	   )
+	  ()
+	  (
+	   (,(all-the-icons-octicon "rocket" :height 1.1 :v-adjust 0.0)
+	    "Projects"
+	    "Opens list of projects in treemacs"
+	    (lambda (&rest _) (treemacs)))
+	   (,(all-the-icons-octicon "repo" :height 1.1 :v-adjust 0.0)
+	    "Agenda"
+	    "Opens org-agenda"
+	    (lambda (&rest _) (org-agenda-list)))
+	   (,(all-the-icons-octicon "mail" :height 1.1 :v-adjust 0.0)
+	    "Email"
+	    "Opens notmuch for emails"
+	    (lambda (&rest _) (notmuch-hello)))
 	   )))
   :config
   (dashboard-setup-startup-hook)
@@ -235,6 +245,7 @@
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+  (add-hook 'dashboard-mode-hook 'solaire-mode)
   (solaire-global-mode +1))
 
 ;; all-the-icons
