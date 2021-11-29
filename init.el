@@ -155,6 +155,13 @@
     (add-hook 'text-mode-hook #'+word-wrap-mode))
   ;; use system clipboard
   (setq select-enable-clipboard t)
+  ;; fix scrolling
+  (setq scroll-margin 1
+	scroll-conservatively 0
+	scroll-up-aggressively 0.01
+	scroll-down-aggressively 0.01)
+  (setq-default scroll-up-aggressively 0.01
+		scroll-down-aggressively 0.01)
   ;; autosave
   (setq auto-save-default t)
   ;; better backups
@@ -308,11 +315,10 @@
   (setq which-key-idle-delay 0.5)
   (setq which-key-allow-multiple-replacements t))
 
-;; spaceline
-(use-package spaceline
+;; doom-modeline
+(use-package doom-modeline
   :init
-  (setq powerline-default-separator 'bar)
-  (spaceline-emacs-theme))
+  (doom-modeline-mode 1))
 
 ;; company
 (use-package company
