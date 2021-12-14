@@ -13,6 +13,8 @@
 ;;; LSP dependencies:
 ;; clangd v9+
 ;; pip3 install hdl-checker
+;; nixfmt
+;; asmfmt
 
 ;;; Code:
 
@@ -132,8 +134,9 @@
   ;; prevent emacs from buffering
   (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
   ;; set font
-  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-11"))
-  (set-face-attribute 'default t :font "JetBrains Mono-11")
+  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-13"))
+  (set-face-attribute 'default t :font "JetBrains Mono-13")
+  (setq line-spacing 0.2)
   ;; highlight matching parentheses
   (show-paren-mode 1)
   (setq show-paren-delay 0)
@@ -195,7 +198,7 @@
   (setq dashboard-page-separator "\n\f\n")
   (setq dashboard-week-agenda nil)
   (setq dashboard-items '((recents . 5)
-			  (agenda . 10)))
+			  (agenda . 5)))
   (setq dashboard-set-navigator t)
   (setq dashboard-navigator-buttons
 	`((
@@ -315,10 +318,16 @@
   (setq which-key-idle-delay 0.5)
   (setq which-key-allow-multiple-replacements t))
 
-;; doom-modeline
-(use-package doom-modeline
+;; spaceline
+(use-package spaceline
   :init
-  (doom-modeline-mode 1))
+  (setq powerline-default-separator 'bar)
+  (spaceline-emacs-theme))
+
+;; doom-modeline
+;; (use-package doom-modeline
+;;   :init
+;;   (doom-modeline-mode 1))
 
 ;; company
 (use-package company
@@ -456,7 +465,7 @@
   :bind
   ("C-x C-t" . vterm)
   ;; if vterm is installed through nix
-  ;; :straight f
+  :straight f
   :config
   (setq vterm-kill-buffer-on-exit t)
   (setq vterm-max-scrollback 5000))
@@ -649,6 +658,56 @@
                                  notmuch-hello-insert-alltags)
         notmuch-message-headers-visible nil))
 
+;; elcord
+(use-package elcord
+  :init
+  (elcord-mode)
+  :config
+  (setq elcord-mode-icon-alist '((dashboard-mode . "chika_icon")
+				 (fundamental-mode . "chika_icon")
+				 (c-mode . "c-mode_icon")
+				 (c++-mode . "cpp-mode_icon")
+				 (clojure-mode . "clojure-mode_icon")
+				 (csharp-mode . "csharp-mode_icon")
+				 (comint-mode . "comint-mode_icon")
+				 (cperl-mode . "cperl-mode_icon")
+				 ;; (emacs-lisp-mode . (elcord--editor-icon))
+				 (emacs-lisp-mode . "emacs_pen_icon")
+				 (enh-ruby-mode . "ruby-mode_icon")
+				 (erc-mode . "irc-mode_icon")
+				 (eshell-mode . "comint-mode_icon")
+				 (forth-mode . "forth-mode_icon")
+				 (fsharp-mode . "fsharp-mode_icon")
+				 (gdscript-mode . "gdscript-mode_icon")
+				 (haskell-mode . "haskell-mode_icon")
+				 (haskell-interactive-mode . "haskell-mode_icon")
+				 (java-mode . "java-mode_icon")
+				 (js-mode . "javascript-mode_icon")
+				 (kotlin-mode . "kotlin-mode_icon")
+				 (go-mode . "go-mode_icon")
+				 (latex-mode . "latex-mode_icon")
+				 (lisp-mode . "lisp-mode_icon")
+				 (magit-mode . "magit-mode_icon")
+				 (markdown-mode . "markdown-mode_icon")
+				 (meson-mode . "meson-mode_icon")
+				 (mu4e . "emacs_pen_icon")
+				 (nix-mode . "nix-mode_icon")
+				 (org-mode . "org-mode_icon")
+				 (org-agenda-mode . "org-mode_icon")
+				 (racket-mode . "racket-mode_icon")
+				 (ruby-mode . "ruby-mode_icon")
+				 (rust-mode . "rust-mode_icon")
+				 (rustic-mode . "rust-mode_icon")
+				 (zig-mode . "zig-mode_icon")
+				 ("^slime-.*" . "lisp-mode_icon")
+				 ("^sly-.*$" . "lisp-mode_icon")
+				 (typescript-mode . "typescript-mode_icon")
+				 (vterm-mode . "comint-mode_icon")
+				 (php-mode . "php-mode_icon")
+				 (python-mode . "python-mode_icon")))
+  (setq elcord-client-id "865374458532462602")
+  (setq elcord-use-major-mode-as-main-icon t))
+
 ;; pdf-tools
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
@@ -685,6 +744,16 @@
 
 ;; language configuration
 
+;; asm
+;; requires asmfmt
+(use-package asm-mode
+  :straight f
+  :init
+  (defun my-asm-mode-hook ()
+    (local-unset-key (vector asm-comment-char))
+    (setq tab-always-indent (default-value 'tab-always-indent)))
+  (add-hook 'asm-mode-hook #'my-asm-mode-hook))
+
 ;; c/c++
 ;; requires clangd v9+
 (use-package lsp-mode
@@ -700,12 +769,7 @@
                                   "--header-insertion-decorators=0")))
 
 ;; nix
-;; requires nixfmt, rnix-lsp
-(use-package lsp-mode
-  :after
-  nix-mode
-  :init
-  (add-hook 'nix-mode-hook 'lsp))
+;; requires nixfmt
 (use-package nix-mode
   :interpreter
   ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
