@@ -181,7 +181,6 @@
 (use-package dashboard
   :after
   all-the-icons
-  page-break-lines
   :init
   (add-hook 'after-init-hook 'dashboard-refresh-buffer)
   (setq dashboard-set-heading-icons t)
@@ -195,7 +194,6 @@
   (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
   (setq dashboard-banner-logo-title (concat "Hi " (user-full-name) "! Welcome to Chika Emacs!"))
   (setq dashboard-center-content t)
-  (setq dashboard-page-separator "\n\f\n")
   (setq dashboard-week-agenda nil)
   (setq dashboard-items '((recents . 5)
 			  (agenda . 5)))
@@ -272,9 +270,6 @@
   all-the-icons
   :config
   (all-the-icons-completion-mode))
-
-;; page-break-lines
-(use-package page-break-lines)
 
 ;; emojify
 (use-package emojify
@@ -422,6 +417,40 @@
         dumb-jump-aggressive nil
         dumb-jump-selector 'popup)
   (add-hook 'dumb-jump-after-jump-hook #'better-jumper-set-jump))
+
+;; dired
+(use-package dired
+  :straight (:type built-in)
+  :init
+  (setq dired-auto-revert-buffer t
+        dired-dwim-target t
+        dired-hide-details-hide-symlink-targets nil
+        dired-recursive-copies  'always
+        dired-recursive-deletes 'top
+        dired-create-destination-dirs 'ask
+        image-dired-dir (concat "~/.emacs-backups/" "image-dired/")
+        image-dired-db-file (concat image-dired-dir "db.el")
+        image-dired-gallery-dir (concat image-dired-dir "gallery/")
+        image-dired-temp-image-file (concat image-dired-dir "temp-image")
+        image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
+        image-dired-thumb-size 150))
+(use-package all-the-icons-dired
+  :hook
+  (dired-mode . all-the-icons-dired-mode))
+
+;; ranger
+(use-package ranger
+  :after
+  dired
+  :config
+  (unless (file-directory-p image-dired-dir)
+    (make-directory image-dired-dir))
+  (setq ranger-cleanup-on-disable t
+        ranger-excluded-extensions '("mkv" "iso" "mp4")
+        ranger-deer-show-details t
+        ranger-max-preview-size 10
+        ranger-show-literal nil
+        ranger-hide-cursor nil))
 
 ;; eshell
 (use-package eshell
