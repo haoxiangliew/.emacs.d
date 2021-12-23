@@ -75,10 +75,6 @@
         '(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
-  ;; minimize garbage collection on startup
-  (setq gc-cons-threshold most-positive-fixnum)
-  ;; lower threshold back to 8 MiB (default value is 800 kB)
-  (add-hook 'emacs-startup-hook (lambda() (setq gc-cons-threshold (expt 2 23))))
   ;; prioritize non-byte-compiled source files in non interactive session
   (setq load-prefer-newer noninteractive)
   ;; optimize process throughput
@@ -134,9 +130,8 @@
   ;; prevent emacs from buffering
   (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
   ;; set font
-  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-13"))
-  (set-face-attribute 'default t :font "JetBrains Mono-13")
-  (setq line-spacing 0.2)
+  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-11"))
+  (set-face-attribute 'default t :font "JetBrains Mono-11")
   ;; highlight matching parentheses
   (show-paren-mode 1)
   (setq show-paren-delay 0)
@@ -176,6 +171,10 @@
 	kept-old-versions 5)
   ;; delete trailing whitespace
   (add-hook 'before-save-hook 'delete-trailing-whitespace))
+
+(use-package gcmh
+  :init
+  (gcmh-mode 1))
 
 ;; dashboard
 (use-package dashboard
@@ -249,6 +248,23 @@
   (setq doom-themes-treemacs-theme "doom-colors")
   (doom-themes-treemacs-config)
   (doom-themes-org-config))
+
+;; modus-themes
+;; (use-package modus-themes
+;;   :bind
+;;   ("<f5>" . (lambda () (interactive) (modus-themes-toggle)(powerline-reset)))
+;;   :init
+;;   (setq modus-themes-italic-constructs t
+;; 	modus-themes-bold-constructs nil
+;; 	modus-themes-region '(bg-only no-extend))
+;;   (if (daemonp)
+;;       (add-hook 'after-make-frame-functions
+;; 		(lambda (frame)
+;; 		  (with-selected-frame frame
+;; 		    (modus-themes-load-themes))))
+;;     (modus-themes-load-themes))
+;;   :config
+;;   (modus-themes-load-vivendi))
 
 (use-package solaire-mode
   :config
