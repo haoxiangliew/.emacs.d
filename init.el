@@ -14,6 +14,7 @@
 ;; clangd v9+
 ;; pip3 install hdl-checker
 ;; nixfmt
+;; rnix-lsp
 ;; asmfmt
 
 ;;; Code:
@@ -124,6 +125,8 @@
   (add-hook 'tty-setup-hook #'xterm-mouse-mode)
   ;; disable bells
   (setq ring-bell-function 'ignore)
+  ;; change yes/no to y/n
+  (defalias 'yes-or-no-p 'y-or-n-p)
   ;; add padding to compensate for rounded corners
   (setq-default left-margin-width 1 right-margin-width 1)
   (set-window-buffer nil (current-buffer))
@@ -815,6 +818,9 @@
 
 ;; nix
 ;; requires nixfmt
+(use-package lsp-mode
+  :init
+  (add-hook 'nix-mode-hook 'lsp))
 (use-package nix-mode
   :interpreter
   ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
