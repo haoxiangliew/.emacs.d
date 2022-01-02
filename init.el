@@ -1,5 +1,4 @@
-;;; package --- Summary
-;; haoxiangliew's Emacs configuration
+;;; init.el --- haoxiangliew's Emacs configuration
 
 ;;; Commentary:
 ;; This is my personal Emacs configuration
@@ -62,7 +61,8 @@
   (straight-merge-all)
   (straight-normalize-all)
   (straight-prune-build)
-  (straight-remove-unused-repos))
+  (straight-remove-unused-repos)
+  (eval-and-compile (straight-use-package 'use-package)))
 
 ;; emacs config
 (use-package emacs
@@ -123,6 +123,8 @@
   (setq xterm-set-window-title t)
   (setq visible-cursor nil)
   (add-hook 'tty-setup-hook #'xterm-mouse-mode)
+  ;; optimize stumpwm frame
+  (setq frame-resize-pixelwise t)
   ;; disable bells
   (setq ring-bell-function 'ignore)
   ;; change yes/no to y/n
@@ -200,40 +202,75 @@
   (setq dashboard-items '((recents . 5)
 			  (agenda . 5)))
   (setq dashboard-set-navigator t)
-  (setq dashboard-navigator-buttons
-	`((
-	   (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
-	    "Browse Repository"
-	    "Browse configuration repository"
-	    (lambda (&rest _) (browse-url "https://github.com/haoxiangliew/.emacs.d")))
-	   (,(all-the-icons-octicon "gear" :height 1.1 :v-adjust 0.0)
-	    "Edit Config"
-	    "Edit current configuration"
-	    (lambda (&rest _) (open-config)))
-	   (,(all-the-icons-octicon "cloud-download" :height 1.1 :v-adjust 0.0)
-	    "Update"
-	    "Updates and cleans all packages"
-	    (lambda (&rest _) (straight-maintain)))
-	   (,(all-the-icons-octicon "sync" :height 1.1 :v-adjust 0.0)
-	    "Restart"
-	    "Restart Emacs"
-	    (lambda (&rest _) (restart-emacs)))
-	   )
-	  ()
-	  (
-	   (,(all-the-icons-octicon "rocket" :height 1.1 :v-adjust 0.0)
-	    "Projects"
-	    "Opens list of projects in treemacs"
-	    (lambda (&rest _) (treemacs)))
-	   (,(all-the-icons-octicon "repo" :height 1.1 :v-adjust 0.0)
-	    "Agenda"
-	    "Opens org-agenda"
-	    (lambda (&rest _) (org-agenda-list)))
-	   (,(all-the-icons-octicon "mail" :height 1.1 :v-adjust 0.0)
-	    "Email"
-	    "Opens notmuch for emails"
-	    (lambda (&rest _) (notmuch-hello)))
-	   )))
+  (if (display-graphic-p)
+      (setq dashboard-navigator-buttons
+	    `((
+	       (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
+		"Browse Repository"
+		"Browse configuration repository"
+		(lambda (&rest _) (browse-url "https://github.com/haoxiangliew/.emacs.d")))
+	       (,(all-the-icons-octicon "gear" :height 1.1 :v-adjust 0.0)
+		"Edit Config"
+		"Edit current configuration"
+		(lambda (&rest _) (open-config)))
+	       (,(all-the-icons-octicon "cloud-download" :height 1.1 :v-adjust 0.0)
+		"Update"
+		"Updates and cleans all packages"
+		(lambda (&rest _) (straight-maintain)))
+	       (,(all-the-icons-octicon "sync" :height 1.1 :v-adjust 0.0)
+		"Restart"
+		"Restart Emacs"
+		(lambda (&rest _) (restart-emacs)))
+	       )
+	      ()
+	      (
+	       (,(all-the-icons-octicon "rocket" :height 1.1 :v-adjust 0.0)
+		"Projects"
+		"Opens list of projects in treemacs"
+		(lambda (&rest _) (treemacs)))
+	       (,(all-the-icons-octicon "repo" :height 1.1 :v-adjust 0.0)
+		"Agenda"
+		"Opens org-agenda"
+		(lambda (&rest _) (org-agenda-list)))
+	       (,(all-the-icons-octicon "mail" :height 1.1 :v-adjust 0.0)
+		"Email"
+		"Opens notmuch for emails"
+		(lambda (&rest _) (notmuch-hello)))
+	       )))
+    (setq dashboard-navigator-buttons
+	  `((
+	     (,()
+	      "Browse Repository"
+	      "Browse configuration repository"
+	      (lambda (&rest _) (browse-url "https://github.com/haoxiangliew/.emacs.d")))
+	     (,()
+	      "Edit Config"
+	      "Edit current configuration"
+	      (lambda (&rest _) (open-config)))
+	     (,()
+	      "Update"
+	      "Updates and cleans all packages"
+	      (lambda (&rest _) (straight-maintain)))
+	     (,()
+	      "Restart"
+	      "Restart Emacs"
+	      (lambda (&rest _) (restart-emacs)))
+	     )
+	    ()
+	    (
+	     (,()
+	      "Projects"
+	      "Opens list of projects in treemacs"
+	      (lambda (&rest _) (treemacs)))
+	     (,()
+	      "Agenda"
+	      "Opens org-agenda"
+	      (lambda (&rest _) (org-agenda-list)))
+	     (,()
+	      "Email"
+	      "Opens notmuch for emails"
+	      (lambda (&rest _) (notmuch-hello)))
+	     ))))
   :config
   (dashboard-setup-startup-hook)
   (if (< (length command-line-args) 2)
@@ -277,6 +314,8 @@
 
 ;; all-the-icons
 (use-package all-the-icons
+  :if
+  (display-graphic-p)
   :init
   (setq inhibit-compacting-font-caches t)
   :config
@@ -333,15 +372,18 @@
   (setq which-key-allow-multiple-replacements t))
 
 ;; spaceline
-(use-package spaceline
-  :init
-  (setq powerline-default-separator 'bar)
-  (spaceline-emacs-theme))
+;; (use-package spaceline
+;;   :init
+;;   (setq powerline-default-separator 'bar)
+;;   (spaceline-emacs-theme))
 
 ;; doom-modeline
-;; (use-package doom-modeline
-;;   :init
-;;   (doom-modeline-mode 1))
+(use-package doom-modeline
+  :init
+  (doom-modeline-mode 1)
+  :config
+  (column-number-mode)
+  (size-indication-mode))
 
 ;; company
 (use-package company
@@ -351,6 +393,25 @@
   :config
   (setq company-idle-delay 0)
   (setq company-minimum-prefix-length 1))
+
+;; company-tabnine
+(use-package company-tabnine
+  :after
+  company
+  :init
+  (add-to-list 'company-backends #'company-tabnine)
+  (setq company-tabnine--disable-next-transform nil)
+  (defun my-company--transform-candidates (func &rest args)
+    (if (not company-tabnine--disable-next-transform)
+	(apply func args)
+      (setq company-tabnine--disable-next-transform nil)
+      (car args)))
+  (defun my-company-tabnine (func &rest args)
+    (when (eq (car args) 'candidates)
+      (setq company-tabnine--disable-next-transform t))
+    (apply func args))
+  (advice-add #'company--transform-candidates :around #'my-company--transform-candidates)
+  (advice-add #'company-tabnine :around #'my-company-tabnine))
 
 ;; lsp-mode
 (use-package lsp-mode
@@ -755,6 +816,13 @@
 				 (python-mode . "python-mode_icon")))
   (setq elcord-client-id "865374458532462602")
   (setq elcord-use-major-mode-as-main-icon t))
+
+;; smudge (spotify)
+(use-package smudge
+  :init
+  (global-smudge-remote-mode)
+  :config
+  (define-key smudge-mode-map (kbd "C-c .") 'smudge-command-map))
 
 ;; pdf-tools
 (use-package pdf-tools
