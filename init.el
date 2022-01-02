@@ -6,15 +6,22 @@
 ;;; Dependencies:
 ;; git
 ;; ripgrep
-;; fd-find
-;; git-delta
+;; fd
+;; gitAndTools.delta
 
 ;;; LSP dependencies:
+
+;;; asm
+;; asmfmt
+;; pythonPackages.hdl-checker
+;;; c / c++
 ;; clangd v9+
-;; pip3 install hdl-checker
+;;; lua
+;; sumneko-lua-language-server
+;; nodePackages.lua-fmt
+;;; nix
 ;; nixfmt
 ;; rnix-lsp
-;; asmfmt
 
 ;;; Code:
 
@@ -799,6 +806,15 @@
   (setq pdf-view-use-scaling t
         pdf-view-use-imagemagick nil))
 
+;; nov.el
+(use-package nov
+  :mode ("\\.epub\\'" . nov-mode)
+  :hook
+  (nov-mode . visual-line-mode)
+  :config
+  (setq nov-text-width t)
+  (setq nov-variable-pitch nil))
+
 ;; hl-todo
 (use-package hl-todo
   :config
@@ -848,6 +864,18 @@
                                   "--completion-style=detailed"
                                   "--header-insertion=never"
                                   "--header-insertion-decorators=0")))
+
+;; lua
+;; requires sumneko-lua-language-server
+(use-package lsp-mode
+  :init
+  (add-hook 'lua-mode-hook 'lsp)
+  ;; set sumneko to the one installed from nix
+  (setq lsp-clients-lua-language-server-bin (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-sumneko-lua-language-server-*/share/lua-language-server/bin/lua-language-server")))
+	lsp-clients-lua-language-server-main-location (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-sumneko-lua-language-server-*/share/lua-language-server/bin/main.lua")))))
+(use-package lua-mode
+  :mode
+  "\\.lua\\'")
 
 ;; nix
 ;; requires nixfmt
