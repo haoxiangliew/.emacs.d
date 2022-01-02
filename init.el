@@ -202,75 +202,40 @@
   (setq dashboard-items '((recents . 5)
 			  (agenda . 5)))
   (setq dashboard-set-navigator t)
-  (if (display-graphic-p)
-      (setq dashboard-navigator-buttons
-	    `((
-	       (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
-		"Browse Repository"
-		"Browse configuration repository"
-		(lambda (&rest _) (browse-url "https://github.com/haoxiangliew/.emacs.d")))
-	       (,(all-the-icons-octicon "gear" :height 1.1 :v-adjust 0.0)
-		"Edit Config"
-		"Edit current configuration"
-		(lambda (&rest _) (open-config)))
-	       (,(all-the-icons-octicon "cloud-download" :height 1.1 :v-adjust 0.0)
-		"Update"
-		"Updates and cleans all packages"
-		(lambda (&rest _) (straight-maintain)))
-	       (,(all-the-icons-octicon "sync" :height 1.1 :v-adjust 0.0)
-		"Restart"
-		"Restart Emacs"
-		(lambda (&rest _) (restart-emacs)))
-	       )
-	      ()
-	      (
-	       (,(all-the-icons-octicon "rocket" :height 1.1 :v-adjust 0.0)
-		"Projects"
-		"Opens list of projects in treemacs"
-		(lambda (&rest _) (treemacs)))
-	       (,(all-the-icons-octicon "repo" :height 1.1 :v-adjust 0.0)
-		"Agenda"
-		"Opens org-agenda"
-		(lambda (&rest _) (org-agenda-list)))
-	       (,(all-the-icons-octicon "mail" :height 1.1 :v-adjust 0.0)
-		"Email"
-		"Opens notmuch for emails"
-		(lambda (&rest _) (notmuch-hello)))
-	       )))
-    (setq dashboard-navigator-buttons
-	  `((
-	     (,()
-	      "Browse Repository"
-	      "Browse configuration repository"
-	      (lambda (&rest _) (browse-url "https://github.com/haoxiangliew/.emacs.d")))
-	     (,()
-	      "Edit Config"
-	      "Edit current configuration"
-	      (lambda (&rest _) (open-config)))
-	     (,()
-	      "Update"
-	      "Updates and cleans all packages"
-	      (lambda (&rest _) (straight-maintain)))
-	     (,()
-	      "Restart"
-	      "Restart Emacs"
-	      (lambda (&rest _) (restart-emacs)))
-	     )
-	    ()
-	    (
-	     (,()
-	      "Projects"
-	      "Opens list of projects in treemacs"
-	      (lambda (&rest _) (treemacs)))
-	     (,()
-	      "Agenda"
-	      "Opens org-agenda"
-	      (lambda (&rest _) (org-agenda-list)))
-	     (,()
-	      "Email"
-	      "Opens notmuch for emails"
-	      (lambda (&rest _) (notmuch-hello)))
-	     ))))
+  (setq dashboard-navigator-buttons
+	`((
+	   (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
+	    "Browse Repository"
+	    "Browse configuration repository"
+	    (lambda (&rest _) (browse-url "https://github.com/haoxiangliew/.emacs.d")))
+	   (,(all-the-icons-octicon "gear" :height 1.1 :v-adjust 0.0)
+	    "Edit Config"
+	    "Edit current configuration"
+	    (lambda (&rest _) (open-config)))
+	   (,(all-the-icons-octicon "cloud-download" :height 1.1 :v-adjust 0.0)
+	    "Update"
+	    "Updates and cleans all packages"
+	    (lambda (&rest _) (straight-maintain)))
+	   (,(all-the-icons-octicon "sync" :height 1.1 :v-adjust 0.0)
+	    "Restart"
+	    "Restart Emacs"
+	    (lambda (&rest _) (restart-emacs)))
+	   )
+	  ()
+	  (
+	   (,(all-the-icons-octicon "rocket" :height 1.1 :v-adjust 0.0)
+	    "Projects"
+	    "Opens list of projects in treemacs"
+	    (lambda (&rest _) (treemacs)))
+	   (,(all-the-icons-octicon "repo" :height 1.1 :v-adjust 0.0)
+	    "Agenda"
+	    "Opens org-agenda"
+	    (lambda (&rest _) (org-agenda-list)))
+	   (,(all-the-icons-octicon "mail" :height 1.1 :v-adjust 0.0)
+	    "Email"
+	    "Opens notmuch for emails"
+	    (lambda (&rest _) (notmuch-hello)))
+	   )))
   :config
   (dashboard-setup-startup-hook)
   (if (< (length command-line-args) 2)
