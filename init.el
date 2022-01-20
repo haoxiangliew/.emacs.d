@@ -9,11 +9,10 @@
 ;; fd
 ;; gitAndTools.delta
 
-;;; LSP dependencies:
+;;; LSP & formatter dependencies:
 
 ;;; asm
 ;; asmfmt
-;; pythonPackages.hdl-checker
 ;;; c / c++
 ;; clangd v9+
 ;;; lua
@@ -22,6 +21,8 @@
 ;;; nix
 ;; nixfmt
 ;; rnix-lsp
+;;; verilog
+;; nodePackges.svlangserver
 
 ;;; Code:
 
@@ -142,8 +143,8 @@
   ;; prevent emacs from buffering
   (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
   ;; set font
-  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-11"))
-  (set-face-attribute 'default t :font "JetBrains Mono-11")
+  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-10.5"))
+  (set-face-attribute 'default t :font "JetBrains Mono-10.5")
   ;; highlight matching parentheses
   (show-paren-mode 1)
   (setq show-paren-delay 0)
@@ -208,6 +209,7 @@
   (setq dashboard-week-agenda nil)
   (setq dashboard-items '((recents . 5)
 			  (agenda . 5)))
+  (setq dashboard-match-agenda-entry "TODO")
   (setq dashboard-set-navigator t)
   (setq dashboard-navigator-buttons
 	`((
@@ -866,7 +868,7 @@
                                   "--header-insertion-decorators=0")))
 
 ;; lua
-;; requires sumneko-lua-language-server
+;; requires luafmt, sumneko-lua-language-server
 (use-package lsp-mode
   :init
   (add-hook 'lua-mode-hook 'lsp)
@@ -878,7 +880,7 @@
   "\\.lua\\'")
 
 ;; nix
-;; requires nixfmt
+;; requires nixfmt, rnix-lsp
 (use-package lsp-mode
   :init
   (add-hook 'nix-mode-hook 'lsp))
