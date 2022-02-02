@@ -1,0 +1,5 @@
+#+TITLE: haoxiangliew's Emacs configuration
+This is my personal Emacs configuration
+
+* Requirements
+- Emacs 28+ (native-comp recommended)
