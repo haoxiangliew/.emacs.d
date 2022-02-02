@@ -84,6 +84,10 @@
         '(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
+  ;; minimize garbage collection on startup
+  (setq gc-cons-threshold most-positive-fixnum)
+  ;; lower threshold back to 8 MiB (default value is 800 kB)
+  (add-hook 'emacs-startup-hook (lambda() (setq gc-cons-threshold (expt 2 23))))
   ;; prioritize non-byte-compiled source files in non interactive session
   (setq load-prefer-newer noninteractive)
   ;; optimize process throughput
@@ -184,10 +188,6 @@
 	kept-old-versions 5)
   ;; delete trailing whitespace
   (add-hook 'before-save-hook 'delete-trailing-whitespace))
-
-(use-package gcmh
-  :init
-  (gcmh-mode 1))
 
 ;; dashboard
 (use-package dashboard
