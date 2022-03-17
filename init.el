@@ -26,12 +26,6 @@
 
 ;;; Code:
 
-;; define internet check
-(defun internet-check (&optional host)
-  "Check for internet connection with ping HOST."
-  (= 0 (call-process "ping" nil nil nil "-c" "1" "-W" "1"
-		     (if host host "www.google.com"))))
-
 ;; bootstrap straight and use-package
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -53,7 +47,7 @@
 (setq native-comp-async-report-warnings-errors nil)
 
 ;; straight management
-(if (internet-check)
+(if (shell-command "nc -zw1 google.com 443")
     (if (daemonp)
 	(progn (straight-pull-all)
 	       (straight-normalize-all)
@@ -660,6 +654,7 @@
   :config
   (add-hook 'org-mode-hook 'org-fancy-priorities-mode))
 
+(use-package alert)
 (use-package org-wild-notifier
   :config
   (org-wild-notifier-mode))
