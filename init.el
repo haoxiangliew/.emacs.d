@@ -33,7 +33,6 @@
 		     (if host host "www.google.com"))))
 
 ;; bootstrap straight and use-package
-(setq package-enable-at-startup nil)
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -84,10 +83,6 @@
         '(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
-  ;; minimize garbage collection on startup
-  (setq gc-cons-threshold most-positive-fixnum)
-  ;; lower threshold back to 8 MiB (default value is 800 kB)
-  (add-hook 'emacs-startup-hook (lambda() (setq gc-cons-threshold (expt 2 23))))
   ;; prioritize non-byte-compiled source files in non interactive session
   (setq load-prefer-newer noninteractive)
   ;; optimize process throughput
@@ -125,12 +120,6 @@
   ;; name and email for various things like git and email
   (setq user-full-name "Hao Xiang Liew"
 	user-mail-address "haoxiangliew@gmail.com")
-  ;; disable default UI elements
-  (tool-bar-mode -1)
-  (menu-bar-mode -1)
-  (scroll-bar-mode -1)
-  ;; use bar cursor
-  (setq-default cursor-type 'bar)
   ;; optimize terminal use
   (setq xterm-set-window-title t)
   (setq visible-cursor nil)
@@ -141,9 +130,6 @@
   (setq ring-bell-function 'ignore)
   ;; change yes/no to y/n
   (defalias 'yes-or-no-p 'y-or-n-p)
-  ;; add padding to compensate for rounded corners
-  (setq-default left-margin-width 1 right-margin-width 1)
-  (set-window-buffer nil (current-buffer))
   ;; prevent emacs from buffering
   (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
   ;; set font
@@ -180,14 +166,21 @@
   ;; autosave
   (setq auto-save-default t)
   ;; better backups
-  (setq backup-directory-alist '(("." . "~/.emacs-backups/"))
-	backup-by-copying t
-	version-control t
-	delete-old-versions t
-	kept-new-versions 20
-	kept-old-versions 5)
+  (if (file-exists-p "~/.emacs-backups")
+      (setq backup-directory-alist '(("." . "~/.emacs-backups/"))
+	    backup-by-copying t
+	    version-control t
+	    delete-old-versions t
+	    kept-new-versions 20
+	    kept-old-versions 5)
+    (make-directory "~/.emacs-backups"))
   ;; delete trailing whitespace
   (add-hook 'before-save-hook 'delete-trailing-whitespace))
+
+;; gcmh
+(use-package gcmh
+  :init
+  (gcmh-mode 1))
 
 ;; dashboard
 (use-package dashboard
@@ -263,23 +256,6 @@
   (doom-themes-treemacs-config)
   (doom-themes-org-config))
 
-;; modus-themes
-;; (use-package modus-themes
-;;   :bind
-;;   ("<f5>" . (lambda () (interactive) (modus-themes-toggle)(powerline-reset)))
-;;   :init
-;;   (setq modus-themes-italic-constructs t
-;; 	modus-themes-bold-constructs nil
-;; 	modus-themes-region '(bg-only no-extend))
-;;   (if (daemonp)
-;;       (add-hook 'after-make-frame-functions
-;; 		(lambda (frame)
-;; 		  (with-selected-frame frame
-;; 		    (modus-themes-load-themes))))
-;;     (modus-themes-load-themes))
-;;   :config
-;;   (modus-themes-load-vivendi))
-
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
@@ -345,12 +321,6 @@
   (setq which-key-idle-delay 0.5)
   (setq which-key-allow-multiple-replacements t))
 
-;; spaceline
-;; (use-package spaceline
-;;   :init
-;;   (setq powerline-default-separator 'bar)
-;;   (spaceline-emacs-theme))
-
 ;; doom-modeline
 (use-package doom-modeline
   :init
@@ -364,28 +334,20 @@
   :init
   (add-hook 'after-init-hook 'global-company-mode)
   (add-hook 'global-company-mode-hook #'company-tng-mode)
+  (defun disable-remote-company ()
+    (when (and (fboundp 'company-mode)
+               (file-remote-p default-directory))
+      (company-mode -1)))
+  (add-hook 'shell-mode-hook 'disable-remote-company)
   :config
   (setq company-idle-delay 0)
   (setq company-minimum-prefix-length 1))
 
-;; company-tabnine
-(use-package company-tabnine
-  :after
-  company
-  :init
-  (add-to-list 'company-backends #'company-tabnine)
-  (setq company-tabnine--disable-next-transform nil)
-  (defun my-company--transform-candidates (func &rest args)
-    (if (not company-tabnine--disable-next-transform)
-	(apply func args)
-      (setq company-tabnine--disable-next-transform nil)
-      (car args)))
-  (defun my-company-tabnine (func &rest args)
-    (when (eq (car args) 'candidates)
-      (setq company-tabnine--disable-next-transform t))
-    (apply func args))
-  (advice-add #'company--transform-candidates :around #'my-company--transform-candidates)
-  (advice-add #'company-tabnine :around #'my-company-tabnine))
+(use-package company-box
+  :hook
+  (company-mode . company-box-mode)
+  :config
+  (setq company-frontends '(company-tng-frontend company-box-frontend)))
 
 ;; lsp-mode
 (use-package lsp-mode
@@ -393,16 +355,6 @@
   (setq lsp-idle-delay 0.500)
   (setq lsp-log-io nil))
 (use-package lsp-ui)
-
-;; tree-sitter
-(use-package tree-sitter
-  :after
-  tree-sitter-langs
-  :config
-  (require 'tree-sitter-langs)
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-(use-package tree-sitter-langs)
 
 ;; flycheck
 (use-package flycheck
@@ -548,7 +500,7 @@
   :bind
   ("C-x C-t" . vterm)
   ;; if vterm is installed through nix
-  :straight f
+  ;; :straight f
   :config
   (setq vterm-kill-buffer-on-exit t)
   (setq vterm-max-scrollback 5000))
@@ -577,7 +529,11 @@
 ;; undo-tree
 (use-package undo-tree
   :init
-  (global-undo-tree-mode 1))
+  (global-undo-tree-mode 1)
+  :config
+  (setq undo-tree-auto-save-history nil)
+  (setq undo-tree-visualizer-timestamps t)
+  (setq undo-tree-visualizer-diff t))
 
 ;; treemacs
 (use-package treemacs
@@ -660,7 +616,7 @@
   :bind
   ("C-x C-a" . org-agenda)
   :config
-  (setq org-directory "~/haoxiangliew/org")
+  (setq org-directory "/mnt/c/haoxiangliew/org")
   (setq org-agenda-files (list org-directory))
   (setq org-agenda-include-deadlines t
 	org-agenda-skip-deadline-if-done t
@@ -740,63 +696,6 @@
         notmuch-hello-sections `(notmuch-hello-insert-saved-searches
                                  notmuch-hello-insert-alltags)
         notmuch-message-headers-visible nil))
-
-;; elcord
-(use-package elcord
-  :init
-  (elcord-mode)
-  :config
-  (setq elcord-mode-icon-alist '((dashboard-mode . "chika_icon")
-				 (fundamental-mode . "chika_icon")
-				 (c-mode . "c-mode_icon")
-				 (c++-mode . "cpp-mode_icon")
-				 (clojure-mode . "clojure-mode_icon")
-				 (csharp-mode . "csharp-mode_icon")
-				 (comint-mode . "comint-mode_icon")
-				 (cperl-mode . "cperl-mode_icon")
-				 ;; (emacs-lisp-mode . (elcord--editor-icon))
-				 (emacs-lisp-mode . "emacs_pen_icon")
-				 (enh-ruby-mode . "ruby-mode_icon")
-				 (erc-mode . "irc-mode_icon")
-				 (eshell-mode . "comint-mode_icon")
-				 (forth-mode . "forth-mode_icon")
-				 (fsharp-mode . "fsharp-mode_icon")
-				 (gdscript-mode . "gdscript-mode_icon")
-				 (haskell-mode . "haskell-mode_icon")
-				 (haskell-interactive-mode . "haskell-mode_icon")
-				 (java-mode . "java-mode_icon")
-				 (js-mode . "javascript-mode_icon")
-				 (kotlin-mode . "kotlin-mode_icon")
-				 (go-mode . "go-mode_icon")
-				 (latex-mode . "latex-mode_icon")
-				 (lisp-mode . "lisp-mode_icon")
-				 (magit-mode . "magit-mode_icon")
-				 (markdown-mode . "markdown-mode_icon")
-				 (meson-mode . "meson-mode_icon")
-				 (mu4e . "emacs_pen_icon")
-				 (nix-mode . "nix-mode_icon")
-				 (org-mode . "org-mode_icon")
-				 (org-agenda-mode . "org-mode_icon")
-				 (racket-mode . "racket-mode_icon")
-				 (ruby-mode . "ruby-mode_icon")
-				 (rust-mode . "rust-mode_icon")
-				 (rustic-mode . "rust-mode_icon")
-				 (zig-mode . "zig-mode_icon")
-				 ("^slime-.*" . "lisp-mode_icon")
-				 ("^sly-.*$" . "lisp-mode_icon")
-				 (typescript-mode . "typescript-mode_icon")
-				 (vterm-mode . "comint-mode_icon")
-				 (php-mode . "php-mode_icon")
-				 (python-mode . "python-mode_icon")))
-  (setq elcord-client-id "865374458532462602")
-  (setq elcord-use-major-mode-as-main-icon t))
-
-;; smudge (spotify)
-(use-package smudge
-  :init
-  (global-smudge-remote-mode)
-  :config
-  (define-key smudge-mode-map (kbd "C-c .") 'smudge-command-map))
 
 ;; pdf-tools
 (use-package pdf-tools
