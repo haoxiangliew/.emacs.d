@@ -9,21 +9,6 @@
 ;; fd
 ;; gitAndTools.delta
 
-;;; LSP & formatter dependencies:
-
-;;; asm
-;; asmfmt
-;;; c / c++
-;; clangd v9+
-;;; lua
-;; sumneko-lua-language-server
-;; nodePackages.lua-fmt
-;;; nix
-;; nixfmt
-;; rnix-lsp
-;;; verilog
-;; nodePackges.svlangserver
-
 ;;; Code:
 
 ;; bootstrap straight and use-package
@@ -46,8 +31,14 @@
 ;; get rid of compiler warnings
 (setq native-comp-async-report-warnings-errors nil)
 
+;; define internet check
+(defun internet-check (&optional host)
+  "Check for internet connection with ping HOST."
+  (= 0 (call-process "ping" nil nil nil "-c" "1" "-W" "1"
+		     (if host host "www.google.com"))))
+
 ;; straight management
-(if (shell-command "nc -zw1 google.com 443")
+(if (internet-check)
     (if (daemonp)
 	(progn (straight-pull-all)
 	       (straight-normalize-all)
@@ -345,6 +336,15 @@
 
 ;; lsp-mode
 (use-package lsp-mode
+  :hook
+  (lsp-mode . lsp-enable-which-key-integration)
+  :init
+  (defun prog-mode-lsp-init ()
+    (unless (derived-mode-p 'emacs-lisp-mode)
+      (lsp)))
+  (add-hook 'prog-mode-hook #'prog-mode-lsp-init)
+  (add-hook 'before-save-hook #'lsp-format-buffer)
+  (setq lsp-keymap-prefix "C-c l")
   :config
   (setq lsp-idle-delay 0.500)
   (setq lsp-log-io nil))
@@ -610,7 +610,7 @@
   :bind
   ("C-x C-a" . org-agenda)
   :config
-  (setq org-directory "/mnt/c/haoxiangliew/org")
+  (setq org-directory "~/haoxiangliew/org")
   (setq org-agenda-files (list org-directory))
   (setq org-agenda-include-deadlines t
 	org-agenda-skip-deadline-if-done t
@@ -727,70 +727,5 @@
           ("DEPRECATED" font-lock-doc-face bold)
           ("BUG" error bold)
           ("XXX" font-lock-constant-face bold))))
-
-;; format-all
-;; check https://github.com/lassik/emacs-format-all-the-code#supported-languages
-(use-package format-all
-  :config
-  (add-hook 'prog-mode-hook 'format-all-ensure-formatter)
-  (add-hook 'prog-mode-hook 'format-all-mode))
-
-;; language configuration
-
-;; asm
-;; requires asmfmt
-(use-package asm-mode
-  :straight f
-  :init
-  (defun my-asm-mode-hook ()
-    (local-unset-key (vector asm-comment-char))
-    (setq tab-always-indent (default-value 'tab-always-indent)))
-  (add-hook 'asm-mode-hook #'my-asm-mode-hook))
-
-;; c/c++
-;; requires clangd v9+
-(use-package lsp-mode
-  :init
-  (add-hook 'c-mode-hook 'lsp)
-  (add-hook 'c++-mode-hook 'lsp)
-  :config
-  (setq lsp-clients-clangd-args '("-j=3"
-                                  "--background-index"
-                                  "--clang-tidy"
-                                  "--completion-style=detailed"
-                                  "--header-insertion=never"
-                                  "--header-insertion-decorators=0")))
-
-;; lua
-;; requires luafmt, sumneko-lua-language-server
-(use-package lsp-mode
-  :init
-  (add-hook 'lua-mode-hook 'lsp)
-  ;; set sumneko to the one installed from nix
-  (setq lsp-clients-lua-language-server-bin (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-sumneko-lua-language-server-*/share/lua-language-server/bin/lua-language-server")))
-	lsp-clients-lua-language-server-main-location (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-sumneko-lua-language-server-*/share/lua-language-server/bin/main.lua")))))
-(use-package lua-mode
-  :mode
-  "\\.lua\\'")
-
-;; nix
-;; requires nixfmt, rnix-lsp
-(use-package lsp-mode
-  :init
-  (add-hook 'nix-mode-hook 'lsp))
-(use-package nix-mode
-  :interpreter
-  ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
-  :mode
-  "\\.nix\\'")
-(use-package nix-update)
-(use-package company-nixos-options)
-
-;; verilog
-;; requires pip3 install hdl-checker
-(use-package lsp-mode
-  :init
-  (add-hook 'verilog-mode-hook 'lsp)
-  (add-hook 'vhdl-mode 'lsp))
 
 ;;; init.el ends here
