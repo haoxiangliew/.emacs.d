@@ -28,9 +28,6 @@
 (eval-when-compile (straight-use-package 'use-package))
 (setq straight-use-package-by-default t)
 
-;; get rid of compiler warnings
-(setq native-comp-async-report-warnings-errors nil)
-
 ;; define internet check
 (defun internet-check (&optional host)
   "Check for internet connection with ping HOST."
@@ -60,6 +57,10 @@
 (use-package emacs
   :straight (:type built-in)
   :init
+  ;; less noise when compiling elisp
+  (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
+  (setq native-comp-async-report-warnings-errors nil)
+  (setq load-prefer-newer t)
   ;; vertico config
   (defun crm-indicator (args)
     (cons (concat "[CRM] " (car args)) (cdr args)))
@@ -160,12 +161,24 @@
 	    kept-old-versions 5)
     (make-directory "~/.emacs-backups"))
   ;; delete trailing whitespace
-  (add-hook 'before-save-hook 'delete-trailing-whitespace))
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+  ;; define wsl-copy
+  (global-set-key (kbd "C-S-c") #'wsl-copy)
+  (defun wsl-copy (start end)
+    (interactive "r")
+    (shell-command-on-region start end "clip.exe")
+    (deactivate-mark)))
 
 ;; gcmh
 (use-package gcmh
   :init
   (gcmh-mode 1))
+
+;; pinentry
+(use-package pinentry
+  :init
+  (setq epa-pinentry-mode `loopback)
+  (pinentry-start))
 
 ;; dashboard
 (use-package dashboard
@@ -214,10 +227,18 @@
 	    "Projects"
 	    "Opens list of projects in treemacs"
 	    (lambda (&rest _) (treemacs)))
+	   (,(all-the-icons-octicon "sync" :height 1.1 :v-adjust 0.0)
+	    "Sync"
+	    "Sync projects to treemacs"
+	    (lambda (&rest _) (treemacs-projectile)))
 	   (,(all-the-icons-octicon "repo" :height 1.1 :v-adjust 0.0)
 	    "Agenda"
 	    "Opens org-agenda"
 	    (lambda (&rest _) (org-agenda-list)))
+	   (,(all-the-icons-octicon "calendar" :height 1.1 :v-adjust 0.0)
+	    "Calendar"
+	    "Opens my-calendar"
+	    (lambda (&rest _) (open-my-calendar)))
 	   (,(all-the-icons-octicon "mail" :height 1.1 :v-adjust 0.0)
 	    "Email"
 	    "Opens notmuch for emails"
@@ -283,6 +304,8 @@
 
 ;; vertico
 (use-package vertico
+  :straight (vertico :files (:defaults "extensions/*")
+		     :includes ())
   :init
   (vertico-mode))
 
@@ -296,7 +319,7 @@
   :init
   (setq completion-styles '(orderless)
         completion-category-defaults nil
-        completion-category-overrides '((file (styles partial-completion)))))
+        completion-category-overrides '((file (styles basic partial-completion)))))
 
 ;; which-key
 (use-package which-key
@@ -319,11 +342,8 @@
   :init
   (add-hook 'after-init-hook 'global-company-mode)
   (add-hook 'global-company-mode-hook #'company-tng-mode)
-  (defun disable-remote-company ()
-    (when (and (fboundp 'company-mode)
-               (file-remote-p default-directory))
-      (company-mode -1)))
-  (add-hook 'shell-mode-hook 'disable-remote-company)
+  (add-hook 'eshell-mode-hook (lambda ()
+				(company-mode -1)))
   :config
   (setq company-idle-delay 0)
   (setq company-minimum-prefix-length 1))
@@ -334,16 +354,19 @@
   :config
   (setq company-frontends '(company-tng-frontend company-box-frontend)))
 
+;; projectile
+(use-package projectile
+  :bind
+  (:map projectile-mode-map
+	("C-c p" . projectile-command-map))
+  :init
+  (projectile-mode +1))
+
 ;; lsp-mode
 (use-package lsp-mode
   :hook
   (lsp-mode . lsp-enable-which-key-integration)
   :init
-  (defun prog-mode-lsp-init ()
-    (unless (derived-mode-p 'emacs-lisp-mode)
-      (lsp)))
-  (add-hook 'prog-mode-hook #'prog-mode-lsp-init)
-  (add-hook 'before-save-hook #'lsp-format-buffer)
   (setq lsp-keymap-prefix "C-c l")
   :config
   (setq lsp-idle-delay 0.500)
@@ -391,7 +414,10 @@
 ;; doom-snippets
 (use-package doom-snippets
   :straight
-  (doom-snippets :type git :host github :repo "hlissner/doom-snippets")
+  (doom-snippets
+   :type git
+   :host github
+   :repo "hlissner/doom-snippets")
   :after
   yasnippet)
 
@@ -543,6 +569,9 @@
   (treemacs magit)
   :config
   (setq treemacs-git-mode 'simple))
+(use-package treemacs-projectile
+  :after
+  (treemacs projectile))
 (use-package lsp-treemacs
   :after
   (treemacs lsp))
@@ -610,7 +639,7 @@
   :bind
   ("C-x C-a" . org-agenda)
   :config
-  (setq org-directory "~/haoxiangliew/org")
+  (setq org-directory "/mnt/c/haoxiangliew/org")
   (setq org-agenda-files (list org-directory))
   (setq org-agenda-include-deadlines t
 	org-agenda-skip-deadline-if-done t
@@ -658,6 +687,29 @@
 (use-package org-wild-notifier
   :config
   (org-wild-notifier-mode))
+
+;; calfw (calendar)
+(use-package calfw
+  :bind
+  ("C-c C-c" . open-my-calendar)
+  :config
+  (setq cfw:face-item-separator-color nil
+        cfw:render-line-breaker 'cfw:render-line-breaker-none)
+  (defun open-my-calendar ()
+    (interactive)
+    (cfw:open-calendar-buffer
+     :contents-sources
+     (list
+      (cfw:org-create-source "#50fa7b")
+      (cfw:ical-create-source "Canvas" "https://canvas.vt.edu/feeds/calendars/user_B7azceel162srPg4Nw9Ax13hcF0aPcJ57bcriQbK.ics" "#ff5555")
+      ))))
+
+(use-package calfw-org
+  :after
+  calfw)
+(use-package calfw-ical
+  :after
+  calfw)
 
 ;; notmuch
 (use-package notmuch
@@ -727,5 +779,28 @@
           ("DEPRECATED" font-lock-doc-face bold)
           ("BUG" error bold)
           ("XXX" font-lock-constant-face bold))))
+
+;; language configuration
+
+;; format-all
+;; check https://github.com/lassik/emacs-format-all-the-code#supported-languages
+(use-package format-all
+  :config
+  (add-hook 'prog-mode-hook 'format-all-ensure-formatter)
+  (add-hook 'prog-mode-hook 'format-all-mode))
+
+;; c/c++
+;; requires clangd v9+
+(use-package lsp-mode
+  :init
+  (add-hook 'c-mode-hook 'lsp)
+  (add-hook 'c++-mode-hook 'lsp)
+  :config
+  (setq lsp-clients-clangd-args '("-j=3"
+                                  "--background-index"
+                                  "--clang-tidy"
+                                  "--completion-style=detailed"
+                                  "--header-insertion=never"
+                                  "--header-insertion-decorators=0")))
 
 ;;; init.el ends here

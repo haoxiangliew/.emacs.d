@@ -6,10 +6,15 @@
 ;;; Code:
 
 ;; adjust gc until gcmh-mode
-(setq gc-cons-threshold most-positive-fixnum)
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6)
 
 ;; bootstrap straight and use-package
 (setq package-enable-at-startup nil)
+(setq package-quickstart nil)
+
+;; inhibit resize
+(setq frame-inhibit-implied-resize t)
 
 ;; disable default UI elements
 (tool-bar-mode -1)
