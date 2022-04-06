@@ -27,6 +27,7 @@
 (require 'straight)
 (eval-when-compile (straight-use-package 'use-package))
 (setq straight-use-package-by-default t)
+(setq straight-vc-git-default-clone-depth 1)
 
 ;; define internet check
 (defun internet-check (&optional host)
@@ -161,24 +162,12 @@
 	    kept-old-versions 5)
     (make-directory "~/.emacs-backups"))
   ;; delete trailing whitespace
-  (add-hook 'before-save-hook 'delete-trailing-whitespace)
-  ;; define wsl-copy
-  (global-set-key (kbd "C-S-c") #'wsl-copy)
-  (defun wsl-copy (start end)
-    (interactive "r")
-    (shell-command-on-region start end "clip.exe")
-    (deactivate-mark)))
+  (add-hook 'before-save-hook 'delete-trailing-whitespace))
 
 ;; gcmh
 (use-package gcmh
   :init
   (gcmh-mode 1))
-
-;; pinentry
-(use-package pinentry
-  :init
-  (setq epa-pinentry-mode `loopback)
-  (pinentry-start))
 
 ;; dashboard
 (use-package dashboard
@@ -520,7 +509,7 @@
   :bind
   ("C-x C-t" . vterm)
   ;; if vterm is installed through nix
-  ;; :straight f
+  :straight f
   :config
   (setq vterm-kill-buffer-on-exit t)
   (setq vterm-max-scrollback 5000))
@@ -557,6 +546,8 @@
 
 ;; treemacs
 (use-package treemacs
+  :bind
+  ("C-<tab>" . treemacs)
   :init
   (setq treemacs-follow-after-init t
         treemacs-is-never-other-window t
@@ -639,7 +630,7 @@
   :bind
   ("C-x C-a" . org-agenda)
   :config
-  (setq org-directory "/mnt/c/haoxiangliew/org")
+  (setq org-directory "~/haoxiangliew/org")
   (setq org-agenda-files (list org-directory))
   (setq org-agenda-include-deadlines t
 	org-agenda-skip-deadline-if-done t
@@ -744,6 +735,56 @@
                                  notmuch-hello-insert-alltags)
         notmuch-message-headers-visible nil))
 
+;; elcord
+(use-package elcord
+  :init
+  (elcord-mode)
+  :config
+  (setq elcord-mode-icon-alist '((dashboard-mode . "chika_icon")
+				 (fundamental-mode . "chika_icon")
+				 (c-mode . "c-mode_icon")
+				 (c++-mode . "cpp-mode_icon")
+				 (clojure-mode . "clojure-mode_icon")
+				 (csharp-mode . "csharp-mode_icon")
+				 (comint-mode . "comint-mode_icon")
+				 (cperl-mode . "cperl-mode_icon")
+				 ;; (emacs-lisp-mode . (elcord--editor-icon))
+				 (emacs-lisp-mode . "emacs_pen_icon")
+				 (enh-ruby-mode . "ruby-mode_icon")
+				 (erc-mode . "irc-mode_icon")
+				 (eshell-mode . "comint-mode_icon")
+				 (forth-mode . "forth-mode_icon")
+				 (fsharp-mode . "fsharp-mode_icon")
+				 (gdscript-mode . "gdscript-mode_icon")
+				 (haskell-mode . "haskell-mode_icon")
+				 (haskell-interactive-mode . "haskell-mode_icon")
+				 (java-mode . "java-mode_icon")
+				 (js-mode . "javascript-mode_icon")
+				 (kotlin-mode . "kotlin-mode_icon")
+				 (go-mode . "go-mode_icon")
+				 (latex-mode . "latex-mode_icon")
+				 (lisp-mode . "lisp-mode_icon")
+				 (magit-mode . "magit-mode_icon")
+				 (markdown-mode . "markdown-mode_icon")
+				 (meson-mode . "meson-mode_icon")
+				 (mu4e . "emacs_pen_icon")
+				 (nix-mode . "nix-mode_icon")
+				 (org-mode . "org-mode_icon")
+				 (org-agenda-mode . "org-mode_icon")
+				 (racket-mode . "racket-mode_icon")
+				 (ruby-mode . "ruby-mode_icon")
+				 (rust-mode . "rust-mode_icon")
+				 (rustic-mode . "rust-mode_icon")
+				 (zig-mode . "zig-mode_icon")
+				 ("^slime-.*" . "lisp-mode_icon")
+				 ("^sly-.*$" . "lisp-mode_icon")
+				 (typescript-mode . "typescript-mode_icon")
+				 (vterm-mode . "comint-mode_icon")
+				 (php-mode . "php-mode_icon")
+				 (python-mode . "python-mode_icon")))
+  (setq elcord-client-id "865374458532462602")
+  (setq elcord-use-major-mode-as-main-icon t))
+
 ;; pdf-tools
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
@@ -802,5 +843,18 @@
                                   "--completion-style=detailed"
                                   "--header-insertion=never"
                                   "--header-insertion-decorators=0")))
+
+;; nix
+;; requires nixfmt and rnix-lsp
+(use-package lsp-mode
+  :init
+  (add-hook 'nix-mode-hook 'lsp))
+(use-package nix-mode
+  :interpreter
+  ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
+  :mode
+  "\\.nix\\'")
+(use-package nix-update)
+(use-package company-nixos-options)
 
 ;;; init.el ends here
