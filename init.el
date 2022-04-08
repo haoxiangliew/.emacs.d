@@ -162,7 +162,19 @@
 	    kept-old-versions 5)
     (make-directory "~/.emacs-backups"))
   ;; delete trailing whitespace
-  (add-hook 'before-save-hook 'delete-trailing-whitespace))
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+  ;; define wsl-copy
+  (global-set-key (kbd "C-S-c") #'wsl-copy)
+  (defun wsl-copy (start end)
+    (interactive "r")
+    (shell-command-on-region start end "clip.exe")
+    (deactivate-mark)))
+
+;; pinentry
+(use-package pinentry
+  :init
+  (setq epa-pinentry-mode `loopback)
+  (pinentry-start))
 
 ;; gcmh
 (use-package gcmh
@@ -630,7 +642,7 @@
   :bind
   ("C-x C-a" . org-agenda)
   :config
-  (setq org-directory "~/haoxiangliew/org")
+  (setq org-directory "/mnt/c/haoxiangliew/org")
   (setq org-agenda-files (list org-directory))
   (setq org-agenda-include-deadlines t
 	org-agenda-skip-deadline-if-done t
@@ -735,75 +747,6 @@
                                  notmuch-hello-insert-alltags)
         notmuch-message-headers-visible nil))
 
-;; elcord
-(use-package elcord
-  :init
-  (elcord-mode)
-  :config
-  (setq elcord-mode-icon-alist '((dashboard-mode . "chika_icon")
-				 (fundamental-mode . "chika_icon")
-				 (c-mode . "c-mode_icon")
-				 (c++-mode . "cpp-mode_icon")
-				 (clojure-mode . "clojure-mode_icon")
-				 (csharp-mode . "csharp-mode_icon")
-				 (comint-mode . "comint-mode_icon")
-				 (cperl-mode . "cperl-mode_icon")
-				 ;; (emacs-lisp-mode . (elcord--editor-icon))
-				 (emacs-lisp-mode . "emacs_pen_icon")
-				 (enh-ruby-mode . "ruby-mode_icon")
-				 (erc-mode . "irc-mode_icon")
-				 (eshell-mode . "comint-mode_icon")
-				 (forth-mode . "forth-mode_icon")
-				 (fsharp-mode . "fsharp-mode_icon")
-				 (gdscript-mode . "gdscript-mode_icon")
-				 (haskell-mode . "haskell-mode_icon")
-				 (haskell-interactive-mode . "haskell-mode_icon")
-				 (java-mode . "java-mode_icon")
-				 (js-mode . "javascript-mode_icon")
-				 (kotlin-mode . "kotlin-mode_icon")
-				 (go-mode . "go-mode_icon")
-				 (latex-mode . "latex-mode_icon")
-				 (lisp-mode . "lisp-mode_icon")
-				 (magit-mode . "magit-mode_icon")
-				 (markdown-mode . "markdown-mode_icon")
-				 (meson-mode . "meson-mode_icon")
-				 (mu4e . "emacs_pen_icon")
-				 (nix-mode . "nix-mode_icon")
-				 (org-mode . "org-mode_icon")
-				 (org-agenda-mode . "org-mode_icon")
-				 (racket-mode . "racket-mode_icon")
-				 (ruby-mode . "ruby-mode_icon")
-				 (rust-mode . "rust-mode_icon")
-				 (rustic-mode . "rust-mode_icon")
-				 (zig-mode . "zig-mode_icon")
-				 ("^slime-.*" . "lisp-mode_icon")
-				 ("^sly-.*$" . "lisp-mode_icon")
-				 (typescript-mode . "typescript-mode_icon")
-				 (vterm-mode . "comint-mode_icon")
-				 (php-mode . "php-mode_icon")
-				 (python-mode . "python-mode_icon")))
-  (setq elcord-client-id "865374458532462602")
-  (setq elcord-use-major-mode-as-main-icon t))
-
-;; pdf-tools
-(use-package pdf-tools
-  :mode ("\\.pdf\\'" . pdf-view-mode)
-  :magic ("%PDF" . pdf-view-mode)
-  :config
-  (pdf-tools-install-noverify)
-  (setq-default pdf-view-display-size 'fit-page)
-  (setq pdf-view-use-scaling t
-        pdf-view-use-imagemagick nil))
-
-;; nov.el
-(use-package nov
-  :mode ("\\.epub\\'" . nov-mode)
-  :hook
-  (nov-mode . visual-line-mode)
-  :config
-  (setq nov-text-width t)
-  (setq nov-variable-pitch nil))
-
 ;; hl-todo
 (use-package hl-todo
   :config
@@ -846,15 +789,15 @@
 
 ;; nix
 ;; requires nixfmt and rnix-lsp
-(use-package lsp-mode
-  :init
-  (add-hook 'nix-mode-hook 'lsp))
-(use-package nix-mode
-  :interpreter
-  ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
-  :mode
-  "\\.nix\\'")
-(use-package nix-update)
-(use-package company-nixos-options)
+;; (use-package lsp-mode
+;;   :init
+;;   (add-hook 'nix-mode-hook 'lsp))
+;; (use-package nix-mode
+;;   :interpreter
+;;   ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
+;;   :mode
+;;   "\\.nix\\'")
+;; (use-package nix-update)
+;; (use-package company-nixos-options)
 
 ;;; init.el ends here
