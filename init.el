@@ -367,8 +367,6 @@
 (use-package lsp-mode
   :hook
   (lsp-mode . lsp-enable-which-key-integration)
-  :init
-  (setq lsp-keymap-prefix "C-c l")
   :config
   (setq lsp-idle-delay 0.500)
   (setq lsp-log-io nil))

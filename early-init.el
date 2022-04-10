@@ -28,4 +28,7 @@
 (setq-default left-margin-width 1 right-margin-width 1)
 (set-window-buffer nil (current-buffer))
 
+;; disable deferred compilation
+(setq comp-deferred-compilation nil)
+
 ;;; early-init.el ends here
