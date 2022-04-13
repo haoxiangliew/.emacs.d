@@ -119,6 +119,10 @@
   (defalias 'yes-or-no-p 'y-or-n-p)
   ;; prevent emacs from buffering
   (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
+  (setq pgtk-wait-for-event-timeout 0.001)
+  ;; disable bidirectional text scanning
+  (setq-default bidi-display-reordering 'left-to-right
+		bidi-paragraph-direction 'left-to-right)
   ;; set font
   (add-to-list 'default-frame-alist '(font . "JetBrains Mono-10.5"))
   (set-face-attribute 'default t :font "JetBrains Mono-10.5")
@@ -144,12 +148,16 @@
   ;; use system clipboard
   (setq select-enable-clipboard t)
   ;; fix scrolling
-  (setq scroll-margin 1
-	scroll-conservatively 0
-	scroll-up-aggressively 0.01
-	scroll-down-aggressively 0.01)
-  (setq-default scroll-up-aggressively 0.01
-		scroll-down-aggressively 0.01)
+  (setq hscroll-margin 1
+	scroll-conservatively 101
+	scroll-margin 0
+	scroll-preserve-screen-position t
+	auto-window-vscroll nil
+	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
+	mouse-wheel-scroll-amount-horizontal 2)
+  (setq fast-but-imprecise-scrolling t)
+  ;; smooth scroll (emacs 29+)
+  (pixel-scroll-precision-mode)
   ;; autosave
   (setq auto-save-default t)
   ;; better backups
@@ -167,7 +175,11 @@
 ;; gcmh
 (use-package gcmh
   :init
-  (gcmh-mode 1))
+  (gcmh-mode 1)
+  :config
+  (setq gcmh-idle-delay 'auto
+	gcmh-auto-idle-delay-factor 10
+	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
 
 ;; dashboard
 (use-package dashboard
@@ -672,7 +684,9 @@
   :config
   (add-hook 'org-mode-hook 'org-fancy-priorities-mode))
 
-(use-package alert)
+(use-package alert
+  :config
+  (setq alert-default-style 'libnotify))
 (use-package org-wild-notifier
   :config
   (org-wild-notifier-mode))
