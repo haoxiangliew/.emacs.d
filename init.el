@@ -162,19 +162,7 @@
 	    kept-old-versions 5)
     (make-directory "~/.emacs-backups"))
   ;; delete trailing whitespace
-  (add-hook 'before-save-hook 'delete-trailing-whitespace)
-  ;; define wsl-copy
-  (global-set-key (kbd "C-S-c") #'wsl-copy)
-  (defun wsl-copy (start end)
-    (interactive "r")
-    (shell-command-on-region start end "clip.exe")
-    (deactivate-mark)))
-
-;; pinentry
-(use-package pinentry
-  :init
-  (setq epa-pinentry-mode `loopback)
-  (pinentry-start))
+  (add-hook 'before-save-hook 'delete-trailing-whitespace))
 
 ;; gcmh
 (use-package gcmh
@@ -640,7 +628,7 @@
   :bind
   ("C-x C-a" . org-agenda)
   :config
-  (setq org-directory "/mnt/c/haoxiangliew/org")
+  (setq org-directory "~/haoxiangliew/org")
   (setq org-agenda-files (list org-directory))
   (setq org-agenda-include-deadlines t
 	org-agenda-skip-deadline-if-done t
@@ -787,15 +775,15 @@
 
 ;; nix
 ;; requires nixfmt and rnix-lsp
-;; (use-package lsp-mode
-;;   :init
-;;   (add-hook 'nix-mode-hook 'lsp))
-;; (use-package nix-mode
-;;   :interpreter
-;;   ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
-;;   :mode
-;;   "\\.nix\\'")
-;; (use-package nix-update)
-;; (use-package company-nixos-options)
+(use-package lsp-mode
+  :init
+  (add-hook 'nix-mode-hook 'lsp))
+(use-package nix-mode
+  :interpreter
+  ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
+  :mode
+  "\\.nix\\'")
+(use-package nix-update)
+(use-package company-nixos-options)
 
 ;;; init.el ends here
