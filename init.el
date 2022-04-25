@@ -18,126 +18,69 @@
       (bootstrap-version 5))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
-	(url-retrieve-synchronously
-	 "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-	 'silent 'inhibit-cookies)
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
+(straight-use-package 'use-package)
+(setq straight-use-package-by-default t
+      straight-vc-git-default-clone-depth 1)
 (require 'straight)
-(eval-when-compile (straight-use-package 'use-package))
-(setq straight-use-package-by-default t)
-(setq straight-vc-git-default-clone-depth 1)
+(require 'straight-x)
 
-;; define internet check
-(defun internet-check (&optional host)
-  "Check for internet connection with ping HOST."
-  (= 0 (call-process "ping" nil nil nil "-c" "1" "-W" "1"
-		     (if host host "www.google.com"))))
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "*** Emacs loaded in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
 
-;; straight management
-(if (internet-check)
-    (if (daemonp)
-	(progn (straight-pull-all)
-	       (straight-normalize-all)
-	       (add-hook 'after-init-hook 'straight-prune-build)
-	       (add-hook 'after-init-hook 'straight-remove-unused-repos))
-      (message "In order to reduce startup delay, we are not going to update straight on startup. Run straight-maintain to do so."))
-  (message "There is no internet connection, we are unable to update straight."))
-(defun straight-maintain ()
-  "Maintain straight packages and repositories."
-  (interactive)
-  (straight-fetch-all)
-  (straight-merge-all)
-  (straight-normalize-all)
-  (straight-prune-build)
-  (straight-remove-unused-repos)
-  (eval-and-compile (straight-use-package 'use-package)))
+;; no littering
+(setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
+      url-history-file (expand-file-name "url/history" user-emacs-directory))
+(use-package no-littering)
+(setq custom-file
+      (if (boundp 'server-socket-dir)
+          (expand-file-name "custom.el" server-socket-dir)
+        (expand-file-name (format "emacs-custom-%s.el" (user-uid)) temporary-file-directory)))
+(load custom-file t)
 
 ;; emacs config
 (use-package emacs
   :straight (:type built-in)
   :init
   ;; less noise when compiling elisp
-  (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local))
-  (setq native-comp-async-report-warnings-errors nil)
-  (setq load-prefer-newer t)
-  ;; vertico config
-  (defun crm-indicator (args)
-    (cons (concat "[CRM] " (car args)) (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-  (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-  (setq enable-recursive-minibuffers t)
-  ;; prioritize non-byte-compiled source files in non interactive session
-  (setq load-prefer-newer noninteractive)
-  ;; optimize process throughput
-  (setq read-process-output-max (* 1024 1024)) ;; 1MB
-  ;; define restart emacs
-  (defun launch-separate-emacs-in-terminal ()
-    (suspend-emacs "fg ; emacs -nw"))
-  (defun launch-separate-emacs-under-x ()
-    (call-process "sh" nil nil nil "-c" "emacs &"))
-  (defun restart-emacs ()
-    (interactive)
-    (if (daemonp)
-	(progn (restart-counter)
-	       (save-buffers-kill-emacs))
-      (let ((kill-emacs-hook (append kill-emacs-hook (list (if (display-graphic-p)
-							       #'launch-separate-emacs-under-x
-							     #'launch-separate-emacs-in-terminal)))))
-	(restart-counter)
-	(save-buffers-kill-emacs))))
-  (defun restart-counter ()
-    (setq restart-count 5)
-    (while (> restart-count 0)
-      (if (daemonp)
-	  (message "We are in a daemon, killing in %d seconds..." . (restart-count))
-	(message "Restarting in %d seconds..." . (restart-count)))
-      (sleep-for 1)
-      (setq restart-count (- restart-count 1))))
+  (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
+	native-comp-async-report-warnings-errors nil
+        load-prefer-newer t)
   ;; load secrets
   (defun load-if-exists (f)
     (if (file-exists-p (expand-file-name f))
-	(load-file (expand-file-name f))))
+        (load-file (expand-file-name f))))
   (load-if-exists (concat (print user-emacs-directory) "secrets.el"))
   (setq auth-sources '("~/.authinfo"))
   :config
-  ;; name and email for various things like git and email
+  ;; username and email
   (setq user-full-name "Hao Xiang Liew"
 	user-mail-address "haoxiangliew@gmail.com")
-  ;; optimize terminal use
-  (setq xterm-set-window-title t)
-  (setq visible-cursor nil)
-  (add-hook 'tty-setup-hook #'xterm-mouse-mode)
-  ;; optimize stumpwm frame
-  (setq frame-resize-pixelwise t)
-  ;; disable bells
-  (setq ring-bell-function 'ignore)
-  ;; change yes/no to y/n
-  (defalias 'yes-or-no-p 'y-or-n-p)
-  ;; prevent emacs from buffering
-  (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
-  (setq pgtk-wait-for-event-timeout 0.001)
-  ;; disable bidirectional text scanning
-  (setq-default bidi-display-reordering 'left-to-right
-		bidi-paragraph-direction 'left-to-right)
-  ;; set font
+  ;; font
   (add-to-list 'default-frame-alist '(font . "JetBrains Mono-10.5"))
   (set-face-attribute 'default t :font "JetBrains Mono-10.5")
-  ;; highlight matching parentheses
+  ;; highlight and match parentheses
   (show-paren-mode 1)
   (setq show-paren-delay 0)
-  ;; raise undo limit to 80 mb
-  (setq undo-limit 80000000)
-  ;; match parentheses
   (add-hook 'prog-mode-hook 'electric-pair-mode)
-  ;; open config defun
-  (defun open-config ()
-    (interactive)
-    (find-file (concat (print user-emacs-directory) "init.el")))
-  (global-set-key (kbd "C-c C-s") 'open-config)
+  ;; autosave
+  (setq auto-save-default t)
+  ;; delete trailing whitespace
+  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+  ;; use system clipboard
+  (setq select-enable-clipboard t)
+  ;; raise undo limit
+  (setq undo-limit 80000000) ; 80mb
   ;; intelligent word-wrap
   (defvar +word-wrap-extra-indent 'double)
   (defvar +word-wrap-disabled-modes '(fundamental-mode so-long-mode))
@@ -145,36 +88,31 @@
   (when (memq 'visual-line-mode text-mode-hook)
     (remove-hook 'text-mode-hook #'visual-line-mode)
     (add-hook 'text-mode-hook #'+word-wrap-mode))
-  ;; use system clipboard
-  (setq select-enable-clipboard t)
   ;; fix scrolling
   (setq hscroll-margin 1
-	scroll-conservatively 101
-	scroll-margin 0
-	scroll-preserve-screen-position t
-	auto-window-vscroll nil
-	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
-	mouse-wheel-scroll-amount-horizontal 2)
+        scroll-conservatively 101
+        scroll-margin 0
+        scroll-preserve-screen-position t
+        auto-window-vscroll nil
+        mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
+        mouse-wheel-scroll-amount-horizontal 2)
   (setq fast-but-imprecise-scrolling t)
-  ;; smooth scrolling
-  (if (<= emacs-major-version 29)
-      (progn (pixel-scroll-precision-mode)
-	     (setq pixel-scroll-precision-large-scroll-height 40.0
-		   pixel-scroll-precision-interpolation-factor 30))
-    (pixel-scroll-mode 1))
-  ;; autosave
-  (setq auto-save-default t)
-  ;; better backups
-  (if (file-exists-p "~/.emacs-backups")
-      (setq backup-directory-alist '(("." . "~/.emacs-backups/"))
-	    backup-by-copying t
-	    version-control t
-	    delete-old-versions t
-	    kept-new-versions 20
-	    kept-old-versions 5)
-    (make-directory "~/.emacs-backups"))
-  ;; delete trailing whitespace
-  (add-hook 'before-save-hook 'delete-trailing-whitespace))
+  ;; disable bells
+  (setq ring-bell-function 'ignore)
+  ;; change yes/no to y/n
+  (defalias 'yes-or-no-p 'y-or-n-p)
+  ;; optimize terminal use
+  (setq xterm-set-window-title t
+	visible-cursor nil)
+  ;; optimize frames
+  (setq frame-resize-pixelwise t
+	pgtk-wait-for-event-timeout 0.001)
+  ;; prevent emacs from buffering
+  (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
+  (setq pgtk-wait-for-event-timeout 0.001)
+  ;; disable bidirectional text scanning
+  (setq-default bidi-display-reordering 'left-to-right
+                bidi-paragraph-direction 'left-to-right))
 
 ;; gcmh
 (use-package gcmh
@@ -182,96 +120,31 @@
   (gcmh-mode 1)
   :config
   (setq gcmh-idle-delay 'auto
-	gcmh-auto-idle-delay-factor 10
+	gcmh-idle-delay-factor 10
 	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
 
-;; dashboard
-(use-package dashboard
-  :after
-  all-the-icons
-  :init
-  (add-hook 'after-init-hook 'dashboard-refresh-buffer)
-  (setq dashboard-set-heading-icons t)
-  (setq dashboard-set-file-icons t)
-  (defun dashboard-banner-startup()
-    (if (display-graphic-p)
-        (setq dashboard-startup-banner (concat (print user-emacs-directory) "home.png"))
-      (setq dashboard-startup-banner (concat (print user-emacs-directory) "home.txt"))))
-  (add-hook 'server-after-make-frame-hook 'dashboard-banner-startup)
-  (dashboard-banner-startup)
-  (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
-  (setq dashboard-banner-logo-title (concat "Hi " (user-full-name) "! Welcome to Chika Emacs!"))
-  (setq dashboard-center-content t)
-  (setq dashboard-week-agenda nil)
-  (setq dashboard-items '((recents . 5)
-			  (agenda . 5)))
-  (setq dashboard-match-agenda-entry "TODO")
-  (setq dashboard-set-navigator t)
-  (setq dashboard-navigator-buttons
-	`((
-	   (,(all-the-icons-octicon "mark-github" :height 1.1 :v-adjust 0.0)
-	    "Browse Repository"
-	    "Browse configuration repository"
-	    (lambda (&rest _) (browse-url "https://github.com/haoxiangliew/.emacs.d")))
-	   (,(all-the-icons-octicon "gear" :height 1.1 :v-adjust 0.0)
-	    "Edit Config"
-	    "Edit current configuration"
-	    (lambda (&rest _) (open-config)))
-	   (,(all-the-icons-octicon "cloud-download" :height 1.1 :v-adjust 0.0)
-	    "Update"
-	    "Updates and cleans all packages"
-	    (lambda (&rest _) (straight-maintain)))
-	   (,(all-the-icons-octicon "sync" :height 1.1 :v-adjust 0.0)
-	    "Restart"
-	    "Restart Emacs"
-	    (lambda (&rest _) (restart-emacs)))
-	   )
-	  ()
-	  (
-	   (,(all-the-icons-octicon "rocket" :height 1.1 :v-adjust 0.0)
-	    "Projects"
-	    "Opens list of projects in treemacs"
-	    (lambda (&rest _) (treemacs)))
-	   (,(all-the-icons-octicon "sync" :height 1.1 :v-adjust 0.0)
-	    "Sync"
-	    "Sync projects to treemacs"
-	    (lambda (&rest _) (treemacs-projectile)))
-	   (,(all-the-icons-octicon "repo" :height 1.1 :v-adjust 0.0)
-	    "Agenda"
-	    "Opens org-agenda"
-	    (lambda (&rest _) (org-agenda-list)))
-	   (,(all-the-icons-octicon "calendar" :height 1.1 :v-adjust 0.0)
-	    "Calendar"
-	    "Opens my-calendar"
-	    (lambda (&rest _) (open-my-calendar)))
-	   (,(all-the-icons-octicon "mail" :height 1.1 :v-adjust 0.0)
-	    "Email"
-	    "Opens notmuch for emails"
-	    (lambda (&rest _) (notmuch-hello)))
-	   )))
-  :config
-  (dashboard-setup-startup-hook)
-  (if (< (length command-line-args) 2)
-      (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))))
+;; splash screen
+(use-package splash-screen
+  :straight
+  (splash-screen
+   :type git
+   :host github
+   :repo "rougier/emacs-splash"
+   :files ("splash-screen.el")))
 
-;; dracula-theme
-(use-package doom-themes
+;; dracula theme
+(use-package dracula-theme
   :config
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
-  (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
-    (load-theme 'doom-dracula t))
-  (doom-themes-visual-bell-config)
-  (setq doom-themes-treemacs-theme "doom-colors")
-  (doom-themes-treemacs-config)
-  (doom-themes-org-config))
+  (load-theme 'dracula t))
 
-(use-package solaire-mode
+;; spaceline
+(use-package spaceline
   :config
-  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-  (add-hook 'dashboard-mode-hook 'solaire-mode)
-  (solaire-global-mode +1))
+  (setq powerline-default-separator 'wave)
+  (spaceline-emacs-theme))
+
+;; restart-emacs
+(use-package restart-emacs)
 
 ;; all-the-icons
 (use-package all-the-icons
@@ -290,28 +163,18 @@
   :config
   (all-the-icons-completion-mode))
 
-;; emojify
-(use-package emojify
-  :init
-  (add-hook 'after-init-hook #'global-emojify-mode))
-
-;; rainbow-delimiters
-(use-package rainbow-delimiters
-  :config
-  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
-
-;; rainbow-mode
-(use-package rainbow-mode
-  :config
-  (setq rainbow-x-colors nil)
-  (add-hook 'prog-mode-hook 'rainbow-mode)
-  (add-hook 'rainbow-mode-hook (hl-line-mode (if rainbow-mode -1 +1))))
-
 ;; vertico
 (use-package vertico
   :straight (vertico :files (:defaults "extensions/*")
-		     :includes ())
+                     :includes ())
   :init
+  (defun crm-indicator (args)
+    (cons (concat "[CRM] " (car args)) (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+  (setq minibuffer-prompt-properties
+        '(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+  (setq enable-recursive-minibuffers t)
   (vertico-mode))
 
 (use-package marginalia
@@ -331,27 +194,30 @@
   :init
   (which-key-mode)
   :config
-  (setq which-key-idle-delay 0.5)
-  (setq which-key-allow-multiple-replacements t))
+  (setq which-key-idle-delay 0.5
+	which-key-allow-multiple-replacements t))
 
-;; doom-modeline
-(use-package doom-modeline
-  :init
-  (doom-modeline-mode 1)
+;; rainbow-delimiters
+(use-package rainbow-delimiters
   :config
-  (column-number-mode)
-  (size-indication-mode))
+  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+
+;; rainbow-mode
+(use-package rainbow-mode
+  :config
+  (setq rainbow-x-colors nil)
+  (add-hook 'prog-mode-hook 'rainbow-mode)
+  (add-hook 'rainbow-mode-hook (hl-line-mode (if rainbow-mode -1 +1))))
 
 ;; company
 (use-package company
   :init
   (add-hook 'after-init-hook 'global-company-mode)
   (add-hook 'global-company-mode-hook #'company-tng-mode)
-  (add-hook 'eshell-mode-hook (lambda ()
-				(company-mode -1)))
+  (add-hook 'eshell-mode-hook (lambda () (when (file-remote-p default-directory) (company-mode -1))))
   :config
-  (setq company-idle-delay 0)
-  (setq company-minimum-prefix-length 1))
+  (setq company-idle-delay 0
+	company-minimum-prefix-length 1))
 
 (use-package company-box
   :hook
@@ -363,7 +229,7 @@
 (use-package projectile
   :bind
   (:map projectile-mode-map
-	("C-c p" . projectile-command-map))
+        ("C-c p" . projectile-command-map))
   :init
   (projectile-mode +1))
 
@@ -372,8 +238,9 @@
   :hook
   (lsp-mode . lsp-enable-which-key-integration)
   :config
-  (setq lsp-idle-delay 0.500)
-  (setq lsp-log-io nil))
+  (setq read-process-output-max (* 1024 1024)
+	lsp-idle-delay 0.500
+	lsp-log-io nil))
 (use-package lsp-ui)
 
 ;; flycheck
@@ -381,8 +248,8 @@
   :init
   (global-flycheck-mode)
   :config
-  (setq flycheck-emacs-lisp-load-path 'inherit)
-  (setq flycheck-check-syntax-automatically '(save mode-enable)))
+  (setq flycheck-emacs-lisp-load-path 'inherit
+	flycheck-check-syntax-automatically '(save mode-enable)))
 
 ;; flyspell
 (use-package flyspell
@@ -433,8 +300,8 @@
   :after
   lsp
   :init
-  (setq dap-breakpoints-file "~/.emacs-backups/dap-breakpoints"
-        dap-utils-extension-path "~/.emacs-backups/dap-extension/")
+  (setq dap-breakpoints-file (expand-file-name "dap-breakpoints" user-emacs-directory)
+        dap-utils-extension-path (expand-file-name "dap-extension" user-emacs-directory))
   :config
   (dap-mode 1))
 
@@ -457,7 +324,7 @@
         dired-recursive-copies  'always
         dired-recursive-deletes 'top
         dired-create-destination-dirs 'ask
-        image-dired-dir (concat "~/.emacs-backups/" "image-dired/")
+        image-dired-dir (expand-file-name "image-dired/" user-emacs-directory)
         image-dired-db-file (concat image-dired-dir "db.el")
         image-dired-gallery-dir (concat image-dired-dir "gallery/")
         image-dired-temp-image-file (concat image-dired-dir "temp-image")
@@ -480,6 +347,7 @@
         ranger-max-preview-size 10
         ranger-show-literal nil
         ranger-hide-cursor nil))
+
 
 ;; eshell
 (use-package eshell
@@ -525,8 +393,8 @@
   ;; if vterm is installed through nix
   :straight f
   :config
-  (setq vterm-kill-buffer-on-exit t)
-  (setq vterm-max-scrollback 5000))
+  (setq vterm-kill-buffer-on-exit t
+	vterm-max-scrollback 5000))
 
 ;; ibuffer
 (use-package ibuffer
@@ -554,9 +422,9 @@
   :init
   (global-undo-tree-mode 1)
   :config
-  (setq undo-tree-auto-save-history nil)
-  (setq undo-tree-visualizer-timestamps t)
-  (setq undo-tree-visualizer-diff t))
+  (setq undo-tree-auto-save-history nil
+	undo-tree-visualizer-timestamps t
+	undo-tree-visualizer-diff t))
 
 ;; treemacs
 (use-package treemacs
@@ -566,8 +434,8 @@
   (setq treemacs-follow-after-init t
         treemacs-is-never-other-window t
         treemacs-sorting 'alphabetic-case-insensitive-asc
-        treemacs-persist-file "~/.emacs-backups/treemacs-persist"
-        treemacs-last-error-persist-file "~/.emacs-backups/treemacs-last-error-persist"))
+        treemacs-persist-file (expand-file-name "treemacs-persist" user-emacs-directory)
+        treemacs-last-error-persist-file (expand-file-name "treemacs-last-error-persist" user-emacs-directory)))
 
 (use-package treemacs-magit
   :after
@@ -602,6 +470,7 @@
 (use-package git-gutter
   :config
   (global-git-gutter-mode 't))
+
 
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
@@ -720,8 +589,6 @@
 
 ;; notmuch
 (use-package notmuch
-  :bind
-  ("C-x C-m" . notmuch-hello)
   :init
   (setq +notmuch-mail-folder "~/mail/")
   (setq +notmuch-sync-backend "notmuch new")

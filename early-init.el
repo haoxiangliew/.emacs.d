@@ -9,9 +9,14 @@
 (setq gc-cons-threshold most-positive-fixnum
       gc-cons-percentage 0.6)
 
+;; disable deferred compilation and fix nix native-comp
+(setq comp-deferred-compilation nil
+      native-comp-bootstrap-deny-list '("seq.*")
+      native-comp-deferred-compilation-deny-list '("seq.*"))
+
 ;; bootstrap straight and use-package
-(setq package-enable-at-startup nil)
-(setq package-quickstart nil)
+(setq package-enable-at-startup nil
+      package-quickstart nil)
 
 ;; inhibit resize
 (setq frame-inhibit-implied-resize t)
