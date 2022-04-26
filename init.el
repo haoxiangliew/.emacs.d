@@ -26,7 +26,8 @@
   (load bootstrap-file nil 'nomessage))
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t
-      straight-vc-git-default-clone-depth 1)
+      straight-vc-git-default-clone-depth 1
+      straight-recipes-gnu-elpa-use-mirror t)
 (require 'straight)
 (require 'straight-x)
 
@@ -57,11 +58,9 @@
 	native-comp-async-report-warnings-errors nil
         load-prefer-newer t)
   ;; load secrets
-  (defun load-if-exists (f)
-    (if (file-exists-p (expand-file-name f))
-        (load-file (expand-file-name f))))
-  (load-if-exists (concat (print user-emacs-directory) "secrets.el"))
   (setq auth-sources '("~/.authinfo"))
+  ;; configure scratch
+  (setq initial-scratch-message (concat ";; Welcome " user-login-name " to Emacs " (format "%s" emacs-major-version) "." (format "%s" emacs-minor-version) "\n\n"))
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
@@ -122,15 +121,6 @@
   (setq gcmh-idle-delay 'auto
 	gcmh-idle-delay-factor 10
 	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
-
-;; splash screen
-(use-package splash-screen
-  :straight
-  (splash-screen
-   :type git
-   :host github
-   :repo "rougier/emacs-splash"
-   :files ("splash-screen.el")))
 
 ;; dracula theme
 (use-package dracula-theme
