@@ -223,6 +223,13 @@
   :init
   (projectile-mode +1))
 
+;; tree-sitter
+(use-package tree-sitter
+  :init
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+(use-package tree-sitter-langs)
+
 ;; lsp-mode
 (use-package lsp-mode
   :hook
@@ -577,8 +584,15 @@
   :after
   calfw)
 
+;; elcord
+(use-package elcord
+  :init
+  (elcord-mode))
+
 ;; notmuch
 (use-package notmuch
+  :bind
+  ("C-x C-m" . notmuch-hello)
   :init
   (setq +notmuch-mail-folder "~/mail/")
   (setq +notmuch-sync-backend "notmuch new")
