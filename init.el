@@ -25,19 +25,11 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 (straight-use-package 'use-package)
+(require 'straight)
+(require 'straight-x)
 (setq straight-use-package-by-default t
       straight-vc-git-default-clone-depth 1
       straight-recipes-gnu-elpa-use-mirror t)
-(require 'straight)
-(require 'straight-x)
-
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (message "*** Emacs loaded in %s with %d garbage collections."
-                     (format "%.2f seconds"
-                             (float-time
-                              (time-subtract after-init-time before-init-time)))
-                     gcs-done)))
 
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
@@ -55,16 +47,16 @@
   :init
   ;; less noise when compiling elisp
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
-	native-comp-async-report-warnings-errors nil
+        native-comp-async-report-warnings-errors nil
         load-prefer-newer t)
   ;; load secrets
   (setq auth-sources '("~/.authinfo"))
   ;; configure scratch
-  (setq initial-scratch-message (concat ";; Welcome " user-login-name " to Emacs " (format "%s" emacs-major-version) "." (format "%s" emacs-minor-version) "\n\n"))
+  (setq initial-scratch-message (concat ";; Welcome " user-login-name " to Emacs " (format "%s" emacs-major-version) "." (format "%s" emacs-minor-version) "\n" (format ";; *** Emacs loaded in %s with %d garbage collections." (format "%.2f seconds" (float-time (time-subtract after-init-time before-init-time))) gcs-done) "\n"))
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
-	user-mail-address "haoxiangliew@gmail.com")
+        user-mail-address "haoxiangliew@gmail.com")
   ;; font
   (add-to-list 'default-frame-alist '(font . "JetBrains Mono-10.5"))
   (set-face-attribute 'default t :font "JetBrains Mono-10.5")
@@ -102,10 +94,10 @@
   (defalias 'yes-or-no-p 'y-or-n-p)
   ;; optimize terminal use
   (setq xterm-set-window-title t
-	visible-cursor nil)
+        visible-cursor nil)
   ;; optimize frames
   (setq frame-resize-pixelwise t
-	pgtk-wait-for-event-timeout 0.001)
+        pgtk-wait-for-event-timeout 0.001)
   ;; prevent emacs from buffering
   (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
   (setq pgtk-wait-for-event-timeout 0.001)
@@ -122,16 +114,31 @@
 	gcmh-idle-delay-factor 10
 	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
 
-;; dracula theme
-(use-package dracula-theme
+;; dracula-theme
+(use-package doom-themes
   :config
-  (load-theme 'dracula t))
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
+    (load-theme 'doom-dracula t))
+  (doom-themes-visual-bell-config)
+  (setq doom-themes-treemacs-theme "doom-colors")
+  (doom-themes-treemacs-config)
+  (doom-themes-org-config))
+(use-package solaire-mode
+  :config
+  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+  (add-hook 'dashboard-mode-hook 'solaire-mode)
+  (solaire-global-mode +1))
 
-;; spaceline
-(use-package spaceline
+;; doom-modeline
+(use-package doom-modeline
+  :init
+  (doom-modeline-mode 1)
   :config
-  (setq powerline-default-separator 'wave)
-  (spaceline-emacs-theme))
+  (column-number-mode)
+  (size-indication-mode))
 
 ;; restart-emacs
 (use-package restart-emacs)
@@ -146,7 +153,6 @@
   (if (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
       (message "all-the-icons is installed!")
     (and (all-the-icons-install-fonts) (restart-emacs))))
-
 (use-package all-the-icons-completion
   :after
   all-the-icons
@@ -156,7 +162,7 @@
 ;; vertico
 (use-package vertico
   :straight (vertico :files (:defaults "extensions/*")
-                     :includes ())
+                     :includes (vertico-mouse))
   :init
   (defun crm-indicator (args)
     (cons (concat "[CRM] " (car args)) (cdr args)))
@@ -165,14 +171,13 @@
         '(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
-  (vertico-mode))
-
+  (vertico-mode)
+  (vertico-mouse-mode))
 (use-package marginalia
   :init
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
   :config
   (marginalia-mode))
-
 (use-package orderless
   :init
   (setq completion-styles '(orderless)
@@ -185,12 +190,7 @@
   (which-key-mode)
   :config
   (setq which-key-idle-delay 0.5
-	which-key-allow-multiple-replacements t))
-
-;; rainbow-delimiters
-(use-package rainbow-delimiters
-  :config
-  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+        which-key-allow-multiple-replacements t))
 
 ;; rainbow-mode
 (use-package rainbow-mode
@@ -207,13 +207,7 @@
   (add-hook 'eshell-mode-hook (lambda () (when (file-remote-p default-directory) (company-mode -1))))
   :config
   (setq company-idle-delay 0
-	company-minimum-prefix-length 1))
-
-(use-package company-box
-  :hook
-  (company-mode . company-box-mode)
-  :config
-  (setq company-frontends '(company-tng-frontend company-box-frontend)))
+        company-minimum-prefix-length 1))
 
 ;; projectile
 (use-package projectile
@@ -223,62 +217,12 @@
   :init
   (projectile-mode +1))
 
-;; tree-sitter
-(use-package tree-sitter
-  :init
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-(use-package tree-sitter-langs)
-
-;; lsp-mode
-(use-package lsp-mode
-  :hook
-  (lsp-mode . lsp-enable-which-key-integration)
-  :config
-  (setq read-process-output-max (* 1024 1024)
-	lsp-idle-delay 0.500
-	lsp-log-io nil))
-(use-package lsp-ui)
-
-;; flycheck
-(use-package flycheck
-  :init
-  (global-flycheck-mode)
-  :config
-  (setq flycheck-emacs-lisp-load-path 'inherit
-	flycheck-check-syntax-automatically '(save mode-enable)))
-
-;; flyspell
-(use-package flyspell
-  :init
-  (add-hook 'yaml-mode-hook #'flyspell-prog-mode)
-  (add-hook 'conf-mode-hook #'flyspell-prog-mode)
-  (add-hook 'prog-mode-hook #'flyspell-prog-mode))
-
-(use-package flyspell-correct
-  :after
-  flyspell
-  :bind
-  (("C-;" . flyspell-correct-wrapper)))
-
-(use-package flyspell-correct-popup
-  :after
-  flyspell-correct)
-
-(use-package flyspell-lazy
-  :init
-  (flyspell-lazy-mode)
-  :config
-  (flyspell-mode 1))
-
 ;; yasnippet
 (use-package yasnippet
   :init
   (yas-global-mode 1)
   :config
   (setq yas-triggers-in-field t))
-
-;; doom-snippets
 (use-package doom-snippets
   :straight
   (doom-snippets
@@ -287,29 +231,6 @@
    :repo "hlissner/doom-snippets")
   :after
   yasnippet)
-
-;; dap-mode
-(use-package dap-mode
-  :hook
-  (dap-mode . dap-ui-mode)
-  :hook
-  (dap-ui-mode . dap-ui-controls-mode)
-  :after
-  lsp
-  :init
-  (setq dap-breakpoints-file (expand-file-name "dap-breakpoints" user-emacs-directory)
-        dap-utils-extension-path (expand-file-name "dap-extension" user-emacs-directory))
-  :config
-  (dap-mode 1))
-
-;; dumb-jump
-(use-package dumb-jump
-  :config
-  (setq dumb-jump-default-project user-emacs-directory
-        dumb-jump-prefer-searcher 'rg
-        dumb-jump-aggressive nil
-        dumb-jump-selector 'popup)
-  (add-hook 'dumb-jump-after-jump-hook #'better-jumper-set-jump))
 
 ;; dired
 (use-package dired
@@ -345,7 +266,6 @@
         ranger-show-literal nil
         ranger-hide-cursor nil))
 
-
 ;; eshell
 (use-package eshell
   :bind
@@ -354,28 +274,28 @@
   :init
   (defun eshell-add-aliases ()
     (dolist (var   '(("q"  "exit")
-		     ("ff" "find-file $1")
-		     ("d"  "dired $1")
-		     ("rg" "rg --color=always $*")
-		     ("l"  "ls -lh $*")
-		     ("ll" "ls -lah $*")
-		     ("git" "git --no-pager $*")
-		     ("gg" "magit-status")
-		     ("cdp" "cd-to-project")
-		     ("clear" "clear-scrollback")))
+                     ("ff" "find-file $1")
+                     ("d"  "dired $1")
+                     ("rg" "rg --color=always $*")
+                     ("l"  "ls -lh $*")
+                     ("ll" "ls -lah $*")
+                     ("git" "git --no-pager $*")
+                     ("gg" "magit-status")
+                     ("cdp" "cd-to-project")
+                     ("clear" "clear-scrollback")))
       (add-to-list 'eshell-command-aliases-list var)))
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases)
   :config
   (setq eshell-prompt-regexp "^.* λ "
-	eshell-prompt-function #'+eshell/prompt)
+        eshell-prompt-function #'+eshell/prompt)
   (defun +eshell/prompt ()
     (let ((base/dir (shrink-path-prompt default-directory)))
       (concat (propertize (car base/dir)
                           'face 'font-lock-comment-face)
-	      (propertize (cdr base/dir)
+              (propertize (cdr base/dir)
                           'face 'font-lock-constant-face)
-	      (propertize " λ" 'face 'eshell-prompt-face)
-	      (propertize " " 'face 'default)))))
+              (propertize " λ" 'face 'eshell-prompt-face)
+              (propertize " " 'face 'default)))))
 (use-package shrink-path)
 (use-package fish-completion
   :hook
@@ -391,7 +311,7 @@
   :straight f
   :config
   (setq vterm-kill-buffer-on-exit t
-	vterm-max-scrollback 5000))
+        vterm-max-scrollback 5000))
 
 ;; ibuffer
 (use-package ibuffer
@@ -410,8 +330,8 @@
         icon)))
   (define-ibuffer-column size
     (:name "Size"
-	   :inline t
-	   :header-mouse-map ibuffer-size-header-map)
+           :inline t
+           :header-mouse-map ibuffer-size-header-map)
     (file-size-human-readable (buffer-size))))
 
 ;; undo-tree
@@ -420,8 +340,8 @@
   (global-undo-tree-mode 1)
   :config
   (setq undo-tree-auto-save-history nil
-	undo-tree-visualizer-timestamps t
-	undo-tree-visualizer-diff t))
+        undo-tree-visualizer-timestamps t
+        undo-tree-visualizer-diff t))
 
 ;; treemacs
 (use-package treemacs
@@ -433,7 +353,6 @@
         treemacs-sorting 'alphabetic-case-insensitive-asc
         treemacs-persist-file (expand-file-name "treemacs-persist" user-emacs-directory)
         treemacs-last-error-persist-file (expand-file-name "treemacs-last-error-persist" user-emacs-directory)))
-
 (use-package treemacs-magit
   :after
   (treemacs magit)
@@ -442,9 +361,6 @@
 (use-package treemacs-projectile
   :after
   (treemacs projectile))
-(use-package lsp-treemacs
-  :after
-  (treemacs lsp))
 
 ;; magit
 (use-package magit
@@ -463,11 +379,9 @@
   :after magit
   :init
   (magit-delta-mode +1))
-
 (use-package git-gutter
   :config
   (global-git-gutter-mode 't))
-
 
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
@@ -516,7 +430,6 @@
 	org-agenda-skip-deadline-if-done t
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
-
 (use-package org-super-agenda
   :config
   (setq org-super-agenda-groups '((:name "Today"
@@ -543,7 +456,6 @@
 					 :tag "classes"
 					 :order 7)))
   (org-super-agenda-mode))
-
 (use-package org-appear
   :config
   (add-hook 'org-mode-hook 'org-appear-mode))
@@ -553,7 +465,6 @@
 (use-package org-fancy-priorities
   :config
   (add-hook 'org-mode-hook 'org-fancy-priorities-mode))
-
 (use-package alert
   :config
   (setq alert-default-style 'libnotify))
@@ -576,7 +487,6 @@
       (cfw:org-create-source "#50fa7b")
       (cfw:ical-create-source "Canvas" "https://canvas.vt.edu/feeds/calendars/user_B7azceel162srPg4Nw9Ax13hcF0aPcJ57bcriQbK.ics" "#ff5555")
       ))))
-
 (use-package calfw-org
   :after
   calfw)
@@ -648,31 +558,23 @@
   (add-hook 'prog-mode-hook 'format-all-ensure-formatter)
   (add-hook 'prog-mode-hook 'format-all-mode))
 
-;; c/c++
-;; requires clangd v9+
-(use-package lsp-mode
+;; eglot
+;; check https://github.com/joaotavora/eglot#connecting-to-a-server
+(use-package eglot
   :init
-  (add-hook 'c-mode-hook 'lsp)
-  (add-hook 'c++-mode-hook 'lsp)
+  (add-hook 'prog-mode-hook 'eglot-ensure)
   :config
-  (setq lsp-clients-clangd-args '("-j=3"
-                                  "--background-index"
-                                  "--clang-tidy"
-                                  "--completion-style=detailed"
-                                  "--header-insertion=never"
-                                  "--header-insertion-decorators=0")))
+  (setq eglot-sync-connect nil))
 
-;; nix
-;; requires nixfmt and rnix-lsp
-(use-package lsp-mode
+;; flymake
+;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
+(use-package flymake
+  :bind
+  ("C-c ! c" . flymake-start)
+  ("C-c ! l" . flymake-show-buffer-diagnostics)
+  ("C-c ! n" . flymake-goto-next-error)
+  ("C-c ! p" . flymake-goto-prev-error)
   :init
-  (add-hook 'nix-mode-hook 'lsp))
-(use-package nix-mode
-  :interpreter
-  ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
-  :mode
-  "\\.nix\\'")
-(use-package nix-update)
-(use-package company-nixos-options)
+  (add-hook 'prog-mode-hook 'flymake-mode))
 
 ;;; init.el ends here
