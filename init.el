@@ -52,7 +52,7 @@
   ;; load secrets
   (setq auth-sources '("~/.authinfo"))
   ;; configure scratch
-  (setq initial-scratch-message (concat ";; Welcome " user-login-name " to Emacs " (format "%s" emacs-major-version) "." (format "%s" emacs-minor-version) "\n" (format ";; *** Emacs loaded in %s with %d garbage collections." (format "%.2f seconds" (float-time (time-subtract after-init-time before-init-time))) gcs-done) "\n"))
+  (setq initial-scratch-message (concat ";; Welcome " user-login-name " to Emacs " (format "%s" emacs-major-version) "." (format "%s" emacs-minor-version) "\n" (format ";; *** Emacs loaded in %s with %d garbage collections." (format "%.2f seconds" (float-time (time-subtract after-init-time before-init-time))) gcs-done) "\n\n"))
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
@@ -292,10 +292,10 @@
     (let ((base/dir (shrink-path-prompt default-directory)))
       (concat (propertize (car base/dir)
                           'face 'font-lock-comment-face)
-              (propertize (cdr base/dir)
+	      (propertize (cdr base/dir)
                           'face 'font-lock-constant-face)
-              (propertize " λ" 'face 'eshell-prompt-face)
-              (propertize " " 'face 'default)))))
+	      (propertize " λ" 'face 'eshell-prompt-face)
+	      (propertize " " 'face 'default)))))
 (use-package shrink-path)
 (use-package fish-completion
   :hook
@@ -390,33 +390,31 @@
   :config
   (setq highlight-indent-guides-method 'bitmap))
 
-;; multiple-cursors
-(use-package multiple-cursors
-  :bind
-  ("C-c c" . mc/edit-lines))
-
 ;; ligatures
 (use-package ligature
   :straight
   (ligature :type git :host github :repo "mickeynp/ligature.el")
   :init
-  (global-prettify-symbols-mode)
+  (global-prettify-symbols-mode +1)
   :config
   ;; Enable all JetBrains Mono ligatures in programming modes
   (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-				       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-				       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-				       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-				       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-				       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-				       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-				       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-				       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-				       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-				       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
-  ;; Enables ligature checks globally in all buffers. You can also do it
-  ;; per mode with `ligature-mode'.
+                                       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+                                       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+                                       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+                                       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+                                       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+                                       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+                                       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+                                       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+                                       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+                                       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
   (global-ligature-mode t))
+
+;; multiple-cursors
+(use-package multiple-cursors
+  :bind
+  ("C-c c" . mc/edit-lines))
 
 ;; org-mode
 (use-package org
@@ -497,22 +495,21 @@
 ;; elcord
 (use-package elcord
   :init
-  (elcord-mode))
+  (elcord-mode)
+  :config
+  (setq elcord-use-major-mode-as-main-icon t))
 
 ;; notmuch
 (use-package notmuch
   :bind
   ("C-x C-m" . notmuch-hello)
   :init
-  (setq +notmuch-mail-folder "~/mail/")
+  (setq +notmuch-mail-folder "~/.mail/")
   (setq +notmuch-sync-backend "notmuch new")
   (setq-default notmuch-search-oldest-first nil)
   :config
   (setq notmuch-fcc-dirs nil
         message-kill-buffer-on-exit t
-        message-send-mail-function 'message-send-mail-with-sendmail
-        send-mail-function 'sendmail-send-it
-        ;; sendmail-program "/usr/local/bin/msmtp"
         notmuch-search-result-format
         '(("date" . "%12s ")
           ("count" . "%-7s ")
@@ -527,6 +524,10 @@
           (:name "sent"    :query "tag:sent"                :key "s")
           (:name "drafts"  :query "tag:draft"               :key "d"))
         notmuch-archive-tags '("-inbox" "-unread"))
+  (setq message-send-mail-function 'message-smtpmail-send-it
+	smtpmail-smtp-server "smtp.gmail.com"
+	smtpmail-stream-type 'ssl
+	smtpmail-smtp-service 465)
   (setq notmuch-show-log nil
         notmuch-hello-sections `(notmuch-hello-insert-saved-searches
                                  notmuch-hello-insert-alltags)
@@ -576,5 +577,14 @@
   ("C-c ! p" . flymake-goto-prev-error)
   :init
   (add-hook 'prog-mode-hook 'flymake-mode))
+
+;; nix-mode
+(use-package nix-mode
+  :interpreter
+  ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
+  :mode
+  "\\.nix\\'")
+(use-package nix-update)
+(use-package company-nixos-options)
 
 ;;; init.el ends here
