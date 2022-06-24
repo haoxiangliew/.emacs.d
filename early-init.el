@@ -10,9 +10,7 @@
       gc-cons-percentage 0.6)
 
 ;; disable deferred compilation and fix nix native-comp
-(setq comp-deferred-compilation nil
-      native-comp-bootstrap-deny-list '("seq.*")
-      native-comp-deferred-compilation-deny-list '("seq.*"))
+(setq comp-deferred-compilation nil)
 
 ;; bootstrap straight and use-package
 (setq package-enable-at-startup nil
@@ -31,7 +29,8 @@
 (setq-default cursor-type 'bar)
 
 ;; add padding to compensate for rounded corners
-(setq-default left-margin-width 1 right-margin-width 1)
-(set-window-buffer nil (current-buffer))
+(add-to-list 'default-frame-alist '(internal-border-width . 7))
+;; (setq-default left-margin-width 1 right-margin-width 1)
+;; (set-window-buffer nil (current-buffer))
 
 ;;; early-init.el ends here

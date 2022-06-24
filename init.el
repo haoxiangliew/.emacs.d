@@ -5,8 +5,6 @@
 
 ;;; Dependencies:
 ;; git
-;; ripgrep
-;; fd
 ;; gitAndTools.delta
 
 ;;; Code:
@@ -24,12 +22,13 @@
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
-(straight-use-package 'use-package)
 (require 'straight)
-(require 'straight-x)
-(setq straight-use-package-by-default t
-      straight-vc-git-default-clone-depth 1
-      straight-recipes-gnu-elpa-use-mirror t)
+(straight-use-package 'use-package)
+(use-package straight
+  :config
+  (setq straight-use-package-by-default t
+	straight-vc-git-default-clone-depth 1
+	straight-recipes-gnu-elpa-use-mirror t))
 
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
@@ -58,8 +57,8 @@
   (setq user-full-name "Hao Xiang Liew"
         user-mail-address "haoxiangliew@gmail.com")
   ;; font
-  (add-to-list 'default-frame-alist '(font . "JetBrains Mono-10.5"))
-  (set-face-attribute 'default t :font "JetBrains Mono-10.5")
+  (add-to-list 'default-frame-alist '(font . "Cascadia Code-10.5:weight=normal"))
+  (set-face-attribute 'default t :font "Cascadia Code-10.5:weight=normal")
   ;; highlight and match parentheses
   (show-paren-mode 1)
   (setq show-paren-delay 0)
@@ -101,6 +100,8 @@
   ;; prevent emacs from buffering
   (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
   (setq pgtk-wait-for-event-timeout 0.001)
+  ;; disable flashing cursor
+  (blink-cursor-mode 0)
   ;; disable bidirectional text scanning
   (setq-default bidi-display-reordering 'left-to-right
                 bidi-paragraph-direction 'left-to-right))
@@ -129,7 +130,6 @@
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-  (add-hook 'dashboard-mode-hook 'solaire-mode)
   (solaire-global-mode +1))
 
 ;; doom-modeline
@@ -208,6 +208,9 @@
   :config
   (setq company-idle-delay 0
         company-minimum-prefix-length 1))
+(use-package company-box
+  :hook
+  (company-mode . company-box-mode))
 
 ;; projectile
 (use-package projectile
@@ -388,7 +391,9 @@
   :init
   (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
   :config
-  (setq highlight-indent-guides-method 'bitmap))
+  (setq highlight-indent-guides-method 'character
+	highlight-indent-guides-responsive 'top
+	highlight-indent-guides-delay 0))
 
 ;; ligatures
 (use-package ligature
@@ -397,18 +402,25 @@
   :init
   (global-prettify-symbols-mode +1)
   :config
-  ;; Enable all JetBrains Mono ligatures in programming modes
-  (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-                                       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-                                       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-                                       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-                                       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-                                       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-                                       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-                                       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-                                       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-                                       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-                                       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+  ;; Enable the "www" ligature in every possible major mode
+  (ligature-set-ligatures 't '("www"))
+  ;; Enable traditional ligature support in eww-mode, if the
+  ;; `variable-pitch' face supports it
+  (ligature-set-ligatures 'eww-mode '("ff" "fi" "ffi"))
+  ;; Enable all Cascadia Code ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode '("|||>" "<|||" "<==>" "<!--" "####" "~~>" "***" "||=" "||>"
+                                       ":::" "::=" "=:=" "===" "==>" "=!=" "=>>" "=<<" "=/=" "!=="
+                                       "!!." ">=>" ">>=" ">>>" ">>-" ">->" "->>" "-->" "---" "-<<"
+                                       "<~~" "<~>" "<*>" "<||" "<|>" "<$>" "<==" "<=>" "<=<" "<->"
+                                       "<--" "<-<" "<<=" "<<-" "<<<" "<+>" "</>" "###" "#_(" "..<"
+                                       "..." "+++" "/==" "///" "_|_" "www" "&&" "^=" "~~" "~@" "~="
+                                       "~>" "~-" "**" "*>" "*/" "||" "|}" "|]" "|=" "|>" "|-" "{|"
+                                       "[|" "]#" "::" ":=" ":>" ":<" "$>" "==" "=>" "!=" "!!" ">:"
+                                       ">=" ">>" ">-" "-~" "-|" "->" "--" "-<" "<~" "<*" "<|" "<:"
+                                       "<$" "<=" "<>" "<-" "<<" "<+" "</" "#{" "#[" "#:" "#=" "#!"
+                                       "##" "#(" "#?" "#_" "%%" ".=" ".-" ".." ".?" "+>" "++" "?:"
+                                       "?=" "?." "??" ";;" "/*" "/=" "/>" "//" "__" "~~" "(*" "*)"
+                                       "\\\\" "://"))
   (global-ligature-mode t))
 
 ;; multiple-cursors
@@ -558,6 +570,24 @@
   :config
   (add-hook 'prog-mode-hook 'format-all-ensure-formatter)
   (add-hook 'prog-mode-hook 'format-all-mode))
+
+;; github copilot
+(use-package copilot
+  :straight
+  (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :init
+  (add-hook 'prog-mode-hook 'copilot-mode)
+  :config
+  (defun copilot-tab ()
+    (interactive)
+    (or (copilot-accept-completion)
+        (company-indent-or-complete-common nil)))
+  (with-eval-after-load 'company
+    (delq 'company-preview-if-just-one-frontend company-frontends)
+    (define-key company-mode-map (kbd "<tab>") 'copilot-tab)
+    (define-key company-mode-map (kbd "TAB") 'copilot-tab)
+    (define-key company-active-map (kbd "<tab>") 'copilot-tab)
+    (define-key company-active-map (kbd "TAB") 'copilot-tab)))
 
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
