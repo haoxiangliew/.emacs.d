@@ -314,6 +314,7 @@
   :straight f
   :config
   (add-to-list 'vterm-eval-cmds '("magit-status" magit-status))
+  (add-to-list 'vterm-eval-cmds '("magit-clone" magit-clone))
   (setq vterm-kill-buffer-on-exit t
         vterm-max-scrollback 5000))
 
@@ -383,9 +384,9 @@
   :after magit
   :init
   (magit-delta-mode +1))
-(use-package git-gutter
-  :config
-  (global-git-gutter-mode 't))
+;; (use-package git-gutter
+;;   :config
+;;   (global-git-gutter-mode 't))
 
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
@@ -520,7 +521,29 @@
   (setq +notmuch-mail-folder "~/.mail/")
   (setq +notmuch-sync-backend "notmuch new")
   (setq-default notmuch-search-oldest-first nil)
+  (defun set-smtp-server-message-send-and-exit ()
+    "Set SMTP server from list of multiple ones and send mail."
+    (interactive)
+    (message-remove-header "X-Message-SMTP-Method") ;; Remove. We always determine it by the From field
+    (let ((sender
+           (message-fetch-field "From")))
+      (loop for (addr server port usr) in smtp-accounts
+            when (string-match addr sender)
+            do (message-add-header (format "X-Message-SMTP-Method: smtp %s %d %s" server port usr)))
+      (let ((xmess
+             (message-fetch-field "X-Message-SMTP-Method")))
+        (if xmess
+            (progn
+              (message (format "Sending message using '%s' with config '%s'" sender xmess))
+              (message-send-and-exit))
+          (error "Could not find SMTP Server for this Sender address: %s. You might want to correct it or add it to the SMTP Server list 'smtp-accounts'" sender)))))
+  (defun local-gnus-compose-mode()
+    "Keys for gnus compose mode."
+    (local-set-key (kbd "C-c C-c") 'set-smtp-server-message-send-and-exit))
+  (add-hook 'gnus-message-setup-hook 'local-gnus-compose-mode)
   :config
+  (setq smtp-accounts '(("haoxiangliew@gmail.com" "smtp.gmail.com" 465 "haoxiangliew@gmail.com")
+			("haoxiangliew@vt.edu" "smtp.gmail.com" 465 "haoxiangliew@vt.edu")))
   (setq notmuch-fcc-dirs nil
         message-kill-buffer-on-exit t
         notmuch-search-result-format
@@ -572,6 +595,12 @@
   (add-hook 'prog-mode-hook 'format-all-ensure-formatter)
   (add-hook 'prog-mode-hook 'format-all-mode))
 
+;; tree-sitter
+(use-package tree-sitter
+  :init
+  (global-tree-sitter-mode))
+(use-package tree-sitter-langs)
+
 ;; github copilot
 (use-package copilot
   :straight
@@ -585,10 +614,10 @@
         (company-indent-or-complete-common nil)))
   (with-eval-after-load 'company
     (delq 'company-preview-if-just-one-frontend company-frontends)
-    (define-key company-mode-map (kbd "<tab>") 'copilot-tab)
-    (define-key company-mode-map (kbd "TAB") 'copilot-tab)
-    (define-key company-active-map (kbd "<tab>") 'copilot-tab)
-    (define-key company-active-map (kbd "TAB") 'copilot-tab)))
+    (define-key company-mode-map (kbd "M-<tab>") 'copilot-tab)
+    (define-key company-mode-map (kbd "M-TAB") 'copilot-tab)
+    (define-key company-active-map (kbd "M-<tab>") 'copilot-tab)
+    (define-key company-active-map (kbd "M-TAB") 'copilot-tab)))
 
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server

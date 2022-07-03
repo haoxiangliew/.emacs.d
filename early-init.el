@@ -5,10 +5,6 @@
 
 ;;; Code:
 
-;; adjust gc until gcmh-mode
-(setq gc-cons-threshold most-positive-fixnum
-      gc-cons-percentage 0.6)
-
 ;; disable deferred compilation and fix nix native-comp
 (setq comp-deferred-compilation nil)
 
