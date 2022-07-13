@@ -199,26 +199,47 @@
   (add-hook 'prog-mode-hook 'rainbow-mode)
   (add-hook 'rainbow-mode-hook (hl-line-mode (if rainbow-mode -1 +1))))
 
-;; company
-(use-package company
-  :init
-  (add-hook 'after-init-hook 'global-company-mode)
-  (add-hook 'global-company-mode-hook #'company-tng-mode)
-  (add-hook 'eshell-mode-hook (lambda () (when (file-remote-p default-directory) (company-mode -1))))
-  :config
-  (setq company-idle-delay 0
-        company-minimum-prefix-length 1))
-(use-package company-box
-  :hook
-  (company-mode . company-box-mode))
-
-;; projectile
-(use-package projectile
+;; corfu
+(use-package corfu
+  :straight (corfu :files (:defaults "extensions/*")
+		   :includes (corfu-info))
+  :custom
+  (corfu-cycle t)
+  (corfu-preselect-first nil)
   :bind
-  (:map projectile-mode-map
-        ("C-c p" . projectile-command-map))
+  (:map corfu-map
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
   :init
-  (projectile-mode +1))
+  (setq completion-cycle-threshold 3)
+  (setq read-extended-command-predicate
+	#'command-completion-default-include-p)
+  (setq tab-always-indent 'complete)
+  (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
+    (unless (or (bound-and-true-p mct--active)
+		(bound-and-true-p vertico--input))
+      (corfu-mode 1)))
+  (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+  (global-corfu-mode)
+  :config
+  (setq corfu-auto t
+        corfu-auto-delay 0
+        corfu-auto-prefix 0
+        completion-styles '(basic)))
+(use-package kind-icon
+  :after
+  corfu
+  :custom
+  (kind-icon-default-face 'corfu-default)
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+(use-package corfu-doc
+  :init
+  (add-hook 'corfu-mode-hook #'corfu-doc-mode))
+(use-package pcmpl-args)
 
 ;; yasnippet
 (use-package yasnippet
@@ -269,6 +290,16 @@
         ranger-show-literal nil
         ranger-hide-cursor nil))
 
+;; pdf-tools
+(use-package pdf-tools
+  :mode ("\\.pdf\\'" . pdf-view-mode)
+  :magic ("%PDF" . pdf-view-mode)
+  :config
+  (pdf-tools-install-noverify)
+  (setq-default pdf-view-display-size 'fit-page)
+  (setq pdf-view-use-scaling t
+        pdf-view-use-imagemagick nil))
+
 ;; eshell
 (use-package eshell
   :bind
@@ -300,11 +331,6 @@
 	      (propertize " λ" 'face 'eshell-prompt-face)
 	      (propertize " " 'face 'default)))))
 (use-package shrink-path)
-(use-package fish-completion
-  :hook
-  (eshell-mode . fish-completion-mode)
-  :init
-  (setq fish-completion-fallback-on-bash-p t))
 
 ;; vterm
 (use-package vterm
@@ -339,14 +365,14 @@
            :header-mouse-map ibuffer-size-header-map)
     (file-size-human-readable (buffer-size))))
 
-;; undo-tree
-(use-package undo-tree
+;; undo-fu
+(use-package undo-fu)
+(use-package undo-fu-session
   :init
-  (global-undo-tree-mode 1)
-  :config
-  (setq undo-tree-auto-save-history nil
-        undo-tree-visualizer-timestamps t
-        undo-tree-visualizer-diff t))
+  (global-undo-fu-session-mode))
+(use-package vundo
+  :bind
+  ("C-x u" . vundo))
 
 ;; treemacs
 (use-package treemacs
@@ -363,9 +389,6 @@
   (treemacs magit)
   :config
   (setq treemacs-git-mode 'simple))
-(use-package treemacs-projectile
-  :after
-  (treemacs projectile))
 
 ;; magit
 (use-package magit
@@ -384,9 +407,9 @@
   :after magit
   :init
   (magit-delta-mode +1))
-;; (use-package git-gutter
-;;   :config
-;;   (global-git-gutter-mode 't))
+(use-package git-gutter
+  :config
+  (global-git-gutter-mode 't))
 
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
@@ -428,7 +451,8 @@
 ;; multiple-cursors
 (use-package multiple-cursors
   :bind
-  ("C-c c" . mc/edit-lines))
+  ("C-c c" . mc/edit-lines)
+  ("C-c <mouse-1>" . mc/add-cursor-on-click))
 
 ;; org-mode
 (use-package org
@@ -592,7 +616,7 @@
 ;; check https://github.com/lassik/emacs-format-all-the-code#supported-languages
 (use-package format-all
   :config
-  (add-hook 'prog-mode-hook 'format-all-ensure-formatter)
+  (add-hook 'format-all-mode-hook 'format-all-ensure-formatter)
   (add-hook 'prog-mode-hook 'format-all-mode))
 
 ;; tree-sitter
@@ -611,13 +635,9 @@
   (defun copilot-tab ()
     (interactive)
     (or (copilot-accept-completion)
-        (company-indent-or-complete-common nil)))
-  (with-eval-after-load 'company
-    (delq 'company-preview-if-just-one-frontend company-frontends)
-    (define-key company-mode-map (kbd "M-<tab>") 'copilot-tab)
-    (define-key company-mode-map (kbd "M-TAB") 'copilot-tab)
-    (define-key company-active-map (kbd "M-<tab>") 'copilot-tab)
-    (define-key company-active-map (kbd "M-TAB") 'copilot-tab)))
+	(indent-for-tab-command)))
+  (with-eval-after-load 'copilot
+    (define-key copilot-mode-map (kbd "M-<tab>") #'copilot-tab)))
 
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
@@ -644,7 +664,17 @@
   ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
   :mode
   "\\.nix\\'")
-(use-package nix-update)
-(use-package company-nixos-options)
+
+;; platformio-mode
+(use-package platformio-mode
+  :mode
+  "\\.pio\\'"
+  :init
+  (add-hook 'c++-mode-hook (lambda () (platformio-conditionally-enable))))
+
+;; udev-mode
+(use-package udev-mode
+  :mode
+  "\\.rules\\'")
 
 ;;; init.el ends here
