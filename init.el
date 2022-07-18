@@ -126,20 +126,41 @@
 	tramp-use-ssh-controlmaster-options nil))
 
 ;; dracula-theme
-(use-package doom-themes
-  :config
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
+;; (use-package doom-themes
+;;   :config
+;;   (setq doom-themes-enable-bold t
+;;         doom-themes-enable-italic t)
+;;   (if (daemonp)
+;;       (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
+;;     (load-theme 'doom-dracula t))
+;;   (doom-themes-visual-bell-config)
+;;   (setq doom-themes-treemacs-theme "doom-colors")
+;;   (doom-themes-treemacs-config)
+;;   (doom-themes-org-config))
+
+;; modus-themes
+(use-package modus-themes
+  :bind
+  ;; ("<f5>" . (lambda () (interactive) (modus-themes-toggle)(powerline-reset)))
+  ("<f5>" . modus-themes-toggle)
+  :init
+  (setq modus-themes-italic-constructs t
+	modus-themes-bold-constructs nil
+	modus-themes-region '(bg-only no-extend))
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
-    (load-theme 'doom-dracula t))
-  (doom-themes-visual-bell-config)
-  (setq doom-themes-treemacs-theme "doom-colors")
-  (doom-themes-treemacs-config)
-  (doom-themes-org-config))
+      (add-hook 'after-make-frame-functions
+		(lambda (frame)
+		  (with-selected-frame frame
+		    (modus-themes-load-themes))))
+    (modus-themes-load-themes))
+  :config
+  (modus-themes-load-vivendi))
+
+;; solaire-mode
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+  (add-to-list 'solaire-mode-themes-to-face-swap "^modus-")
   (solaire-global-mode +1))
 
 ;; doom-modeline
@@ -654,19 +675,19 @@
   :init
   (add-hook 'prog-mode-hook 'flymake-mode))
 
+;; arduino-mode
+(use-package arduino-mode
+  :mode
+  "\\.ino\\'"
+  :config
+  (setq arduino-tab-width 4))
+
 ;; nix-mode
 (use-package nix-mode
   :interpreter
   ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
   :mode
   "\\.nix\\'")
-
-;; platformio-mode
-(use-package platformio-mode
-  :mode
-  "\\.pio\\'"
-  :init
-  (add-hook 'c++-mode-hook (lambda () (platformio-conditionally-enable))))
 
 ;; udev-mode
 (use-package udev-mode
