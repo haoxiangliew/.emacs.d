@@ -115,6 +115,16 @@
 	gcmh-idle-delay-factor 10
 	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
 
+;; tramp
+(use-package tramp
+  :config
+  (add-to-list 'tramp-connection-properties (list (regexp-quote "/ssh:haoxiangliew:")
+						  "direct-async-processs" t))
+  (setq tramp-verbose 0
+	tramp-auto-save-directory (expand-file-name "tramp/autosave" user-emacs-directory)
+	tramp-chunksize 2000
+	tramp-use-ssh-controlmaster-options nil))
+
 ;; dracula-theme
 (use-package doom-themes
   :config
@@ -256,39 +266,51 @@
   :after
   yasnippet)
 
-;; dired
-(use-package dired
-  :straight (:type built-in)
+;; dirvish
+(use-package dirvish
+  :straight (dirvish :files (:defaults "extensions/*")
+		     :includes (dirvish-menu
+				dirvish-yank
+				dirvish-peek
+				dirvish-vc
+				dirvish-extras
+				dirvish-icons
+				dirvish-side))
+  :bind
+  (("C-<tab>" . dirvish-side)
+   :map dired-mode-map
+   ("h" . dired-up-directory)
+   ("j" . dired-next-line)
+   ("k" . dired-previous-line)
+   ("l" . dired-find-file)
+   ("i" . wdired-change-to-wdired-mode)
+   ("." . dired-omit-mode)
+   ("b"   . dirvish-bookmark-jump)
+   ("f"   . dirvish-file-info-menu)
+   ("y"   . dirvish-yank-menu)
+   ("N"   . dirvish-narrow)
+   ("^"   . dirvish-history-last)
+   ("s"   . dirvish-quicksort)
+   ("?"   . dirvish-dispatch)
+   ("TAB" . dirvish-subtree-toggle)
+   ("SPC" . dirvish-history-jump)
+   ("M-n" . dirvish-history-go-forward)
+   ("M-p" . dirvish-history-go-backward)
+   ("M-l" . dirvish-ls-switches-menu)
+   ("M-m" . dirvish-mark-menu)
+   ("M-f" . dirvish-toggle-fullscreen)
+   ("M-s" . dirvish-setup-menu)
+   ("M-e" . dirvish-emerge-menu)
+   ("M-j" . dirvish-fd-jump))
   :init
-  (setq dired-auto-revert-buffer t
-        dired-dwim-target t
-        dired-hide-details-hide-symlink-targets nil
-        dired-recursive-copies  'always
-        dired-recursive-deletes 'top
-        dired-create-destination-dirs 'ask
-        image-dired-dir (expand-file-name "image-dired/" user-emacs-directory)
-        image-dired-db-file (concat image-dired-dir "db.el")
-        image-dired-gallery-dir (concat image-dired-dir "gallery/")
-        image-dired-temp-image-file (concat image-dired-dir "temp-image")
-        image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
-        image-dired-thumb-size 150))
-(use-package all-the-icons-dired
-  :hook
-  (dired-mode . all-the-icons-dired-mode))
-
-;; ranger
-(use-package ranger
-  :after
-  dired
+  (dirvish-override-dired-mode)
+  :custom
+  (dirvish-header-line-format '(:left (path) :right (free-space)))
+  (dirvish-mode-line-format
+   '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
+  (dirvish-attributes '(all-the-icons file-size collapse subtree-state vc-state git-msg))
   :config
-  (unless (file-directory-p image-dired-dir)
-    (make-directory image-dired-dir))
-  (setq ranger-cleanup-on-disable t
-        ranger-excluded-extensions '("mkv" "iso" "mp4")
-        ranger-deer-show-details t
-        ranger-max-preview-size 10
-        ranger-show-literal nil
-        ranger-hide-cursor nil))
+  (dirvish-peek-mode))
 
 ;; pdf-tools
 (use-package pdf-tools
@@ -350,20 +372,10 @@
   ("C-x C-b" . ibuffer)
   :config
   (setq ibuffer-show-empty-filter-groups nil
-        ibuffer-filter-group-name-face '(:inherit (success bold)))
-  (define-ibuffer-column icon (:name "  ")
-    (let ((icon (if (and (buffer-file-name)
-                         (all-the-icons-auto-mode-match?))
-                    (all-the-icons-icon-for-file (file-name-nondirectory (buffer-file-name)) :v-adjust -0.05)
-                  (all-the-icons-icon-for-mode major-mode :v-adjust -0.05))))
-      (if (symbolp icon)
-          (setq icon (all-the-icons-faicon "file-o" :face 'all-the-icons-dsilver :height 0.8 :v-adjust 0.0))
-        icon)))
-  (define-ibuffer-column size
-    (:name "Size"
-           :inline t
-           :header-mouse-map ibuffer-size-header-map)
-    (file-size-human-readable (buffer-size))))
+        ibuffer-filter-group-name-face '(:inherit (success bold))))
+(use-package all-the-icons-ibuffer
+  :hook
+  (ibuffer-mode . all-the-icons-ibuffer-mode))
 
 ;; undo-fu
 (use-package undo-fu)
@@ -373,22 +385,6 @@
 (use-package vundo
   :bind
   ("C-x u" . vundo))
-
-;; treemacs
-(use-package treemacs
-  :bind
-  ("C-<tab>" . treemacs)
-  :init
-  (setq treemacs-follow-after-init t
-        treemacs-is-never-other-window t
-        treemacs-sorting 'alphabetic-case-insensitive-asc
-        treemacs-persist-file (expand-file-name "treemacs-persist" user-emacs-directory)
-        treemacs-last-error-persist-file (expand-file-name "treemacs-last-error-persist" user-emacs-directory)))
-(use-package treemacs-magit
-  :after
-  (treemacs magit)
-  :config
-  (setq treemacs-git-mode 'simple))
 
 ;; magit
 (use-package magit
