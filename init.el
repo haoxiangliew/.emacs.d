@@ -9,6 +9,11 @@
 ;;; Code:
 
 ;; bootstrap straight and use-package
+(setq straight-check-for-modifications 'live-with-find
+      straight-cache-autoloads t
+      straight-use-package-by-default t
+      straight-vc-git-default-clone-depth 1
+      straight-recipes-gnu-elpa-use-mirror t)
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -23,11 +28,6 @@
   (load bootstrap-file nil 'nomessage))
 (require 'straight)
 (straight-use-package 'use-package)
-(use-package straight
-  :config
-  (setq straight-use-package-by-default t
-	straight-vc-git-default-clone-depth 1
-	straight-recipes-gnu-elpa-use-mirror t))
 
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")

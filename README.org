@@ -2,4 +2,14 @@
 This is my personal Emacs configuration
 
 * Requirements
-- Emacs 28+ (native-comp recommended)
+- A recent version of Emacs (28+)
+
+* Code
+#+BEGIN_SRC shell
+./init.el
+#+END_SRC
+- Contains my primary configuration
+#+BEGIN_SRC shell
+./editor-init.el
+#+END_SRC
+- Contains my $EDITOR configuration
