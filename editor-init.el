@@ -11,9 +11,13 @@
 
 ;;; Code:
 
-;; optimize gc without gcmh
-(setq gc-cons-threshold most-positive-fixnum
-      gc-cons-percentage 0.6)
+;; gcmh
+(add-to-list 'load-path "~/.emacs.d/straight/build/gcmh/")
+(require 'gcmh)
+(setq gcmh-idle-delay 'auto
+      gcmh-idle-delay-factor 10
+      gcmh-high-cons-threshold (* 16 1024 1024)) ; 16mb
+(gcmh-mode 1)
 
 ;; disable deferred compilation
 (setq comp-deferred-compilation nil)
@@ -56,7 +60,7 @@
 ;; configure scratch
 (setq initial-scratch-message (concat
 			       ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
-			       ";; [INFO] Emacs loaded 0 packages in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
+			       ";; [INFO] Emacs loaded 1 package in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
 ;; font
 (add-to-list 'default-frame-alist '(font . "Monospace-10.5:weight=normal"))
 (set-face-attribute 'default nil :font "Monospace-10.5:weight=normal")

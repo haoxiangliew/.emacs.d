@@ -29,6 +29,15 @@
 (require 'straight)
 (straight-use-package 'use-package)
 
+;; gcmh
+(use-package gcmh
+  :init
+  (gcmh-mode 1)
+  :config
+  (setq gcmh-idle-delay 'auto
+	gcmh-idle-delay-factor 10
+	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
+
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
       url-history-file (expand-file-name "url/history" user-emacs-directory))
@@ -140,15 +149,6 @@
 	tramp-auto-save-directory (expand-file-name "tramp/autosave" user-emacs-directory)
 	tramp-chunksize 2000
 	tramp-use-ssh-controlmaster-options nil))
-
-;; gcmh
-(use-package gcmh
-  :init
-  (gcmh-mode 1)
-  :config
-  (setq gcmh-idle-delay 'auto
-	gcmh-idle-delay-factor 10
-	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
 
 ;; dracula-theme
 (use-package doom-themes
