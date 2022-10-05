@@ -353,6 +353,7 @@
 			   :host github
 			   :repo "hlissner/doom-snippets"
 			   :files ("*.el" "*"))
+  :defer
   :after
   yasnippet)
 
@@ -629,11 +630,20 @@
 	org-agenda-skip-deadline-if-done t
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
-(use-package ox-gfm)
+(use-package ox-gfm
+  :defer
+  :after
+  org)
 (use-package ox-pandoc
+  :defer
+  :after
+  org
   :config
   (add-to-list 'org-export-backends 'pandoc))
 (use-package org-super-agenda
+  :defer
+  :after
+  org
   :init
   (org-super-agenda-mode)
   :config
@@ -661,18 +671,30 @@
 					 :tag "classes"
 					 :order 7))))
 (use-package org-download
+  :defer
+  :after
+  org
   :config
   (setq org-download-method 'directory
 	org-download-image-dir "images"))
 (use-package org-modern
+  :defer
+  :after
+  org
   :init
   (global-org-modern-mode)
   :config
   (setq org-modern-label-border nil))
 (use-package alert
+  :defer
+  :after
+  org
   :config
   (setq alert-default-style 'libnotify))
 (use-package org-wild-notifier
+  :defer
+  :after
+  org
   :init
   (org-wild-notifier-mode))
 
