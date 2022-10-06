@@ -902,7 +902,11 @@
   :mode
   "\\.v\\'"
   :init
-  (add-to-list 'eglot-server-programs '(verilog-mode "svls")))
+  (add-to-list 'eglot-server-programs '(verilog-mode "verible-verilog-ls"))
+  (push '(verible-verilog-format . ("verible-verilog-format"
+				    filepath))
+	apheleia-formatters)
+  (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format)))
 
 ;; yaml-mode
 (use-package yaml-mode

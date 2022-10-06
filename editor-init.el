@@ -60,7 +60,7 @@
 ;; configure scratch
 (setq initial-scratch-message (concat
 			       ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
-			       ";; [INFO] Emacs loaded 1 package in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
+			       ";; [INFO] Emacs loaded gcmh in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
 ;; font
 (add-to-list 'default-frame-alist '(font . "Monospace-10.5:weight=normal"))
 (set-face-attribute 'default nil :font "Monospace-10.5:weight=normal")
