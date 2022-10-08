@@ -1,19 +1,25 @@
-- [Requirements](#org3b0b499)
-- [Code](#org892884c)
+- [[.emacs.d](https://git.sr.ht/~haoxiangliew/.emacs.d)](#orgfe95062)
+  - [Requirements](#orgb4120db)
+  - [Code](#org07bf488)
+
+
+<a id="orgfe95062"></a>
+
+# [.emacs.d](https://git.sr.ht/~haoxiangliew/.emacs.d)
 
 This is my personal Emacs configuration
 
 
-<a id="org3b0b499"></a>
+<a id="orgb4120db"></a>
 
-# Requirements
+## Requirements
 
 -   A recent version of Emacs (28+)
 
 
-<a id="org892884c"></a>
+<a id="org07bf488"></a>
 
-# Code
+## Code
 
 ```shell
 ./init.el

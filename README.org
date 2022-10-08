@@ -1,10 +1,10 @@
-#+TITLE: haoxiangliew's Emacs configuration
+* [[https://git.sr.ht/~haoxiangliew/.emacs.d][.emacs.d]]
 This is my personal Emacs configuration
 
-* Requirements
+** Requirements
 - A recent version of Emacs (28+)
 
-* Code
+** Code
 #+BEGIN_SRC shell
 ./init.el
 #+END_SRC
