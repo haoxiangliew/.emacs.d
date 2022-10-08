@@ -2,6 +2,9 @@
 #+AUTHOR: Hao Xiang Liew
 
 * [[https://git.sr.ht/~haoxiangliew/.emacs.d][.emacs.d]]
+
+[![builds.sr.ht status](https://builds.sr.ht/~haoxiangliew/.emacs.d/commits/master/.build.yml.svg)](https://builds.sr.ht/~haoxiangliew/.emacs.d/commits/master/.build.yml?)
+
 This is my personal Emacs configuration
 
 ** Requirements
