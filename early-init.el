@@ -6,7 +6,8 @@
 ;;; Code:
 
 ;; disable deferred compilation
-(setq comp-deferred-compilation nil)
+(setq comp-deferred-compilation nil
+      native-comp-deferred-compilation nil)
 
 ;; bootstrap straight and use-package
 (setq package-enable-at-startup nil

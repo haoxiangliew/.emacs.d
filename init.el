@@ -10,6 +10,7 @@
 
 ;; bootstrap straight and use-package
 (setq straight-check-for-modifications 'live-with-find
+      straight--native-comp-available t
       straight-cache-autoloads t
       straight-use-package-by-default t
       straight-vc-git-default-clone-depth 1

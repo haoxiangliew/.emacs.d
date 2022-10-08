@@ -1,0 +1,20 @@
+image: nixos/unstable
+packages:
+  - nixos.git
+secrets:
+  - cc8ebb81-d377-441a-bab6-08e95f4b8ea5
+sources:
+  - https://git.sr.ht/~haoxiangliew/.emacs.d
+tasks:
+  - validate-gh-fingerprint-and-configure-ssh: |
+      tmp_dir=$(mktemp -d -p $HOME)
+      ssh-keyscan -t rsa github.com > $tmp_dir/github_host
+      ssh-keygen -lf $tmp_dir/github_host > $tmp_dir/github_fingerprint
+      grep -R "nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8" $tmp_dir/github_fingerprint
+      cat $tmp_dir/github_host >> ~/.ssh/known_hosts
+      rm -rf $tmp_dir
+      echo -e "Host github.com\n    IdentityFile ~/.ssh/id_rsa\n    IdentitiesOnly yes\n    BatchMode yes\n" >> ~/.ssh/config
+  - mirror-to-github: |
+      cd ~/.emacs.d
+      git remote add github git@github.com:haoxiangliew/.emacs.d.git
+      git push --mirror github
