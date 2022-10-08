@@ -1,26 +1,24 @@
-- [[.emacs.d](https://git.sr.ht/~haoxiangliew/.emacs.d)](#org9461b32)
-  - [Requirements](#org691f454)
-  - [Code](#org67cdf02)
+- [[.emacs.d](https://git.sr.ht/~haoxiangliew/.emacs.d)](#orgb094d5f)
+  - [Requirements](#orgfafb020)
+  - [Code](#org1e6a8d4)
 
 
 
-<a id="org9461b32"></a>
+<a id="orgb094d5f"></a>
 
 # [.emacs.d](https://git.sr.ht/~haoxiangliew/.emacs.d)
-
-[\![builds.sr.ht status](![img](https://builds.sr.ht/~haoxiangliew/.emacs.d/commits/master/.build.yml.svg))](<https://builds.sr.ht/~haoxiangliew/.emacs.d/commits/master/.build.yml>?)
 
 This is my personal Emacs configuration
 
 
-<a id="org691f454"></a>
+<a id="orgfafb020"></a>
 
 ## Requirements
 
 -   A recent version of Emacs (28+)
 
 
-<a id="org67cdf02"></a>
+<a id="org1e6a8d4"></a>
 
 ## Code
 
