@@ -1,3 +1,6 @@
+#+TITLE: .emacs.d
+#+AUTHOR: Hao Xiang Liew
+
 * [[https://git.sr.ht/~haoxiangliew/.emacs.d][.emacs.d]]
 This is my personal Emacs configuration
 

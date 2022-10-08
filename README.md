@@ -1,23 +1,24 @@
-- [[.emacs.d](https://git.sr.ht/~haoxiangliew/.emacs.d)](#orgfe95062)
-  - [Requirements](#orgb4120db)
-  - [Code](#org07bf488)
+- [[.emacs.d](https://git.sr.ht/~haoxiangliew/.emacs.d)](#orge881d41)
+  - [Requirements](#org62bf1d1)
+  - [Code](#orgaf6af89)
 
 
-<a id="orgfe95062"></a>
+
+<a id="orge881d41"></a>
 
 # [.emacs.d](https://git.sr.ht/~haoxiangliew/.emacs.d)
 
 This is my personal Emacs configuration
 
 
-<a id="orgb4120db"></a>
+<a id="org62bf1d1"></a>
 
 ## Requirements
 
 -   A recent version of Emacs (28+)
 
 
-<a id="org07bf488"></a>
+<a id="orgaf6af89"></a>
 
 ## Code
 
