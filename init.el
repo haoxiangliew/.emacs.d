@@ -57,6 +57,26 @@
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
         native-comp-async-report-warnings-errors nil
         load-prefer-newer t)
+  ;; speed up load-file
+  (define-advice load-file (:override (file) silence)
+    (load file nil 'nomessage))
+  (define-advice startup--load-user-init-file (:before (&rest _) undo-silence)
+    (advice-remove #'load-file #'load-file@silence))
+  ;; much safer networking
+  (setq gnutls-verify-error noninteractive
+	gnutls-algorithm-priority
+	(when (boundp 'libgnutls-version)
+          (concat "SECURE128:+SECURE192:-VERS-ALL"
+                  (if (>= libgnutls-version 30605)
+                      ":+VERS-TLS1.3")
+                  ":+VERS-TLS1.2"))
+	gnutls-min-prime-bits 3072
+	tls-checktrust gnutls-verify-error
+	tls-program '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
+                      "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
+--strict-tofu --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:+VERS-TLS1.3' %h"
+                      "gnutls-cli -p %p %h"))
+  (setq ffap-machine-p-known 'reject)
   ;; load secrets
   (defun load-if-exists (f)
     (if (file-exists-p (expand-file-name f))
@@ -87,7 +107,7 @@
   (add-to-list 'default-frame-alist '(font . "Monospace-10.5:weight=normal"))
   (set-face-attribute 'default nil :font "Monospace-10.5:weight=normal")
   (set-face-attribute 'fixed-pitch nil :font "Monospace-10.5:weight=normal")
-  (set-face-attribute 'variable-pitch nil :font "Ubuntu-10.5:weight=normal")
+  (set-face-attribute 'variable-pitch nil :font "Cantarell-10.5:weight=normal")
   (setq inhibit-compacting-font-caches t)
   ;; highlight and match parentheses
   (show-paren-mode 1)
@@ -104,6 +124,7 @@
   ;; intelligent word-wrap
   (defvar +word-wrap-extra-indent 'double)
   (defvar +word-wrap-disabled-modes '(fundamental-mode so-long-mode))
+  (defvar +word-wrap-visual-modes '(org-mode))
   (defvar +word-wrap-text-modes '(text-mode markdown-mode markdown-view-mode gfm-mode gfm-view-mode rst-mode latex-mode LaTeX-mode))
   (when (memq 'visual-line-mode text-mode-hook)
     (remove-hook 'text-mode-hook #'visual-line-mode)
@@ -117,7 +138,7 @@
         mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
         mouse-wheel-scroll-amount-horizontal 2)
   (setq fast-but-imprecise-scrolling t)
-  (setq pixel-scroll-precision-mode t)
+  (setq redisplay-skip-fontification-on-input t)
   ;; disable bells
   (setq ring-bell-function 'ignore)
   ;; change yes/no to y/n
@@ -125,17 +146,19 @@
   ;; optimize terminal use
   (setq xterm-set-window-title t
         visible-cursor nil)
+  ;; increase process throughput
+  (setq read-process-output-max (* 64 1024)) ;; 64kb
   ;; optimize frames
   (setq frame-resize-pixelwise t
         pgtk-wait-for-event-timeout 0.001)
-  ;; prevent emacs from buffering
-  (add-to-list 'default-frame-alist '(inhibit-double-buffering . t))
-  (setq pgtk-wait-for-event-timeout 0.001)
+  (setq-default cursor-in-non-selected-windows nil)
+  (setq highlight-nonselected-windows nil)
   ;; disable flashing cursor
   (blink-cursor-mode 0)
   ;; disable bidirectional text scanning
   (setq-default bidi-display-reordering 'left-to-right
-                bidi-paragraph-direction 'left-to-right))
+		bidi-paragraph-direction 'left-to-right)
+  (setq bidi-inhibit-bpa t))
 
 ;; esup
 (use-package esup
@@ -445,7 +468,6 @@
         ranger-show-literal nil
         ranger-hide-cursor nil))
 
-
 ;; ansi-color
 (use-package ansi-color
   :straight (:type built-in)
@@ -559,15 +581,6 @@
   :config
   (setq vc-git-diff-switches '("--histogram")))
 
-;; highlight-indent-guides
-(use-package highlight-indent-guides
-  :init
-  (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
-  :config
-  (setq highlight-indent-guides-method 'bitmap
-	highlight-indent-guides-responsive 'top
-	highlight-indent-guides-delay 0))
-
 ;; ligatures
 (use-package ligature
   :straight (ligature :type git
@@ -677,15 +690,6 @@
   :init
   (org-wild-notifier-mode))
 
-;; todoist
-(use-package todoist
-  :bind
-  ("C-c t" . todoist)
-  (:map todoist-mode-map
-	("t" . todoist-task-menu)
-	("p" . todoist-project-menu)
-	("q" . kill-buffer-and-window)))
-
 ;; calfw (calendar)
 (use-package calfw
   :bind
@@ -709,11 +713,11 @@
   calfw)
 
 ;; elcord
-(use-package elcord
-  :init
-  (elcord-mode)
-  :config
-  (setq elcord-use-major-mode-as-main-icon t))
+;; (use-package elcord
+;;   :init
+;;   (elcord-mode)
+;;   :config
+;;   (setq elcord-use-major-mode-as-main-icon t))
 
 ;; notmuch
 (use-package notmuch
