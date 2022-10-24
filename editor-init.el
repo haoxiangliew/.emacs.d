@@ -146,6 +146,7 @@
 (setq bidi-inhibit-bpa t)
 ;; disable backups
 (setq make-backup-files nil)
+(setq auto-save-default nil)
 
 ;; configure eshell
 (global-set-key (kbd "C-x C-e") 'eshell)

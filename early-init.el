@@ -6,7 +6,8 @@
 ;;; Code:
 
 ;; defer gc
-(setq gc-cons-threshold most-positive-fixnum)
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6)
 
 ;; bootstrap straight and use-package
 (setq package-enable-at-startup nil
