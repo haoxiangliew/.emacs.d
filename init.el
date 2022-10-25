@@ -83,8 +83,6 @@
 	(load-file (expand-file-name f))))
   (load-if-exists "~/.emacs.d/secrets.el")
   (setq auth-sources '("~/.authinfo"))
-  ;; load theme
-  (load-if-exists "~/.emacs.d/themes/doom-dracula-pro-theme.el")
   ;; Add frame borders and window dividers
   (modify-all-frames-parameters
    '((right-divider-width . 10)
@@ -646,12 +644,12 @@
   (global-org-modern-mode)
   :config
   (setq org-modern-label-border nil))
-(use-package alert
-  :config
-  (setq alert-default-style 'libnotify))
-(use-package org-wild-notifier
-  :init
-  (org-wild-notifier-mode))
+;; (use-package alert
+;;   :config
+;;   (setq alert-default-style 'libnotify))
+;; (use-package org-wild-notifier
+;;   :init
+;;   (org-wild-notifier-mode))
 
 ;; calfw (calendar)
 (use-package calfw
@@ -771,22 +769,11 @@
 ;; copilot
 (use-package copilot
   :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
-  :bind
-  ("C-c a" . copilot-complete)
-  ("C-c b m" . global-copilot-mode)
-  ("C-c b n" . copilot-next-completion)
-  ("C-c b p" . copilot-previous-completion)
-  ("C-c b d" . copilot-diagnose)
-  ("C-c <tab>" . copilot-tab)
   :init
   (setq copilot-node-executable (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-nodejs-16*/bin/node"))))
   :config
-  (defun copilot-tab ()
-    (interactive)
-    (or (copilot-accept-completion)
-	(indent-for-tab-command)))
   (with-eval-after-load 'copilot
-    (add-hook 'post-command-hook 'copilot-clear-overlay)))
+    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-accept-completion)))
 
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
