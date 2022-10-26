@@ -122,6 +122,10 @@
       auto-window-vscroll nil
       mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
       mouse-wheel-scroll-amount-horizontal 2)
+(pixel-scroll-precision-mode)
+(setq pixel-scroll-precision-interpolate-page t
+      pixel-scroll-precision-use-momentum t
+      pixel-scroll-precision-momentum-seconds 0.1)
 (setq fast-but-imprecise-scrolling t)
 (setq redisplay-skip-fontification-on-input t)
 ;; disable bells
