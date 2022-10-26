@@ -102,10 +102,10 @@
   (setq user-full-name "Hao Xiang Liew"
         user-mail-address "haoxiangliew@gmail.com")
   ;; font
-  (add-to-list 'default-frame-alist '(font . "Monospace-10.5:weight=normal"))
-  (set-face-attribute 'default nil :font "Monospace-10.5:weight=normal")
-  (set-face-attribute 'fixed-pitch nil :font "Monospace-10.5:weight=normal")
-  (set-face-attribute 'variable-pitch nil :font "Cantarell-10.5:weight=normal")
+  (add-to-list 'default-frame-alist '(font . "Monospace-10.5"))
+  (set-face-attribute 'default nil :font "Monospace-10.5")
+  (set-face-attribute 'fixed-pitch nil :font "Monospace-10.5")
+  (set-face-attribute 'variable-pitch nil :font "Sans-10.5")
   (setq inhibit-compacting-font-caches t)
   ;; highlight and match parentheses
   (show-paren-mode 1)
@@ -540,7 +540,11 @@
   :hook (dired-mode   . diff-hl-dired-mode)
   :hook (diff-hl-mode . diff-hl-flydiff-mode)
   :config
-  (setq vc-git-diff-switches '("--histogram")))
+  (setq diff-hl-disable-on-remote t)
+  (setq vc-git-diff-switches '("--histogram"))
+  (setq left-fringe-width 2)
+  (add-hook 'magit-pre-refresh-hook  #'diff-hl-magit-pre-refresh)
+  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
 
 ;; ligatures
 (use-package ligature
@@ -550,39 +554,34 @@
   :init
   (global-prettify-symbols-mode)
   :config
-  (ligature-set-ligatures 'prog-mode '("[INFO ]" "[WARN ]" "[PASS ]" "[VERBOSE]" "[KO]" "[OK]"
-				       "[PASS]" "[ERROR]" "[DEBUG]" "[INFO]" "[WARN]" "[WARNING]"
-				       "[ERR]" "[FATAL]" "[TRACE]" "[FIXME]" "[TODO]" "[BUG]"
-				       "[NOTE]" "[HACK]" "[MARK]" "[FAIL]"
-				       "# ERROR" "# DEBUG" "# INFO" "# WARN" "# WARNING"
-				       "# ERR" "# FATAL" "# TRACE" "# FIXME" "# TODO" "# BUG"
-				       "# NOTE" "# HACK" "# MARK" "# FAIL"
-				       "// ERROR" "// DEBUG" "// INFO" "// WARN" "// WARNING"
-				       "// ERR" "// FATAL" "// TRACE" "// FIXME" "// TODO" "// BUG"
-				       "// NOTE" "// HACK" "// MARK" "// FAIL"
-				       "!=" "!==" "!==" "!≡" "!≡≡" "#(" "#_" "#{" "#?" "##" "#_(" "#["
-				       "%=" "&%" "&&" "&+" "&-" "&/" "&=" "&&&" "$>" "(|" "*>"
-				       "++" "+++" "+=" "+>" "++=" "--" "-<" "-<<" "-="
-				       "->" "->>" "---" "-->" "-+-" "-\\/" "-|>" "-<|"
-				       "->-" "-<-" "-|" "-||" "-|:" ".=" "//=" "/=" "/=="
-				       "/-\\" "/-:" "/->" "/=>" "/-<" "/=<" "/=:" ":=" ":≡"
-				       ":=>" ":-\\" ":=\\" ":-/" ":=/" ":-|" ":=|" ":|-" ":|="
-				       "<$>" "<*" "<*>" "<+>" "<-" "<<=" "<=>" "<>" "<|>" "<<-"
-				       "<|" "<=<" "<~" "<~~" "<<~" "<$" "<+" "<!>" "<@>" "<#>"
-				       "<%>" "<^>" "<&>" "<?>" "<.>" "</>" "<\\>" "<\">" "<:>"
-				       "<~>" "<**>" "<<^" "<=" "<->" "<!--" "<--" "<~<" "<==>"
-				       "<|-" "<||" "<<|" "<-<" "<-->" "<<==" "<==" "<-\\" "<-/"
-				       "<=\\" "<=/" "=<<" "==" "===" "==>" "=>" "=~" "=>>" "=~="
-				       "==>>" "=>=" "=<=" "=<" "==<" "=<|" "=/=" "=/<" "=|" "=||"
-				       "=|:" ">-" ">>-" ">>=" ">=>" ">>^" ">>|" ">!=" ">->" ">=="
-				       ">=" ">/=" ">-|" ">=|" ">-\\" ">=\\" ">-/" ">=/" ">λ=" "?."
-				       "^=" "^<<" "^>>" "\\=" "\\==" "\\/=" "\\-/" "\\-:" "\\->"
-				       "\\=>" "\\-<" "\\=<" "\\=:" "|=" "|>=" "|>" "|+|" "|->"
-				       "|-->" "|=>" "|==>" "|>-" "|<<" "||>" "|>>" "|-" "||-"
-				       "||=" "|)" "|]" "|-:" "|=:" "|-<" "|=<" "|--<" "|==<"
-				       "~=" "~>" "~~>" "~>>" "[[" "[|" "_|_" "]]" "≡≡" "≡≡≡"
-				       "≡:≡" "≡/" "≡/≡"))
+  ;; Enable all JetBrains Mono ligatures in programming modes
+  (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
+                                       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+                                       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+                                       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+                                       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+                                       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+                                       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+                                       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+                                       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+                                       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+                                       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
   (global-ligature-mode t))
+
+;; hl-todo
+(use-package hl-todo
+  :hook (prog-mode . hl-todo-mode)
+  :hook (yaml-mode . hl-todo-mode)
+  :config
+  (setq hl-todo-highlight-punctuation ":"
+        hl-todo-keyword-faces '(("TODO" warning bold)
+				("FIXME" error bold)
+				("REVIEW" font-lock-keyword-face bold)
+				("HACK" font-lock-constant-face bold)
+				("DEPRECATED" font-lock-doc-face bold)
+				("NOTE" success bold)
+				("BUG" error bold)
+				("XXX" font-lock-constant-face bold))))
 
 ;; multiple-cursors
 (use-package multiple-cursors

@@ -12,7 +12,8 @@
 ;;; Code:
 
 ;; defer gc
-(setq gc-cons-threshold most-positive-fixnum)
+(setq gc-cons-threshold most-positive-fixnum
+      gc-cons-percentage 0.6)
 
 ;; gcmh
 (add-to-list 'load-path "~/.emacs.d/straight/build/gcmh/")
@@ -88,10 +89,10 @@
 			       ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
 			       ";; [INFO] Emacs loaded gcmh in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
 ;; font
-(add-to-list 'default-frame-alist '(font . "Monospace-10.5:weight=normal"))
-(set-face-attribute 'default nil :font "Monospace-10.5:weight=normal")
-(set-face-attribute 'fixed-pitch nil :font "Monospace-10.5:weight=normal")
-(set-face-attribute 'variable-pitch nil :font "Cantarell-10.5:weight=normal")
+(add-to-list 'default-frame-alist '(font . "Monospace-10.5"))
+(set-face-attribute 'default nil :font "Monospace-10.5")
+(set-face-attribute 'fixed-pitch nil :font "Monospace-10.5")
+(set-face-attribute 'variable-pitch nil :font "Sans-10.5")
 (setq inhibit-compacting-font-caches t)
 ;; highlight and match parentheses
 (show-paren-mode 1)
@@ -123,7 +124,6 @@
       mouse-wheel-scroll-amount-horizontal 2)
 (setq fast-but-imprecise-scrolling t)
 (setq redisplay-skip-fontification-on-input t)
-(setq pixel-scroll-precision-mode t)
 ;; disable bells
 (setq ring-bell-function 'ignore)
 ;; change yes/no to y/n
@@ -161,3 +161,5 @@
 		   ("clear" "clear-scrollback")))
     (add-to-list 'eshell-command-aliases-list var)))
 (add-hook 'eshell-post-command-hook 'eshell-add-aliases)
+
+;;; editor-init.el ends here
