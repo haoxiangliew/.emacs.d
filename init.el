@@ -544,9 +544,11 @@
   :hook (dired-mode   . diff-hl-dired-mode)
   :hook (diff-hl-mode . diff-hl-flydiff-mode)
   :config
+  (setq left-fringe-width 2
+	left-margin-width 1
+	fringes-outside-margins t)
   (setq diff-hl-disable-on-remote t)
   (setq vc-git-diff-switches '("--histogram"))
-  (setq left-fringe-width 2)
   (add-hook 'magit-pre-refresh-hook  #'diff-hl-magit-pre-refresh)
   (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
 
