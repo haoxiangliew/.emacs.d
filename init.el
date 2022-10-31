@@ -176,17 +176,32 @@
 	tramp-chunksize 2000
 	tramp-use-ssh-controlmaster-options nil))
 
-;; dracula-theme
+;; doom-themes
 (use-package doom-themes
+  :bind
+  ("C-c t" . toggle-themes)
   :config
-  (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
+  (defun current-doom-theme ()
+    "Return the currently used doom theme"
+    (car
+     (seq-filter
+      (lambda (theme)
+	(string-match-p "^doom" (symbol-name theme)))
+      custom-enabled-themes)))
+  (defun toggle-themes ()
+    "Toggle between solarized dark and light"
+    (interactive)
+    (pcase (current-doom-theme)
+      ('doom-solarized-dark (load-theme 'doom-solarized-light t))
+      ('doom-solarized-light (load-theme 'doom-solarized-dark t))))
+  ;; (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t
-	doom-themes-padded-modeline t
-	doom-dracula-pro-padded-modeline t)
+	doom-themes-padded-modeline t)
+  ;; doom-dracula-pro-padded-modeline t)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula-pro t)))
-    (load-theme 'doom-dracula-pro t))
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-solarized-dark t)))
+    (load-theme 'doom-solarized-dark t))
   (doom-themes-visual-bell-config)
   (setq doom-themes-treemacs-theme "doom-colors")
   (doom-themes-treemacs-config)
@@ -196,7 +211,6 @@
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-  ;; (add-to-list 'solaire-mode-themes-to-face-swap "^modus-")
   (solaire-global-mode +1))
 
 ;; doom-modeline
@@ -330,6 +344,39 @@
   :init
   (add-hook 'corfu-mode-hook #'corfu-doc-mode))
 (use-package pcmpl-args)
+
+;; cape
+(use-package cape
+  :bind (("C-c p p" . completion-at-point) ;; capf
+         ("C-c p t" . complete-tag)        ;; etags
+         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+         ("C-c p h" . cape-history)
+         ("C-c p f" . cape-file)
+         ("C-c p k" . cape-keyword)
+         ("C-c p s" . cape-symbol)
+         ("C-c p a" . cape-abbrev)
+         ("C-c p i" . cape-ispell)
+         ("C-c p l" . cape-line)
+         ("C-c p w" . cape-dict)
+         ("C-c p \\" . cape-tex)
+         ("C-c p _" . cape-tex)
+         ("C-c p ^" . cape-tex)
+         ("C-c p &" . cape-sgml)
+         ("C-c p r" . cape-rfc1345))
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  ;; (add-to-list 'completion-at-point-functions #'cape-history)
+  ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
+  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
+  ;; (add-to-list 'completion-at-point-functions #'cape-sgml)
+  ;; (add-to-list 'completion-at-point-functions #'cape-rfc1345)
+  ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
+  ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
+  ;; (add-to-list 'completion-at-point-functions #'cape-dict)
+  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
+  ;; (add-to-list 'completion-at-point-functions #'cape-line)
+  )
 
 ;; yasnippet
 (use-package yasnippet
@@ -831,8 +878,6 @@
 
 ;; nix-mode
 (use-package nix-mode
-  :interpreter
-  ("\\(?:cached-\\)?nix-shell" . +nix-shell-init-mode)
   :mode
   "\\.nix\\'")
 
