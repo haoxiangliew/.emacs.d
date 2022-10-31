@@ -186,20 +186,19 @@
       (lambda (theme)
 	(string-match-p "^doom" (symbol-name theme)))
       custom-enabled-themes)))
-  (defun toggle-themes ()
-    "Toggle between solarized dark and light"
-    (interactive)
-    (pcase (current-doom-theme)
-      ('doom-solarized-dark (load-theme 'doom-solarized-light t))
-      ('doom-solarized-light (load-theme 'doom-solarized-dark t))))
+  ;; (defun toggle-themes ()
+  ;;   "Toggle between solarized dark and light"
+  ;;   (interactive)
+  ;;   (pcase (current-doom-theme)
+  ;;     ('doom-solarized-dark (load-theme 'doom-solarized-light t))
+  ;;     ('doom-solarized-light (load-theme 'doom-solarized-dark t))))
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
-  (define-key global-map (kbd "<f5>") #'toggle-themes)
+  ;; (define-key global-map (kbd "<f5>") #'toggle-themes)
   (if (daemonp)
-      ;; (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-solarized-dark t)))
-      (add-hook 'after-init-hook #'(lambda () (load-theme 'doom-solarized-dark t)))
-    (load-theme 'doom-solarized-dark t))
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
+    (load-theme 'doom-dracula t))
   (doom-themes-visual-bell-config)
   (setq doom-themes-treemacs-theme "doom-colors")
   (doom-themes-treemacs-config)
@@ -607,16 +606,16 @@
   :config
   ;; Enable all JetBrains Mono ligatures in programming modes
   (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-                                       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-                                       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-                                       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-                                       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-                                       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-                                       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-                                       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-                                       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-                                       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-                                       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+				       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+				       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+				       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+				       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+				       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+				       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+				       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+				       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+				       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+				       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
   (global-ligature-mode t))
 
 ;; hl-todo
