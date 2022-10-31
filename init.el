@@ -178,8 +178,6 @@
 
 ;; doom-themes
 (use-package doom-themes
-  :bind
-  ("C-c t" . toggle-themes)
   :config
   (defun current-doom-theme ()
     "Return the currently used doom theme"
@@ -194,13 +192,13 @@
     (pcase (current-doom-theme)
       ('doom-solarized-dark (load-theme 'doom-solarized-light t))
       ('doom-solarized-light (load-theme 'doom-solarized-dark t))))
-  ;; (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
-  ;; doom-dracula-pro-padded-modeline t)
+  (define-key global-map (kbd "<f5>") #'toggle-themes)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-solarized-dark t)))
+      ;; (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-solarized-dark t)))
+      (add-hook 'after-init-hook #'(lambda () (load-theme 'doom-solarized-dark t)))
     (load-theme 'doom-solarized-dark t))
   (doom-themes-visual-bell-config)
   (setq doom-themes-treemacs-theme "doom-colors")
