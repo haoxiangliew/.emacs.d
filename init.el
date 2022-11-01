@@ -186,28 +186,48 @@
       (lambda (theme)
 	(string-match-p "^doom" (symbol-name theme)))
       custom-enabled-themes)))
-  (defun toggle-themes ()
-    "Toggle between solarized dark and light"
-    (interactive)
-    (pcase (current-doom-theme)
-      ('doom-solarized-dark (load-theme 'doom-solarized-light t))
-      ('doom-solarized-light (load-theme 'doom-solarized-dark t))))
+  ;; (defun toggle-themes ()
+  ;;   "Toggle between solarized dark and light"
+  ;;   (interactive)
+  ;;   (pcase (current-doom-theme)
+  ;;     ('doom-solarized-dark (load-theme 'doom-solarized-light t))
+  ;;     ('doom-solarized-light (load-theme 'doom-solarized-dark t))))
+  ;; (define-key global-map (kbd "<f5>") #'toggle-themes)
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
-  (define-key global-map (kbd "<f5>") #'toggle-themes)
   (if (daemonp)
-      (add-hook 'after-init-hook #'(lambda () (load-theme 'doom-solarized-dark t)))
-    (load-theme 'doom-solarized-dark t))
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
+    (load-theme 'doom-dracula t))
   (doom-themes-visual-bell-config)
   (setq doom-themes-treemacs-theme "doom-colors")
   (doom-themes-treemacs-config)
   (doom-themes-org-config))
 
+;; modus-themes
+;; (use-package modus-themes
+;;   :bind
+;;   ("<f5>" . modus-themes-toggle)
+;;   :init
+;;   (setq modus-themes-italic-constructs t
+;; 	modus-themes-variable-pitch-headings t
+;; 	modus-themes-variable-pitch-ui nil
+;; 	modus-themes-org-agenda '((header-block . (variable-pitch scale-title))
+;; 				  (header-date . (grayscale bold-all)))
+;; 	modus-themes-org-blocks '(grayscale)
+;; 	modus-themes-mode-line '(borderless)
+;; 	modus-themes-region '(bg-only no-extend))
+;;   (modus-themes-load-themes)
+;;   :config
+;;   (if (daemonp)
+;;       (add-hook 'after-init-hook #'(lambda () (modus-themes-load-vivendi)))
+;;     (modus-themes-load-vivendi)))
+
 ;; solaire-mode
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+  ;; (add-to-list 'solaire-mode-themes-to-face-swap "^modus-")
   (solaire-global-mode +1))
 
 ;; doom-modeline
@@ -223,6 +243,7 @@
   (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding)
   (doom-modeline-mode 1)
   :config
+  ;; (setq doom-modeline-height 30)
   (column-number-mode)
   (size-indication-mode))
 
