@@ -186,19 +186,40 @@
       (lambda (theme)
 	(string-match-p "^doom" (symbol-name theme)))
       custom-enabled-themes)))
-  ;; (defun toggle-themes ()
-  ;;   "Toggle between solarized dark and light"
-  ;;   (interactive)
-  ;;   (pcase (current-doom-theme)
-  ;;     ('doom-solarized-dark (load-theme 'doom-solarized-light t))
-  ;;     ('doom-solarized-light (load-theme 'doom-solarized-dark t))))
-  ;; (define-key global-map (kbd "<f5>") #'toggle-themes)
+  (defun load-dark-theme ()
+    "Load dark theme and disable light theme"
+    (interactive)
+    (disable-theme 'doom-solarized-light)
+    (load-theme 'doom-solarized-dark t))
+  (defun load-light-theme ()
+    "Load light theme and disable dark theme"
+    (interactive)
+    (disable-theme 'doom-solarized-dark)
+    (load-theme 'doom-solarized-light t))
+  (defun doom-themes-load-prompt ()
+    "Helper for toggle-themes"
+    (let ((theme
+	   (intern
+	    (completing-read "Load Doom theme (will disable all others): "
+			     '(doom-solarized-light doom-solarized-dark) nil t))))
+      (mapc #'disable-theme custom-enabled-themes)
+      (pcase theme
+	('doom-solarized-dark (load-dark-theme))
+	('doom-solarized-light (load-light-theme)))))
+  (defun toggle-themes ()
+    "Toggle between solarized dark and light"
+    (interactive)
+    (pcase (current-doom-theme)
+      ('doom-solarized-dark (load-light-theme))
+      ('doom-solarized-light (load-dark-theme))
+      (_ (doom-themes-load-prompt))))
+  (define-key global-map (kbd "<f5>") #'toggle-themes)
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
-    (load-theme 'doom-dracula t))
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-dark-theme)))
+    (load-dark-theme))
   (doom-themes-visual-bell-config)
   (setq doom-themes-treemacs-theme "doom-colors")
   (doom-themes-treemacs-config)
