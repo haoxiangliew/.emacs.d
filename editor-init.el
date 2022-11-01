@@ -45,10 +45,25 @@
 ;; use bar cursor
 (setq-default cursor-type 'bar)
 
-;; load leuven-dark
+;; load modus-themes
+(defun load-dark-theme ()
+  "Load dark theme and disable light theme"
+  (interactive)
+  (disable-theme 'modus-operandi)
+  (load-theme 'modus-vivendi t))
+(defun load-light-theme ()
+  "Load light theme and disable dark theme"
+  (interactive)
+  (disable-theme 'modus-vivendi)
+  (load-theme 'modus-operandi t))
+(defun auto-theme ()
+  (load-light-theme)
+  (run-at-time "07:00" (* 60 60 24) (lambda () (load-light-theme)))
+  (load-dark-theme)
+  (run-at-time "19:00" (* 60 60 24) (lambda () (load-dark-theme))))
 (if (daemonp)
-    (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'leuven-dark)))
-  (load-theme 'leuven-dark t))
+    (add-hook 'server-after-make-frame-hook #'(lambda () (auto-theme)))
+  (auto-theme))
 
 ;; less noise when compiling elisp
 (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
