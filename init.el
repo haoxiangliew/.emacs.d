@@ -339,7 +339,6 @@
 (use-package rainbow-mode
   :config
   (setq rainbow-x-colors nil)
-  (add-hook 'prog-mode-hook 'rainbow-mode)
   (add-hook 'rainbow-mode-hook (hl-line-mode (if rainbow-mode -1 +1))))
 
 ;; corfu
@@ -599,6 +598,9 @@
   :after project
   :config
   (project-x-mode 1))
+
+;; deadgrep
+(use-package deadgrep)
 
 ;; treemacs
 (use-package treemacs
