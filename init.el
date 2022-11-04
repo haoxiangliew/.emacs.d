@@ -245,9 +245,14 @@
 ;; 	modus-themes-region '(bg-only no-extend))
 ;;   (modus-themes-load-themes)
 ;;   :config
+;;   (defun auto-theme ()
+;;     (modus-themes-load-operandi)
+;;     (run-at-time "07:00" (* 60 60 24) (lambda () (modus-themes-load-operandi)))
+;;     (modus-themes-load-vivendi)
+;;     (run-at-time "19:00" (* 60 60 24) (lambda () (modus-themes-load-vivendi))))
 ;;   (if (daemonp)
-;;       (add-hook 'after-init-hook #'(lambda () (modus-themes-load-vivendi)))
-;;     (modus-themes-load-vivendi)))
+;;       (add-hook 'after-init-hook #'(lambda () (auto-theme)))
+;;     (auto-theme)))
 
 ;; solaire-mode
 (use-package solaire-mode
@@ -316,6 +321,28 @@
   (setq enable-recursive-minibuffers t)
   (vertico-mode)
   (vertico-mouse-mode))
+(use-package mini-popup
+  :after
+  vertico
+  :straight
+  (mini-popup
+   :type git
+   :host github
+   :repo "minad/mini-popup")
+  :init
+  (mini-popup-mode)
+  :config
+  (defun mini-popup-height-resize ()
+    (* (1+ (min vertico--total vertico-count)) (default-line-height)))
+  (defun mini-popup-height-fixed ()
+    (* (1+ (if vertico--input vertico-count 0)) (default-line-height)))
+  (setq mini-popup--height-function #'mini-popup-height-resize)
+  (advice-add #'vertico--resize-window :around
+              (lambda (&rest args)
+		(unless mini-popup-mode
+                  (apply args))))
+  (add-hook 'consult--completion-refresh-hook
+            (lambda (&rest _) (mini-popup--setup)) 99))
 (use-package marginalia
   :init
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
@@ -637,9 +664,6 @@
   :hook (dired-mode   . diff-hl-dired-mode)
   :hook (diff-hl-mode . diff-hl-flydiff-mode)
   :config
-  (setq left-fringe-width 2
-	left-margin-width 1
-	fringes-outside-margins t)
   (setq diff-hl-disable-on-remote t)
   (setq vc-git-diff-switches '("--histogram"))
   (add-hook 'magit-pre-refresh-hook  #'diff-hl-magit-pre-refresh)
