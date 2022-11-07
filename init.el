@@ -162,6 +162,12 @@
 		bidi-paragraph-direction 'left-to-right)
   (setq bidi-inhibit-bpa t))
 
+(use-package benchmark-init
+  :init
+  (benchmark-init/activate)
+  :config
+  (add-hook 'window-setup-hook 'benchmark-init/deactivate))
+
 ;; esup
 (use-package esup
   :config
@@ -321,28 +327,28 @@
   (setq enable-recursive-minibuffers t)
   (vertico-mode)
   (vertico-mouse-mode))
-(use-package mini-popup
-  :after
-  vertico
-  :straight
-  (mini-popup
-   :type git
-   :host github
-   :repo "minad/mini-popup")
-  :init
-  (mini-popup-mode)
-  :config
-  (defun mini-popup-height-resize ()
-    (* (1+ (min vertico--total vertico-count)) (default-line-height)))
-  (defun mini-popup-height-fixed ()
-    (* (1+ (if vertico--input vertico-count 0)) (default-line-height)))
-  (setq mini-popup--height-function #'mini-popup-height-resize)
-  (advice-add #'vertico--resize-window :around
-              (lambda (&rest args)
-		(unless mini-popup-mode
-                  (apply args))))
-  (add-hook 'consult--completion-refresh-hook
-            (lambda (&rest _) (mini-popup--setup)) 99))
+;; (use-package mini-popup
+;;   :after
+;;   vertico
+;;   :straight
+;;   (mini-popup
+;;    :type git
+;;    :host github
+;;    :repo "minad/mini-popup")
+;;   :init
+;;   (mini-popup-mode)
+;;   :config
+;;   (defun mini-popup-height-resize ()
+;;     (* (1+ (min vertico--total vertico-count)) (default-line-height)))
+;;   (defun mini-popup-height-fixed ()
+;;     (* (1+ (if vertico--input vertico-count 0)) (default-line-height)))
+;;   (setq mini-popup--height-function #'mini-popup-height-resize)
+;;   (advice-add #'vertico--resize-window :around
+;;               (lambda (&rest args)
+;; 		(unless mini-popup-mode
+;;                   (apply args))))
+;;   (add-hook 'consult--completion-refresh-hook
+;;             (lambda (&rest _) (mini-popup--setup)) 99))
 (use-package marginalia
   :init
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
@@ -970,7 +976,12 @@
   (push '(verible-verilog-format . ("verible-verilog-format"
 				    filepath))
 	apheleia-formatters)
-  (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format)))
+  (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format))
+  :config
+  (defun verilog-config-hook ()
+    (setq indent-tabs-mode nil
+	  tab-width 2))
+  (add-hook 'verilog-mode-hook 'verilog-config-hook))
 
 ;; yaml-mode
 (use-package yaml-mode
