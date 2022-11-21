@@ -1,4 +1,4 @@
-;;; init.el --- haoxiangliew's Emacs configuration -*- lexical-binding: t; -*-
+;; init.el --- haoxiangliew's Emacs configuration -*- lexical-binding: t; -*-
 
 ;;; Commentary:
 ;; This is my personal Emacs configuration
@@ -327,28 +327,6 @@
   (setq enable-recursive-minibuffers t)
   (vertico-mode)
   (vertico-mouse-mode))
-;; (use-package mini-popup
-;;   :after
-;;   vertico
-;;   :straight
-;;   (mini-popup
-;;    :type git
-;;    :host github
-;;    :repo "minad/mini-popup")
-;;   :init
-;;   (mini-popup-mode)
-;;   :config
-;;   (defun mini-popup-height-resize ()
-;;     (* (1+ (min vertico--total vertico-count)) (default-line-height)))
-;;   (defun mini-popup-height-fixed ()
-;;     (* (1+ (if vertico--input vertico-count 0)) (default-line-height)))
-;;   (setq mini-popup--height-function #'mini-popup-height-resize)
-;;   (advice-add #'vertico--resize-window :around
-;;               (lambda (&rest args)
-;; 		(unless mini-popup-mode
-;;                   (apply args))))
-;;   (add-hook 'consult--completion-refresh-hook
-;;             (lambda (&rest _) (mini-popup--setup)) 99))
 (use-package marginalia
   :init
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
@@ -409,6 +387,12 @@
         corfu-auto-delay 0
         corfu-auto-prefix 0
         completion-styles '(orderless-fast)))
+(use-package corfu-terminal
+  :straight (corfu-terminal :type git
+			    :repo "https://codeberg.org/akib/emacs-corfu-terminal")
+  :init
+  (unless (display-graphic-p)
+    (corfu-terminal-mode +1)))
 (use-package kind-icon
   :after
   corfu

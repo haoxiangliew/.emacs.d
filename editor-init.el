@@ -62,8 +62,8 @@
   (load-dark-theme)
   (run-at-time "19:00" (* 60 60 24) (lambda () (load-dark-theme))))
 (if (daemonp)
-    (add-hook 'server-after-make-frame-hook #'(lambda () (auto-theme)))
-  (auto-theme))
+    (add-hook 'server-after-make-frame-hook #'(lambda () (load-dark-theme)))
+  (load-dark-theme))
 
 ;; less noise when compiling elisp
 (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
