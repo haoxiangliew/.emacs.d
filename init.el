@@ -162,12 +162,6 @@
 		bidi-paragraph-direction 'left-to-right)
   (setq bidi-inhibit-bpa t))
 
-(use-package benchmark-init
-  :init
-  (benchmark-init/activate)
-  :config
-  (add-hook 'window-setup-hook 'benchmark-init/deactivate))
-
 ;; esup
 (use-package esup
   :config
