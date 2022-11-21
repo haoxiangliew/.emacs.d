@@ -3,8 +3,8 @@
 ;;; Commentary:
 ;; This is my personal default editor configuration
 ;; Under my nixos configuration this is aliased to emcs
-;; Since my full emacs configuration is not fit to be $EDITOR
-;; we can launch this with emacs -Q -nw -l ~/.emacs.d/editor-init.el
+;; Since my full Emacs configuration is not fit to be $EDITOR
+;; we can launch this with Emacs -Q -nw -l ~/.emacs.d/editor-init.el
 
 ;;; Dependencies:
 ;; none
@@ -47,16 +47,17 @@
 
 ;; load modus-themes
 (defun load-dark-theme ()
-  "Load dark theme and disable light theme"
+  "Load dark theme and disable light theme."
   (interactive)
   (disable-theme 'modus-operandi)
   (load-theme 'modus-vivendi t))
 (defun load-light-theme ()
-  "Load light theme and disable dark theme"
+  "Load light theme and disable dark theme."
   (interactive)
   (disable-theme 'modus-vivendi)
   (load-theme 'modus-operandi t))
 (defun auto-theme ()
+  "Load light and dark theme at a specified time."
   (load-light-theme)
   (run-at-time "07:00" (* 60 60 24) (lambda () (load-light-theme)))
   (load-dark-theme)
@@ -170,6 +171,7 @@
 ;; configure eshell
 (global-set-key (kbd "C-x C-e") 'eshell)
 (defun eshell-add-aliases ()
+  "Add aliases to eshell."
   (dolist (var   '(("q"  "exit")
 		   ("ff" "find-file $1")
 		   ("d"  "dired $1")
