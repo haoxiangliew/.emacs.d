@@ -149,7 +149,7 @@
   (setq xterm-set-window-title t
         visible-cursor nil)
   ;; increase process throughput
-  (setq read-process-output-max (* 64 1024)) ;; 64kb
+  (setq read-process-output-max (* 1024 1024))
   ;; optimize frames
   (setq frame-resize-pixelwise t
         pgtk-wait-for-event-timeout 0.001)
@@ -750,12 +750,6 @@
   (global-org-modern-mode)
   :config
   (setq org-modern-label-border nil))
-;; (use-package alert
-;;   :config
-;;   (setq alert-default-style 'libnotify))
-;; (use-package org-wild-notifier
-;;   :init
-;;   (org-wild-notifier-mode))
 
 ;; calfw (calendar)
 (use-package calfw
@@ -865,12 +859,15 @@
 (use-package eglot
   :init
   (add-hook 'prog-mode-hook (lambda ()
-			      (if (derived-mode-p 'emacs-lisp-mode)
-				  (ignore)
-				(eglot-ensure))))
+			      (cond ((derived-mode-p 'emacs-lisp-mode) (ignore))
+				    (t (eglot-ensure)))))
   (add-hook 'markdown-mode 'eglot-ensure)
   :config
-  (setq eglot-sync-connect nil))
+  (setq eglot-sync-connect 1
+	eglot-connect-timeout 10
+	eglot-autoshutdown t
+	eglot-send-changes-idle-time 0.5
+	eglot-extend-to-xref t))
 
 ;; copilot
 (use-package copilot
@@ -904,7 +901,17 @@
   :straight (:type built-in)
   :mode
   ("\\.tpp\\'" . c++-mode)
-  ("\\.txx\\'" . c++-mode))
+  ("\\.txx\\'" . c++-mode)
+  :config
+  (add-to-list 'eglot-server-programs
+               '((c-mode c++-mode cc-mode)
+                 . ("clangd"
+                    "-j=8"
+                    "--malloc-trim"
+                    "--background-index"
+                    "--clang-tidy"
+                    "--completion-style=detailed"
+                    "--pch-storage=memory"))))
 (use-package cmake-mode)
 
 ;; go-mode
