@@ -152,7 +152,7 @@
 (setq xterm-set-window-title t
       visible-cursor nil)
 ;; increase process throughput
-(setq read-process-output-max (* 64 1024)) ;; 64kb
+(setq read-process-output-max (* 1024 1024))
 ;; optimize frames
 (setq frame-resize-pixelwise t
       pgtk-wait-for-event-timeout 0.001)
