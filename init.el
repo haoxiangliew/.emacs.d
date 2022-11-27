@@ -55,8 +55,8 @@
   :init
   ;; less noise when compiling elisp
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
-        native-comp-async-report-warnings-errors nil
-        load-prefer-newer t)
+	native-comp-async-report-warnings-errors nil
+	load-prefer-newer t)
   ;; speed up load-file
   (define-advice load-file (:override (file) silence)
     (load file nil 'nomessage))
@@ -66,16 +66,16 @@
   (setq gnutls-verify-error noninteractive
 	gnutls-algorithm-priority
 	(when (boundp 'libgnutls-version)
-          (concat "SECURE128:+SECURE192:-VERS-ALL"
-                  (if (>= libgnutls-version 30605)
-                      ":+VERS-TLS1.3")
-                  ":+VERS-TLS1.2"))
+	  (concat "SECURE128:+SECURE192:-VERS-ALL"
+		  (if (>= libgnutls-version 30605)
+		      ":+VERS-TLS1.3")
+		  ":+VERS-TLS1.2"))
 	gnutls-min-prime-bits 3072
 	tls-checktrust gnutls-verify-error
 	tls-program '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
-                      "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
+		      "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
 --strict-tofu --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:+VERS-TLS1.3' %h"
-                      "gnutls-cli -p %p %h"))
+		      "gnutls-cli -p %p %h"))
   (setq ffap-machine-p-known 'reject)
   ;; load secrets
   (defun load-if-exists (f)
@@ -88,8 +88,8 @@
    '((right-divider-width . 10)
      (internal-border-width . 10)))
   (dolist (face '(window-divider
-                  window-divider-first-pixel
-                  window-divider-last-pixel))
+		  window-divider-first-pixel
+		  window-divider-last-pixel))
     (face-spec-reset-face face)
     (set-face-foreground face (face-attribute 'default :background)))
   (set-face-background 'fringe (face-attribute 'default :background))
@@ -100,7 +100,7 @@
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
-        user-mail-address "haoxiangliew@gmail.com")
+	user-mail-address "haoxiangliew@gmail.com")
   ;; font
   (add-to-list 'default-frame-alist '(font . "Monospace-10.5"))
   (set-face-attribute 'default nil :font "Monospace-10.5")
@@ -129,12 +129,12 @@
     (add-hook 'text-mode-hook #'+word-wrap-mode))
   ;; fix scrolling
   (setq hscroll-margin 1
-        scroll-conservatively 101
-        scroll-margin 0
-        scroll-preserve-screen-position t
-        auto-window-vscroll nil
-        mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
-        mouse-wheel-scroll-amount-horizontal 2)
+	scroll-conservatively 101
+	scroll-margin 0
+	scroll-preserve-screen-position t
+	auto-window-vscroll nil
+	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
+	mouse-wheel-scroll-amount-horizontal 2)
   (pixel-scroll-precision-mode)
   (setq pixel-scroll-precision-interpolate-page t
 	pixel-scroll-precision-use-momentum t
@@ -147,12 +147,12 @@
   (defalias 'yes-or-no-p 'y-or-n-p)
   ;; optimize terminal use
   (setq xterm-set-window-title t
-        visible-cursor nil)
+	visible-cursor nil)
   ;; increase process throughput
   (setq read-process-output-max (* 1024 1024))
   ;; optimize frames
   (setq frame-resize-pixelwise t
-        pgtk-wait-for-event-timeout 0.001)
+	pgtk-wait-for-event-timeout 0.001)
   (setq-default cursor-in-non-selected-windows nil)
   (setq highlight-nonselected-windows nil)
   ;; disable flashing cursor
@@ -220,7 +220,7 @@
   ;;   (load-dark-theme)
   ;;   (run-at-time "19:00" (* 60 60 24) (lambda () (load-dark-theme))))
   (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t
+	doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
   (if (daemonp)
       (add-hook 'server-after-make-frame-hook #'(lambda () (load-dark-theme)))
@@ -268,9 +268,9 @@
     "We expect the encoding to be LF UTF-8, so only show the modeline when this is not the case"
     (setq-local doom-modeline-buffer-encoding
 		(unless (and (memq (plist-get (coding-system-plist buffer-file-coding-system) :category)
-                                   '(coding-category-undecided coding-category-utf-8))
-                             (not (memq (coding-system-eol-type buffer-file-coding-system) '(1 2))))
-                  t)))
+				   '(coding-category-undecided coding-category-utf-8))
+			     (not (memq (coding-system-eol-type buffer-file-coding-system) '(1 2))))
+		  t)))
   (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding)
   (doom-modeline-mode 1)
   :config
@@ -300,7 +300,7 @@
   :hook (completion-list-mode . consult-preview-at-point-mode)
   :init
   (setq register-preview-delay 0.5
-        register-preview-function #'consult-register-format))
+	register-preview-function #'consult-register-format))
 
 ;; vertico
 (use-package vertico
@@ -316,7 +316,7 @@
 	  (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
   (setq minibuffer-prompt-properties
-        '(read-only t cursor-intangible t face minibuffer-prompt))
+	'(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
   (vertico-mode)
@@ -329,8 +329,8 @@
 (use-package orderless
   :init
   (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles . (partial-completion))))))
+	completion-category-defaults nil
+	completion-category-overrides '((file (styles . (partial-completion))))))
 
 ;; which-key
 (use-package which-key
@@ -338,7 +338,7 @@
   (which-key-mode)
   :config
   (setq which-key-idle-delay 0.5
-        which-key-allow-multiple-replacements t))
+	which-key-allow-multiple-replacements t))
 
 ;; rainbow-mode
 (use-package rainbow-mode
@@ -349,13 +349,14 @@
 ;; corfu
 (use-package corfu
   :straight (corfu :files (:defaults "extensions/*")
-		   :includes (corfu-info))
+		   :includes (corfu-info
+			      corfu-popupinfo))
   :bind
   (:map corfu-map
-        ("TAB" . corfu-next)
-        ([tab] . corfu-next)
-        ("S-TAB" . corfu-previous)
-        ([backtab] . corfu-previous))
+	("TAB" . corfu-next)
+	([tab] . corfu-next)
+	("S-TAB" . corfu-previous)
+	([backtab] . corfu-previous))
   :init
   (setq corfu-cycle t)
   (setq corfu-preselect-first nil)
@@ -378,9 +379,9 @@
     (orderless-dispatch '(orderless-fast-dispatch))
     (orderless-matching-styles '(orderless-literal orderless-regexp)))
   (setq corfu-auto t
-        corfu-auto-delay 0
-        corfu-auto-prefix 0
-        completion-styles '(orderless-fast)))
+	corfu-auto-delay 0
+	corfu-auto-prefix 0
+	completion-styles '(orderless-fast)))
 (use-package corfu-terminal
   :straight (corfu-terminal :type git
 			    :repo "https://codeberg.org/akib/emacs-corfu-terminal")
@@ -394,29 +395,26 @@
   (setq kind-icon-default-face 'corfu-default)
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
-(use-package corfu-doc
-  :init
-  (add-hook 'corfu-mode-hook #'corfu-doc-mode))
 (use-package pcmpl-args)
 
 ;; cape
 (use-package cape
   :bind (("C-c p p" . completion-at-point) ;; capf
-         ("C-c p t" . complete-tag)        ;; etags
-         ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
-         ("C-c p h" . cape-history)
-         ("C-c p f" . cape-file)
-         ("C-c p k" . cape-keyword)
-         ("C-c p s" . cape-symbol)
-         ("C-c p a" . cape-abbrev)
-         ("C-c p i" . cape-ispell)
-         ("C-c p l" . cape-line)
-         ("C-c p w" . cape-dict)
-         ("C-c p \\" . cape-tex)
-         ("C-c p _" . cape-tex)
-         ("C-c p ^" . cape-tex)
-         ("C-c p &" . cape-sgml)
-         ("C-c p r" . cape-rfc1345))
+	 ("C-c p t" . complete-tag)        ;; etags
+	 ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
+	 ("C-c p h" . cape-history)
+	 ("C-c p f" . cape-file)
+	 ("C-c p k" . cape-keyword)
+	 ("C-c p s" . cape-symbol)
+	 ("C-c p a" . cape-abbrev)
+	 ("C-c p i" . cape-ispell)
+	 ("C-c p l" . cape-line)
+	 ("C-c p w" . cape-dict)
+	 ("C-c p \\" . cape-tex)
+	 ("C-c p _" . cape-tex)
+	 ("C-c p ^" . cape-tex)
+	 ("C-c p &" . cape-sgml)
+	 ("C-c p r" . cape-rfc1345))
   :init
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
@@ -454,7 +452,7 @@
   (pdf-tools-install-noverify)
   (setq-default pdf-view-display-size 'fit-page)
   (setq pdf-view-use-scaling t
-        pdf-view-use-imagemagick nil))
+	pdf-view-use-imagemagick nil))
 
 ;; eshell
 (use-package eshell
@@ -477,7 +475,7 @@
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases)
   :config
   (setq eshell-prompt-regexp "^.* λ "
-        eshell-prompt-function #'+eshell/prompt)
+	eshell-prompt-function #'+eshell/prompt)
   (defun +eshell/prompt ()
     (let ((base/dir (shrink-path-prompt default-directory)))
       (concat (propertize (car base/dir)
@@ -498,24 +496,24 @@
   (add-to-list 'vterm-eval-cmds '("magit-status" magit-status))
   (add-to-list 'vterm-eval-cmds '("magit-clone" magit-clone))
   (setq vterm-kill-buffer-on-exit t
-        vterm-max-scrollback 5000))
+	vterm-max-scrollback 5000))
 
 ;; dired
 (use-package dired
   :straight (:type built-in)
   :init
   (setq dired-auto-revert-buffer t
-        dired-dwim-target t
-        dired-hide-details-hide-symlink-targets nil
-        dired-recursive-copies  'always
-        dired-recursive-deletes 'top
-        dired-create-destination-dirs 'ask
-        image-dired-dir (expand-file-name "image-dired/" user-emacs-directory)
-        image-dired-db-file (concat image-dired-dir "db.el")
-        image-dired-gallery-dir (concat image-dired-dir "gallery/")
-        image-dired-temp-image-file (concat image-dired-dir "temp-image")
-        image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
-        image-dired-thumb-size 150))
+	dired-dwim-target t
+	dired-hide-details-hide-symlink-targets nil
+	dired-recursive-copies  'always
+	dired-recursive-deletes 'top
+	dired-create-destination-dirs 'ask
+	image-dired-dir (expand-file-name "image-dired/" user-emacs-directory)
+	image-dired-db-file (concat image-dired-dir "db.el")
+	image-dired-gallery-dir (concat image-dired-dir "gallery/")
+	image-dired-temp-image-file (concat image-dired-dir "temp-image")
+	image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
+	image-dired-thumb-size 150))
 (use-package all-the-icons-dired
   :hook
   (dired-mode . all-the-icons-dired-mode))
@@ -528,11 +526,11 @@
   (unless (file-directory-p image-dired-dir)
     (make-directory image-dired-dir))
   (setq ranger-cleanup-on-disable t
-        ranger-excluded-extensions '("mkv" "iso" "mp4")
-        ranger-deer-show-details t
-        ranger-max-preview-size 10
-        ranger-show-literal nil
-        ranger-hide-cursor nil))
+	ranger-excluded-extensions '("mkv" "iso" "mp4")
+	ranger-deer-show-details t
+	ranger-max-preview-size 10
+	ranger-show-literal nil
+	ranger-hide-cursor nil))
 
 ;; ansi-color
 (use-package ansi-color
@@ -585,7 +583,7 @@
   ("C-x C-b" . ibuffer)
   :config
   (setq ibuffer-show-empty-filter-groups nil
-        ibuffer-filter-group-name-face '(:inherit (success bold))))
+	ibuffer-filter-group-name-face '(:inherit (success bold))))
 (use-package all-the-icons-ibuffer
   :hook
   (ibuffer-mode . all-the-icons-ibuffer-mode))
@@ -619,10 +617,10 @@
   ("C-<tab>" . treemacs)
   :init
   (setq treemacs-follow-after-init t
-        treemacs-is-never-other-window t
-        treemacs-sorting 'alphabetic-case-insensitive-asc
-        treemacs-persist-file (expand-file-name "treemacs-persist" user-emacs-directory)
-        treemacs-last-error-persist-file (expand-file-name "treemacs-last-error-persist" user-emacs-directory)))
+	treemacs-is-never-other-window t
+	treemacs-sorting 'alphabetic-case-insensitive-asc
+	treemacs-persist-file (expand-file-name "treemacs-persist" user-emacs-directory)
+	treemacs-last-error-persist-file (expand-file-name "treemacs-last-error-persist" user-emacs-directory)))
 (use-package treemacs-magit
   :after
   (treemacs magit)
@@ -681,7 +679,7 @@
   :hook (yaml-mode . hl-todo-mode)
   :config
   (setq hl-todo-highlight-punctuation ":"
-        hl-todo-keyword-faces '(("TODO" warning bold)
+	hl-todo-keyword-faces '(("TODO" warning bold)
 				("FIXME" error bold)
 				("REVIEW" font-lock-keyword-face bold)
 				("HACK" font-lock-constant-face bold)
@@ -904,14 +902,14 @@
   ("\\.txx\\'" . c++-mode)
   :config
   (add-to-list 'eglot-server-programs
-               '((c-mode c++-mode cc-mode)
-                 . ("clangd"
-                    "-j=8"
-                    "--malloc-trim"
-                    "--background-index"
-                    "--clang-tidy"
-                    "--completion-style=detailed"
-                    "--pch-storage=memory"))))
+	       '((c-mode c++-mode cc-mode)
+		 . ("clangd"
+		    "-j=8"
+		    "--malloc-trim"
+		    "--background-index"
+		    "--clang-tidy"
+		    "--completion-style=detailed"
+		    "--pch-storage=memory"))))
 (use-package cmake-mode)
 
 ;; go-mode
