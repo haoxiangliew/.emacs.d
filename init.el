@@ -216,9 +216,7 @@
       (_ (doom-themes-load-prompt))))
   (define-key global-map (kbd "<f5>") #'toggle-themes)
   (defun auto-theme ()
-    (load-light-theme)
     (run-at-time "07:00" (* 60 60 24) (lambda () (load-light-theme)))
-    (load-dark-theme)
     (run-at-time "19:00" (* 60 60 24) (lambda () (load-dark-theme))))
   (setq doom-themes-enable-bold t
 	doom-themes-enable-italic t
