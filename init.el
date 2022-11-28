@@ -9,6 +9,7 @@
 ;;; Code:
 
 ;; bootstrap straight and use-package
+(setq warning-minimum-level :emergency)
 (setq straight-check-for-modifications 'live-with-find
       straight--native-comp-available t
       straight-cache-autoloads t
