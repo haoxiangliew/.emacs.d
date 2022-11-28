@@ -371,6 +371,8 @@
       (corfu-mode 1)))
   (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
   (global-corfu-mode)
+  (setq corfu-popupinfo-delay 0.5)
+  (corfu-popupinfo-mode)
   :config
   (defun orderless-fast-dispatch (word index total)
     (and (= index 0) (= total 1) (length< word 4)
@@ -651,6 +653,20 @@
   (add-hook 'magit-pre-refresh-hook  #'diff-hl-magit-pre-refresh)
   (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
 
+;; highlight-indent-guides
+(use-package highlight-indent-guides
+  :hook
+  ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
+  :init
+  (setq highlight-indent-guides-method 'character
+	highlight-indent-guides-responsive 'top)
+  :config
+  (defun disable-indent-guides ()
+    (and highlight-indent-guides-mode
+	 (bound-and-true-p org-indent-mode)
+	 (highlight-indent-guides-mode -1)))
+  (add-hook 'org-mode-hook #'disable-indent-guides))
+
 ;; ligatures
 (use-package ligature
   :straight (ligature :type git
@@ -885,7 +901,9 @@
   ("C-c ! n" . flymake-goto-next-error)
   ("C-c ! p" . flymake-goto-prev-error)
   :init
-  (add-hook 'prog-mode-hook 'flymake-mode))
+  (add-hook 'prog-mode-hook 'flymake-mode)
+  :config
+  (setq flymake-fringe-indicator-position 'right-fringe))
 
 ;; arduino-mode
 (use-package arduino-mode
