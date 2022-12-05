@@ -662,7 +662,8 @@
   ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
   :init
   (setq highlight-indent-guides-method 'character
-	highlight-indent-guides-responsive 'top)
+	highlight-indent-guides-responsive 'top
+	highlight-indent-guides-auto-character-face-perc 200)
   :config
   (defun disable-indent-guides ()
     (and highlight-indent-guides-mode
@@ -791,11 +792,11 @@
   calfw)
 
 ;; elcord
-;; (use-package elcord
-;;   :init
-;;   (elcord-mode)
-;;   :config
-;;   (setq elcord-use-major-mode-as-main-icon t))
+(use-package elcord
+  :init
+  (elcord-mode)
+  :config
+  (setq elcord-use-major-mode-as-main-icon t))
 
 ;; notmuch
 (use-package notmuch
