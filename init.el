@@ -663,7 +663,8 @@
   :init
   (setq highlight-indent-guides-method 'character
 	highlight-indent-guides-responsive 'top
-	highlight-indent-guides-auto-character-face-perc 200)
+	highlight-indent-guides-auto-character-face-perc 80
+	highlight-indent-guides-auto-top-character-face-perc 200)
   :config
   (defun disable-indent-guides ()
     (and highlight-indent-guides-mode
