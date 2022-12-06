@@ -373,16 +373,20 @@
   (setq corfu-popupinfo-delay 0.5)
   (corfu-popupinfo-mode)
   :config
-  (defun orderless-fast-dispatch (word index total)
-    (and (= index 0) (= total 1) (length< word 4)
-	 `(orderless-regexp . ,(concat "^" (regexp-quote word)))))
-  (orderless-define-completion-style orderless-fast
-    (orderless-dispatch '(orderless-fast-dispatch))
-    (orderless-matching-styles '(orderless-literal orderless-regexp)))
+  (defun basic-limited-all-completions (string table pred point)
+    (when (length< string 4)
+      (completion-emacs21-all-completions string table pred point)))
+  (defun basic-limited-try-completion (string table pred point)
+    (when (length< string 4)
+      (completion-emacs21-try-completion string table pred point)))
+  (add-to-list 'completion-styles-alist
+               '(basic-limited
+		 basic-limited-try-completion
+		 basic-limited-all-completions
+		 "Limited basic completion."))
   (setq corfu-auto t
 	corfu-auto-delay 0
-	corfu-auto-prefix 0
-	completion-styles '(orderless-fast)))
+	corfu-auto-prefix 0))
 (use-package corfu-terminal
   :straight (corfu-terminal :type git
 			    :repo "https://codeberg.org/akib/emacs-corfu-terminal")
