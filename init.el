@@ -898,8 +898,13 @@
   :init
   (setq copilot-node-executable (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-nodejs-16*/bin/node"))))
   :config
+  (setq copilot-idle-delay 2)
+  (defun copilot-tab ()
+    (interactive)
+    (or (copilot-accept-completion)
+	(indent-for-tab-command)))
   (with-eval-after-load 'copilot
-    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-accept-completion)))
+    (define-key copilot-mode-map (kbd "<tab>") #'copilot-tab)))
 
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
