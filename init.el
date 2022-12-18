@@ -277,15 +277,12 @@
   (column-number-mode)
   (size-indication-mode))
 
-;; restart-emacs
-(use-package restart-emacs)
-
 ;; all-the-icons
 (use-package all-the-icons
   :if
   (display-graphic-p)
   :config
-  (if (file-exists-p "~/.local/share/fonts/all-the-icons.ttf")
+  (if ((find-font (font-spec :name "all-the-icons")))
       (message "all-the-icons is installed!")
     (and (all-the-icons-install-fonts) (restart-emacs))))
 (use-package all-the-icons-completion
