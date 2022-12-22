@@ -664,8 +664,8 @@
   :init
   (setq highlight-indent-guides-method 'character
 	highlight-indent-guides-responsive 'top
-	highlight-indent-guides-auto-character-face-perc 80
-	highlight-indent-guides-auto-top-character-face-perc 200)
+	highlight-indent-guides-auto-character-face-perc 50
+	highlight-indent-guides-auto-top-character-face-perc 300)
   :config
   (defun disable-indent-guides ()
     (and highlight-indent-guides-mode
@@ -931,6 +931,7 @@
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
+  :straight (:type built-in)
   :init
   (add-hook 'prog-mode-hook (lambda ()
 			      (cond ((derived-mode-p 'emacs-lisp-mode) (ignore))
