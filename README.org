@@ -1,7 +1,7 @@
 #+TITLE: .emacs.d
 #+AUTHOR: Hao Xiang Liew
 
-* [[https://git.sr.ht/~haoxiangliew/.emacs.d][.emacs.d]]
+* [[https://github.com/haoxiangliew/.emacs.d][.emacs.d]]
 This is my personal Emacs configuration
 
 ** Requirements
@@ -9,10 +9,10 @@ This is my personal Emacs configuration
 
 ** Code
 #+BEGIN_SRC shell
-./init.el
+  ./init.el
 #+END_SRC
 - Contains my primary configuration
 #+BEGIN_SRC shell
-./editor-init.el
+  ./editor-init.el
 #+END_SRC
 - Contains my $EDITOR configuration
