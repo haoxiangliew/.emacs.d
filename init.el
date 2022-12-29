@@ -106,7 +106,7 @@
   (add-to-list 'default-frame-alist '(font . "Monospace-10.5"))
   (set-face-attribute 'default nil :font "Monospace-10.5")
   (set-face-attribute 'fixed-pitch nil :font "Monospace-10.5")
-  (set-face-attribute 'variable-pitch nil :font "Sans-10.5")
+  (set-face-attribute 'variable-pitch nil :font "Cantarell-10.5")
   (setq inhibit-compacting-font-caches t)
   ;; highlight and match parentheses
   (show-paren-mode 1)
@@ -180,84 +180,21 @@
 ;; doom-themes
 (use-package doom-themes
   :config
-  ;; (defun current-doom-theme ()
-  ;;   "Return the currently used doom theme"
-  ;;   (car
-  ;;    (seq-filter
-  ;;     (lambda (theme)
-  ;; 	(string-match-p "^doom" (symbol-name theme)))
-  ;;     custom-enabled-themes)))
-  (defun load-dark-theme ()
-    "Load dark theme and disable light theme"
-    (interactive)
-    ;; (disable-theme 'doom-solarized-light)
-    (load-theme 'doom-dracula t))
-  ;; (defun load-light-theme ()
-  ;;   "Load light theme and disable dark theme"
-  ;;   (interactive)
-  ;;   (disable-theme 'doom-solarized-dark)
-  ;;   (load-theme 'doom-solarized-light t))
-  ;; (defun doom-themes-load-prompt ()
-  ;;   "Helper for toggle-themes"
-  ;;   (let ((theme
-  ;; 	   (intern
-  ;; 	    (completing-read "Load Doom theme (will disable all others): "
-  ;; 			     '(doom-solarized-light doom-solarized-dark) nil t))))
-  ;;     (mapc #'disable-theme custom-enabled-themes)
-  ;;     (pcase theme
-  ;; 	('doom-solarized-dark (load-dark-theme))
-  ;; 	('doom-solarized-light (load-light-theme)))))
-  ;; (defun toggle-themes ()
-  ;;   "Toggle between solarized dark and light"
-  ;;   (interactive)
-  ;;   (pcase (current-doom-theme)
-  ;;     ('doom-solarized-dark (load-light-theme))
-  ;;     ('doom-solarized-light (load-dark-theme))
-  ;;     (_ (doom-themes-load-prompt))))
-  ;; (define-key global-map (kbd "<f5>") #'toggle-themes)
-  ;; (defun auto-theme ()
-  ;;   (run-at-time "07:00" (* 60 60 24) (lambda () (load-light-theme)))
-  ;;   (run-at-time "19:00" (* 60 60 24) (lambda () (load-dark-theme))))
   (setq doom-themes-enable-bold t
 	doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-dark-theme)))
-    (load-dark-theme))
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
+    (load-theme 'doom-dracula t))
   (doom-themes-visual-bell-config)
   (setq doom-themes-treemacs-theme "doom-colors")
   (doom-themes-treemacs-config)
   (doom-themes-org-config))
 
-;; modus-themes
-;; (use-package modus-themes
-;;   :bind
-;;   ("<f5>" . modus-themes-toggle)
-;;   :init
-;;   (setq modus-themes-italic-constructs t
-;; 	modus-themes-variable-pitch-headings t
-;; 	modus-themes-variable-pitch-ui nil
-;; 	modus-themes-org-agenda '((header-block . (variable-pitch scale-title))
-;; 				  (header-date . (grayscale bold-all)))
-;; 	modus-themes-org-blocks '(grayscale)
-;; 	modus-themes-mode-line '(borderless)
-;; 	modus-themes-region '(bg-only no-extend))
-;;   (modus-themes-load-themes)
-;;   :config
-;;   (defun auto-theme ()
-;;     (modus-themes-load-operandi)
-;;     (run-at-time "07:00" (* 60 60 24) (lambda () (modus-themes-load-operandi)))
-;;     (modus-themes-load-vivendi)
-;;     (run-at-time "19:00" (* 60 60 24) (lambda () (modus-themes-load-vivendi))))
-;;   (if (daemonp)
-;;       (add-hook 'after-init-hook #'(lambda () (auto-theme)))
-;;     (auto-theme)))
-
 ;; solaire-mode
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-  ;; (add-to-list 'solaire-mode-themes-to-face-swap "^modus-")
   (solaire-global-mode +1))
 
 ;; doom-modeline
@@ -273,7 +210,6 @@
   (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding)
   (doom-modeline-mode 1)
   :config
-  ;; (setq doom-modeline-height 30)
   (column-number-mode)
   (size-indication-mode))
 
@@ -290,13 +226,6 @@
   all-the-icons
   :init
   (all-the-icons-completion-mode))
-
-;; consult
-(use-package consult
-  :hook (completion-list-mode . consult-preview-at-point-mode)
-  :init
-  (setq register-preview-delay 0.5
-	register-preview-function #'consult-register-format))
 
 ;; vertico
 (use-package vertico
@@ -322,11 +251,71 @@
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
   :config
   (marginalia-mode))
+(use-package consult
+  :bind (;; C-c bindings (mode-specific-map)
+         ("C-c h" . consult-history)
+         ("C-c m" . consult-mode-command)
+         ("C-c k" . consult-kmacro)
+         ;; C-x bindings (ctl-x-map)
+         ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+         ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+         ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+         ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+         ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+         ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+         ;; Custom M-# bindings for fast register access
+         ("M-#" . consult-register-load)
+         ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+         ("C-M-#" . consult-register)
+         ;; Other custom bindings
+         ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+         ;; M-g bindings (goto-map)
+         ("M-g e" . consult-compile-error)
+         ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+         ("M-g g" . consult-goto-line)             ;; orig. goto-line
+         ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+         ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+         ("M-g m" . consult-mark)
+         ("M-g k" . consult-global-mark)
+         ("M-g i" . consult-imenu)
+         ("M-g I" . consult-imenu-multi)
+         ;; M-s bindings (search-map)
+         ("M-s d" . consult-find)
+         ("M-s D" . consult-locate)
+         ("M-s g" . consult-grep)
+         ("M-s G" . consult-git-grep)
+         ("M-s r" . consult-ripgrep)
+         ("M-s l" . consult-line)
+         ("M-s L" . consult-line-multi)
+         ("M-s k" . consult-keep-lines)
+         ("M-s u" . consult-focus-lines)
+         ;; Isearch integration
+         ("M-s e" . consult-isearch-history)
+         :map isearch-mode-map
+         ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+         ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+         ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+         ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+         ;; Minibuffer history
+         :map minibuffer-local-map
+         ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+         ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+  :hook (completion-list-mode . consult-preview-at-point-mode)
+  :init
+  (setq register-preview-delay 0.5
+	register-preview-function #'consult-register-format)
+  (setq xref-show-xrefs-function #'consult-xref
+        xref-show-definitions-function #'consult-xref))
+(use-package consult-eglot)
+(use-package consult-project-extra
+  :bind
+  (("C-x p f" . consult-project-extra-find)
+   ("C-x p o" . consult-project-extra-find-other-window)))
 (use-package orderless
   :init
   (setq completion-styles '(orderless basic)
 	completion-category-defaults nil
-	completion-category-overrides '((file (styles . (partial-completion))))))
+	completion-category-overrides '((file (styles basic partial-completion)))))
 
 ;; which-key
 (use-package which-key
@@ -335,12 +324,6 @@
   :config
   (setq which-key-idle-delay 0.5
 	which-key-allow-multiple-replacements t))
-
-;; rainbow-mode
-(use-package rainbow-mode
-  :config
-  (setq rainbow-x-colors nil)
-  (add-hook 'rainbow-mode-hook (hl-line-mode (if rainbow-mode -1 +1))))
 
 ;; corfu
 (use-package corfu
@@ -398,39 +381,6 @@
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 (use-package pcmpl-args)
-
-;; cape
-(use-package cape
-  :bind (("C-c p p" . completion-at-point) ;; capf
-	 ("C-c p t" . complete-tag)        ;; etags
-	 ("C-c p d" . cape-dabbrev)        ;; or dabbrev-completion
-	 ("C-c p h" . cape-history)
-	 ("C-c p f" . cape-file)
-	 ("C-c p k" . cape-keyword)
-	 ("C-c p s" . cape-symbol)
-	 ("C-c p a" . cape-abbrev)
-	 ("C-c p i" . cape-ispell)
-	 ("C-c p l" . cape-line)
-	 ("C-c p w" . cape-dict)
-	 ("C-c p \\" . cape-tex)
-	 ("C-c p _" . cape-tex)
-	 ("C-c p ^" . cape-tex)
-	 ("C-c p &" . cape-sgml)
-	 ("C-c p r" . cape-rfc1345))
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  ;; (add-to-list 'completion-at-point-functions #'cape-history)
-  ;; (add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;; (add-to-list 'completion-at-point-functions #'cape-tex)
-  ;; (add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;; (add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;; (add-to-list 'completion-at-point-functions #'cape-abbrev)
-  ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
-  ;; (add-to-list 'completion-at-point-functions #'cape-dict)
-  ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;; (add-to-list 'completion-at-point-functions #'cape-line)
-  )
 
 ;; yasnippet
 (use-package yasnippet
@@ -609,25 +559,6 @@
   :after project
   :config
   (project-x-mode 1))
-
-;; deadgrep
-(use-package deadgrep)
-
-;; treemacs
-(use-package treemacs
-  :bind
-  ("C-<tab>" . treemacs)
-  :init
-  (setq treemacs-follow-after-init t
-	treemacs-is-never-other-window t
-	treemacs-sorting 'alphabetic-case-insensitive-asc
-	treemacs-persist-file (expand-file-name "treemacs-persist" user-emacs-directory)
-	treemacs-last-error-persist-file (expand-file-name "treemacs-last-error-persist" user-emacs-directory)))
-(use-package treemacs-magit
-  :after
-  (treemacs magit)
-  :config
-  (setq treemacs-git-mode 'simple))
 
 ;; magit
 (use-package magit
