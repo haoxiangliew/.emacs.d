@@ -337,22 +337,25 @@
 	("S-TAB" . corfu-previous)
 	([backtab] . corfu-previous))
   :init
-  (setq corfu-cycle t)
-  (setq corfu-preselect-first nil)
-  (setq completion-cycle-threshold 3)
-  (setq read-extended-command-predicate
-	#'command-completion-default-include-p)
-  (setq tab-always-indent 'complete)
+  (setq completion-cycle-threshold 3
+	tab-always-indent 'complete)
   (defun corfu-enable-always-in-minibuffer ()
     "Enable Corfu in the minibuffer if Vertico/Mct are not active."
     (unless (or (bound-and-true-p mct--active)
 		(bound-and-true-p vertico--input))
       (corfu-mode 1)))
   (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+  (with-eval-after-load 'eglot
+    (setq completion-category-defaults nil))
   (global-corfu-mode)
   (setq corfu-popupinfo-delay 0.5)
   (corfu-popupinfo-mode)
   :config
+  (setq corfu-auto t
+	corfu-auto-delay 0
+	corfu-auto-prefix 0)
+  (setq corfu-cycle t
+	corfu-preselect 'prompt)
   (defun basic-limited-all-completions (string table pred point)
     (when (length< string 4)
       (completion-emacs21-all-completions string table pred point)))
@@ -364,9 +367,6 @@
 		 basic-limited-try-completion
 		 basic-limited-all-completions
 		 "Limited basic completion."))
-  (setq corfu-auto t
-	corfu-auto-delay 0
-	corfu-auto-prefix 0)
   (add-hook 'eshell-mode-hook
 	    (lambda ()
 	      (setq-local corfu-auto nil)
