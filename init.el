@@ -366,7 +366,19 @@
 		 "Limited basic completion."))
   (setq corfu-auto t
 	corfu-auto-delay 0
-	corfu-auto-prefix 0))
+	corfu-auto-prefix 0)
+  (add-hook 'eshell-mode-hook
+	    (lambda ()
+	      (setq-local corfu-auto nil)
+	      (corfu-mode)))
+  (defun corfu-send-shell (&rest _)
+    "Send completion candidate when inside comint/eshell."
+    (cond
+     ((and (derived-mode-p 'eshell-mode) (fboundp 'eshell-send-input))
+      (eshell-send-input))
+     ((and (derived-mode-p 'comint-mode)  (fboundp 'comint-send-input))
+      (comint-send-input))))
+  (advice-add #'corfu-insert :after #'corfu-send-shell))
 (use-package corfu-terminal
   :straight (corfu-terminal :type git
 			    :repo "https://codeberg.org/akib/emacs-corfu-terminal")
@@ -610,38 +622,52 @@
 		      :host github
 		      :repo "mickeynp/ligature.el")
   :init
+  (setq prettify-symbols-unprettify-at-point 'right-edge)
   (global-prettify-symbols-mode)
   :config
-  ;; Enable all JetBrains Mono ligatures in programming modes
-  (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
-                                       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
-                                       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
-                                       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
-                                       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
-                                       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
-                                       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
-                                       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
-                                       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
-                                       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
-                                       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
+  ;; Enable PragmataPro ligatures
+  (ligature-set-ligatures 'prog-mode '("[INFO ]" "[WARN ]" "[PASS ]"
+				       "[VERBOSE]" "[KO]" "[OK]" "[PASS]"
+				       "[ERROR]" "[DEBUG]" "[INFO]" "[WARN]"
+				       "[WARNING]" "[ERR]" "[FATAL]" "[TRACE]"
+				       "[FIXME]" "[TODO]" "[BUG]" "[NOTE]" "[HACK]" "[MARK]" "[FAIL]"
+				       "# ERROR" "# DEBUG" "# INFO" "# WARN"
+				       "# WARNING" "# ERR" "# FATAL" "# TRACE"
+				       "# FIXME" "# TODO" "# BUG" "# NOTE" "# HACK" "# MARK" "# FAIL"
+				       "// ERROR" "// DEBUG" "// INFO" "// WARN"
+				       "// WARNING" "// ERR" "// FATAL" "// TRACE"
+				       "// FIXME" "// TODO" "// BUG" "// NOTE" "// HACK" "// MARK" "// FAIL"
+				       "!=" "!==" "!==" "!≡" "!≡≡"
+				       "#(" "#_" "#{" "#?" "##" "#_(" "#["
+				       "%=" "&%" "&&" "&+" "&-" "&/" "&=" "&&&"
+				       "$>" "(|" "*>"
+				       "++" "+++" "+=" "+>" "++="
+				       "--" "-<" "-<<" "-=" "->" "->>" "---" "-->" "-+-"
+				       "-\\/" "-|>" "-<|" "->-" "-<-"
+				       "-|" "-||" "-|:"
+				       ".=" "//=" "/=" "/=="
+				       "/-\\" "/-:" "/->" "/=>" "/-<" "/=<" "/=:" ":=" ":≡" ":=>"
+				       ":-\\" ":=\\" ":-/" ":=/" ":-|" ":=|" ":|-" ":|="
+				       "<$>" "<*" "<*>" "<+>"
+				       "<-" "<<=" "<=>" "<>" "<|>" "<<-" "<|" "<=<" "<~" "<~~" "<<~"
+				       "<$" "<+" "<!>" "<@>" "<#>" "<%>" "<^>" "<&>" "<?>" "<.>"
+				       "</>" "<\\>" "<\">" "<:>" "<~>" "<**>" "<<^" "<=" "<->"
+				       "<!--" "<--" "<~<" "<==>" "<|-" "<||" "<<|" "<-<" "<-->"
+				       "<<==" "<==" "<-\\" "<-/" "<=\\" "<=/"
+				       "=<<" "==" "===" "==>" "=>" "=~" "=>>" "=~=" "==>>"
+				       "=>=" "=<=" "=<" "==<" "=<|" "=/=" "=/<" "=|" "=||" "=|:"
+				       ">-" ">>-" ">>=" ">=>" ">>^" ">>|" ">!=" ">->"
+				       ">==" ">=" ">/=" ">-|" ">=|" ">-\\" ">=\\" ">-/" ">=/"
+				       ">λ=" "?." "^=" "^<<" "^>>"
+				       "\\=" "\\==" "\\/=" "\\-/" "\\-:" "\\->" "\\=>" "\\-<" "\\=<" "\\=:"
+				       "|=" "|>=" "|>" "|+|" "|->" "|-->" "|=>" "|==>" "|>-" "|<<" "||>" "|>>"
+				       "|-" "||-" "||=" "|)" "|]" "|-:" "|=:" "|-<" "|=<" "|--<" "|==<"
+				       "~=" "~>" "~~>" "~>>"
+				       "[[" "[|" "_|_" "]]"
+				       "≡≡" "≡≡≡" "≡:≡" "≡/" "≡/≡"))
   ;; Enables ligature checks globally in all buffers. You can also do it
   ;; per mode with `ligature-mode'.
   (global-ligature-mode t))
-
-;; hl-todo
-(use-package hl-todo
-  :hook (prog-mode . hl-todo-mode)
-  :hook (yaml-mode . hl-todo-mode)
-  :config
-  (setq hl-todo-highlight-punctuation ":"
-	hl-todo-keyword-faces '(("TODO" warning bold)
-				("FIXME" error bold)
-				("REVIEW" font-lock-keyword-face bold)
-				("HACK" font-lock-constant-face bold)
-				("DEPRECATED" font-lock-doc-face bold)
-				("NOTE" success bold)
-				("BUG" error bold)
-				("XXX" font-lock-constant-face bold))))
 
 ;; multiple-cursors
 (use-package multiple-cursors
