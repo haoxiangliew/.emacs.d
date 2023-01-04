@@ -106,7 +106,7 @@
   (add-to-list 'default-frame-alist '(font . "Monospace-10.5"))
   (set-face-attribute 'default nil :font "Monospace-10.5")
   (set-face-attribute 'fixed-pitch nil :font "Monospace-10.5")
-  (set-face-attribute 'variable-pitch nil :font "Cantarell-10.5")
+  (set-face-attribute 'variable-pitch nil :font "sans-10.5")
   (setq inhibit-compacting-font-caches t)
   ;; highlight and match parentheses
   (show-paren-mode 1)
