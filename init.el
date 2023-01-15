@@ -80,6 +80,7 @@
   (setq ffap-machine-p-known 'reject)
   ;; load secrets
   (defun load-if-exists (f)
+    "Load file if it exists"
     (if (file-exists-p (expand-file-name f))
 	(load-file (expand-file-name f))))
   (load-if-exists "~/.emacs.d/secrets.el")
@@ -233,6 +234,7 @@
 		     :includes (vertico-mouse))
   :init
   (defun crm-indicator (args)
+    "CRM indicator for Vertico support"
     (cons (format "[CRM%s] %s"
 		  (replace-regexp-in-string
 		   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
@@ -357,9 +359,11 @@
   (setq corfu-cycle t
 	corfu-preselect 'prompt)
   (defun basic-limited-all-completions (string table pred point)
+    "Basic orderless fast filtering"
     (when (length< string 4)
       (completion-emacs21-all-completions string table pred point)))
   (defun basic-limited-try-completion (string table pred point)
+    "Apply above algorithm to completions"
     (when (length< string 4)
       (completion-emacs21-try-completion string table pred point)))
   (add-to-list 'completion-styles-alist
@@ -425,6 +429,7 @@
   :straight (:type built-in)
   :init
   (defun eshell-add-aliases ()
+    "Alias for eshell"
     (dolist (var   '(("q"  "exit")
 		     ("ff" "find-file $1")
 		     ("d"  "dired $1")
@@ -441,6 +446,7 @@
   (setq eshell-prompt-regexp "^.* λ "
 	eshell-prompt-function #'+eshell/prompt)
   (defun +eshell/prompt ()
+    "Prompt for eshell"
     (let ((base/dir (shrink-path-prompt default-directory)))
       (concat (propertize (car base/dir)
 			  'face 'font-lock-comment-face)
@@ -501,6 +507,7 @@
   :straight (:type built-in)
   :config
   (defun colorize-compilation-buffer ()
+    "Colorize the compilation buffer with ansi-color"
     (let ((inhibit-read-only t))
       (ansi-color-apply-on-region
        compilation-filter-start (point))))
@@ -523,12 +530,14 @@
 	   "\012\033\\[2K\033\\[1F"
 	   )))
   (defun filter-non-sgr-control-sequences-in-region (begin end)
+    "Filter non-sgr control sequences in region"
     (save-excursion
       (goto-char begin)
       (while (re-search-forward
 	      non-sgr-control-sequence-regexp end t)
 	(replace-match ""))))
   (defun filter-non-sgr-control-sequences-in-output (ignored)
+    "Filter non-sgr control sequences in output"
     (let ((start-marker
 	   (or comint-last-output-start
 	       (point-min-marker)))
@@ -556,7 +565,7 @@
 (use-package undo-fu)
 (use-package undo-fu-session
   :init
-  (global-undo-fu-session-mode))
+  (undo-fu-session-global-mode))
 (use-package vundo
   :bind
   ("C-x u" . vundo))
@@ -611,6 +620,7 @@
 	highlight-indent-guides-auto-top-character-face-perc 300)
   :config
   (defun disable-indent-guides ()
+    "Disable indent guides in org-mode"
     (and highlight-indent-guides-mode
 	 (bound-and-true-p org-indent-mode)
 	 (highlight-indent-guides-mode -1)))
@@ -738,6 +748,7 @@
   (setq cfw:face-item-separator-color nil
 	cfw:render-line-breaker 'cfw:render-line-breaker-none)
   (defun open-my-calendar ()
+    "Open my calfw configuration"
     (interactive)
     (cfw:open-calendar-buffer
      :contents-sources
@@ -806,14 +817,32 @@
 	      (message (format "Sending message using '%s' with config '%s'" sender xmess))
 	      (message-send-and-exit))
 	  (error "Could not find SMTP Server for this Sender address: %s. You might want to correct it or add it to the SMTP Server list 'smtp-accounts'" sender)))))
-  (defun local-compose-mode()
+  (defun local-compose-mode ()
     "Keys for compose mode."
     (local-set-key (kbd "C-c C-c") 'set-smtp-server-message-send-and-exit))
   (add-hook 'message-setup-hook 'local-compose-mode)
   (setq notmuch-show-log nil
 	notmuch-hello-sections `(notmuch-hello-insert-saved-searches
 				 notmuch-hello-insert-alltags)
-	notmuch-message-headers-visible nil))
+	notmuch-message-headers-visible nil)
+  (defun notmuch-update ()
+    "Sync notmuch emails with server."
+    (interactive)
+    (let ((compilation-buffer-name-function (lambda (_) (format "*notmuch update*"))))
+      (with-current-buffer (compile (format "%s" +notmuch-sync-backend))
+	(add-hook
+	 'compilation-finish-functions
+	 (lambda (buf status)
+           (if (equal status "finished\n")
+               (progn
+		 (delete-windows-on buf)
+		 (bury-buffer buf)
+		 (notmuch-refresh-all-buffers)
+		 (message "Notmuch sync successful"))
+             (user-error "Failed to sync notmuch data")))
+	 nil
+	 'local))))
+  (define-key notmuch-search-mode-map "G" 'notmuch-update))
 
 ;; language configuration
 
@@ -857,6 +886,7 @@
   :config
   (setq copilot-idle-delay 2)
   (defun copilot-tab ()
+    "Copilot completion for tab"
     (interactive)
     (or (copilot-accept-completion)
 	(indent-for-tab-command)))
@@ -928,6 +958,7 @@
 (use-package nix-mode
   :mode
   "\\.nix\\'")
+(use-package reformatter)
 
 ;; rust-mode
 (use-package rust-mode
@@ -951,6 +982,7 @@
   (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format))
   :config
   (defun verilog-config-hook ()
+    "Verilog-Mode config"
     (setq indent-tabs-mode nil
 	  tab-width 2))
   (add-hook 'verilog-mode-hook 'verilog-config-hook))
