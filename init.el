@@ -764,11 +764,12 @@
   calfw)
 
 ;; elcord
-;; (use-package elcord
-;;   :init
-;;   (elcord-mode)
-;;   :config
-;;   (setq elcord-use-major-mode-as-main-icon t))
+(use-package elcord
+  :init
+  (elcord-mode)
+  :config
+  (setq elcord-use-major-mode-as-main-icon t
+	elcord--editor-name (concat "Emacs " emacs-version)))
 
 ;; notmuch
 (use-package notmuch
@@ -884,7 +885,6 @@
   :init
   (setq copilot-node-executable (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-nodejs-16*/bin/node"))))
   :config
-  (setq copilot-idle-delay 2)
   (defun copilot-tab ()
     "Copilot completion for tab"
     (interactive)
@@ -980,12 +980,13 @@
 				    filepath))
 	apheleia-formatters)
   (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format))
+  (add-hook 'verilog-mode-hook (lambda () (setq indent-tabs-mode nil)))
   :config
-  (defun verilog-config-hook ()
-    "Verilog-Mode config"
-    (setq indent-tabs-mode nil
-	  tab-width 2))
-  (add-hook 'verilog-mode-hook 'verilog-config-hook))
+  (setq verilog-indent-level 2
+	verilog-indent-level-module 2
+	verilog-indent-level-directive 2
+	verilog-indent-level-behavioral 2
+	verilog-indent-level-declaration 2))
 
 ;; yaml-mode
 (use-package yaml-mode
