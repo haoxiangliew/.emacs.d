@@ -779,6 +779,11 @@
   (setq +notmuch-mail-folder "~/.mail/")
   (setq +notmuch-sync-backend "notmuch new")
   (setq-default notmuch-search-oldest-first nil)
+  (setq notmuch-saved-searches
+	'((:name "inbox"   :query "tag:inbox not tag:trash" :key "i")
+	  (:name "flagged" :query "tag:flagged"             :key "f")
+	  (:name "sent"    :query "tag:sent"                :key "s")
+	  (:name "drafts"  :query "tag:draft"               :key "d")))
   :config
   (setq notmuch-fcc-dirs nil
 	message-kill-buffer-on-exit t
@@ -790,11 +795,6 @@
 	  ("tags" . "(%s)"))
 	notmuch-tag-formats
 	'(("unread" (propertize tag 'face 'notmuch-tag-unread)))
-	notmuch-saved-searches
-	'((:name "inbox"   :query "tag:inbox not tag:trash" :key "i")
-	  (:name "flagged" :query "tag:flagged"             :key "f")
-	  (:name "sent"    :query "tag:sent"                :key "s")
-	  (:name "drafts"  :query "tag:draft"               :key "d"))
 	notmuch-archive-tags '("-inbox" "-unread"))
   (setq message-send-mail-function 'message-smtpmail-send-it
 	smtpmail-smtp-server "smtp.gmail.com"
@@ -891,7 +891,7 @@
     (or (copilot-accept-completion)
 	(indent-for-tab-command)))
   (with-eval-after-load 'copilot
-    (define-key copilot-mode-map (kbd "<tab>") #'copilot-tab)))
+    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)))
 
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
