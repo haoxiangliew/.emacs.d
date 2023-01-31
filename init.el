@@ -456,6 +456,52 @@
 	      (propertize " " 'face 'default)))))
 (use-package shrink-path)
 
+;; eat
+(use-package eat
+  :straight
+  (eat
+   :type git
+   :host codeberg
+   :repo "akib/emacs-eat"
+   :files ("*.el" ("term" "term/*.el") "*.texi"
+           "*.ti" ("terminfo/e" "terminfo/e/*")
+           ("terminfo/65" "terminfo/65/*")
+           ("integration" "integration/*")
+           (:exclude ".dir-locals.el" "*-tests.el")))
+  :init
+  (add-hook 'eshell-load-hook #'eat-eshell-mode)
+  (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode)
+  :config
+  (setq eshell-visual-commands nil)
+  (defun start-file-process-shell-command-using-eat-exec
+      (name buffer command)
+    (require 'eat)
+    (with-current-buffer (eat-exec buffer name "bash" nil (list "-ilc" command))
+      (eat-emacs-mode)
+      (setq eat--synchronize-scroll-function #'eat--synchronize-scroll)
+      (get-buffer-process (current-buffer))))
+  (advice-add #'compilation-start :around
+              (defun hijack-start-file-process-shell-command (o &rest args)
+		(advice-add #'start-file-process-shell-command :override
+                            #'start-file-process-shell-command-using-eat-exec)
+		(unwind-protect
+                    (apply o args)
+                  (advice-remove
+                   #'start-file-process-shell-command
+                   #'start-file-process-shell-command-using-eat-exec))))
+  (add-hook #'compilation-start-hook
+            (defun revert-to-eat-setup (proc)
+              (set-process-filter proc #'eat--filter)
+              (add-function :after (process-sentinel proc) #'eat--sentinel)))
+  (advice-add #'kill-compilation :override
+              (defun kill-compilation-by-sending-C-c ()
+		(interactive)
+		(let ((buffer (compilation-find-buffer)))
+                  (if (get-buffer-process buffer)
+	              ;; interrupt-process does not work
+                      (process-send-string (get-buffer-process buffer) (kbd "C-c"))
+                    (error "The %s process is not running" (downcase mode-name)))))))
+
 ;; vterm
 (use-package vterm
   :bind
@@ -502,53 +548,53 @@
 	ranger-show-literal nil
 	ranger-hide-cursor nil))
 
-;; ansi-color
-(use-package ansi-color
-  :straight (:type built-in)
-  :config
-  (defun colorize-compilation-buffer ()
-    "Colorize the compilation buffer with ansi-color"
-    (let ((inhibit-read-only t))
-      (ansi-color-apply-on-region
-       compilation-filter-start (point))))
-  (add-hook 'compilation-filter-hook
-	    #'colorize-compilation-buffer)
-  (defun regexp-alternatives (regexps)
-    "Return the alternation of a list of regexps."
-    (mapconcat (lambda (regexp)
-		 (concat "\\(?:" regexp "\\)"))
-	       regexps "\\|"))
-  (defvar non-sgr-control-sequence-regexp nil
-    "Regexp that matches non-SGR control sequences.")
-  (setq non-sgr-control-sequence-regexp
-	(regexp-alternatives
-	 '(;; icon name escape sequences
-	   "\033\\][0-2];.*?\007"
-	   ;; non-SGR CSI escape sequences
-	   "\033\\[\\??[0-9;]*[^0-9;m]"
-	   ;; noop
-	   "\012\033\\[2K\033\\[1F"
-	   )))
-  (defun filter-non-sgr-control-sequences-in-region (begin end)
-    "Filter non-sgr control sequences in region"
-    (save-excursion
-      (goto-char begin)
-      (while (re-search-forward
-	      non-sgr-control-sequence-regexp end t)
-	(replace-match ""))))
-  (defun filter-non-sgr-control-sequences-in-output (ignored)
-    "Filter non-sgr control sequences in output"
-    (let ((start-marker
-	   (or comint-last-output-start
-	       (point-min-marker)))
-	  (end-marker
-	   (process-mark
-	    (get-buffer-process (current-buffer)))))
-      (filter-non-sgr-control-sequences-in-region
-       start-marker
-       end-marker)))
-  (add-hook 'comint-output-filter-functions
-	    'filter-non-sgr-control-sequences-in-output))
+;; ansi-color (we use eat for full terminal emulation)
+;; (use-package ansi-color
+;;   :straight (:type built-in)
+;;   :config
+;;   (defun colorize-compilation-buffer ()
+;;     "Colorize the compilation buffer with ansi-color"
+;;     (let ((inhibit-read-only t))
+;;       (ansi-color-apply-on-region
+;;        compilation-filter-start (point))))
+;;   (add-hook 'compilation-filter-hook
+;; 	    #'colorize-compilation-buffer)
+;;   (defun regexp-alternatives (regexps)
+;;     "Return the alternation of a list of regexps."
+;;     (mapconcat (lambda (regexp)
+;; 		 (concat "\\(?:" regexp "\\)"))
+;; 	       regexps "\\|"))
+;;   (defvar non-sgr-control-sequence-regexp nil
+;;     "Regexp that matches non-SGR control sequences.")
+;;   (setq non-sgr-control-sequence-regexp
+;; 	(regexp-alternatives
+;; 	 '(;; icon name escape sequences
+;; 	   "\033\\][0-2];.*?\007"
+;; 	   ;; non-SGR CSI escape sequences
+;; 	   "\033\\[\\??[0-9;]*[^0-9;m]"
+;; 	   ;; noop
+;; 	   "\012\033\\[2K\033\\[1F"
+;; 	   )))
+;;   (defun filter-non-sgr-control-sequences-in-region (begin end)
+;;     "Filter non-sgr control sequences in region"
+;;     (save-excursion
+;;       (goto-char begin)
+;;       (while (re-search-forward
+;; 	      non-sgr-control-sequence-regexp end t)
+;; 	(replace-match ""))))
+;;   (defun filter-non-sgr-control-sequences-in-output (ignored)
+;;     "Filter non-sgr control sequences in output"
+;;     (let ((start-marker
+;; 	   (or comint-last-output-start
+;; 	       (point-min-marker)))
+;; 	  (end-marker
+;; 	   (process-mark
+;; 	    (get-buffer-process (current-buffer)))))
+;;       (filter-non-sgr-control-sequences-in-region
+;;        start-marker
+;;        end-marker)))
+;;   (add-hook 'comint-output-filter-functions
+;; 	    'filter-non-sgr-control-sequences-in-output))
 
 ;; ibuffer
 (use-package ibuffer
