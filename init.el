@@ -308,7 +308,7 @@
     (when (length< string 4)
       (completion-emacs21-try-completion string table pred point)))
   (add-to-list 'completion-styles-alist
-               '(basic-limited
+	       '(basic-limited
 		 basic-limited-try-completion
 		 basic-limited-all-completions
 		 "Limited basic completion."))
@@ -405,10 +405,10 @@
    :host codeberg
    :repo "akib/emacs-eat"
    :files ("*.el" ("term" "term/*.el") "*.texi"
-           "*.ti" ("terminfo/e" "terminfo/e/*")
-           ("terminfo/65" "terminfo/65/*")
-           ("integration" "integration/*")
-           (:exclude ".dir-locals.el" "*-tests.el")))
+	   "*.ti" ("terminfo/e" "terminfo/e/*")
+	   ("terminfo/65" "terminfo/65/*")
+	   ("integration" "integration/*")
+	   (:exclude ".dir-locals.el" "*-tests.el")))
   :init
   (add-hook 'eshell-load-hook #'eat-eshell-mode)
   (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode)
@@ -422,26 +422,26 @@
       (setq eat--synchronize-scroll-function #'eat--synchronize-scroll)
       (get-buffer-process (current-buffer))))
   (advice-add #'compilation-start :around
-              (defun hijack-start-file-process-shell-command (o &rest args)
+	      (defun hijack-start-file-process-shell-command (o &rest args)
 		(advice-add #'start-file-process-shell-command :override
-                            #'start-file-process-shell-command-using-eat-exec)
+			    #'start-file-process-shell-command-using-eat-exec)
 		(unwind-protect
-                    (apply o args)
+		    (apply o args)
                   (advice-remove
-                   #'start-file-process-shell-command
-                   #'start-file-process-shell-command-using-eat-exec))))
+		   #'start-file-process-shell-command
+		   #'start-file-process-shell-command-using-eat-exec))))
   (add-hook #'compilation-start-hook
-            (defun revert-to-eat-setup (proc)
-              (set-process-filter proc #'eat--filter)
-              (add-function :after (process-sentinel proc) #'eat--sentinel)))
+	    (defun revert-to-eat-setup (proc)
+	      (set-process-filter proc #'eat--filter)
+	      (add-function :after (process-sentinel proc) #'eat--sentinel)))
   (advice-add #'kill-compilation :override
-              (defun kill-compilation-by-sending-C-c ()
+	      (defun kill-compilation-by-sending-C-c ()
 		(interactive)
 		(let ((buffer (compilation-find-buffer)))
                   (if (get-buffer-process buffer)
-	              ;; interrupt-process does not work
-                      (process-send-string (get-buffer-process buffer) (kbd "C-c"))
-                    (error "The %s process is not running" (downcase mode-name)))))))
+		      ;; interrupt-process does not work
+		      (process-send-string (get-buffer-process buffer) (kbd "C-c"))
+		    (error "The %s process is not running" (downcase mode-name)))))))
 
 ;; vterm
 (use-package vterm
@@ -560,8 +560,8 @@
   (defun vundo-diff ()
     (interactive)
     (let* ((orig vundo--orig-buffer)
-           (source (vundo--current-node vundo--prev-mod-list))
-           (dest (vundo-m-parent source)))
+	   (source (vundo--current-node vundo--prev-mod-list))
+	   (dest (vundo-m-parent source)))
       (if (or (not dest) (eq source dest))
           (message "vundo diff not available")
 	(let ((buf (make-temp-name (concat (buffer-name orig) "-vundo-diff"))))
@@ -607,8 +607,8 @@
   :hook (diff-hl-mode . diff-hl-flydiff-mode)
   :config
   (add-hook 'diff-hl-mode-on-hook
-            (lambda ()
-              (unless (window-system)
+	    (lambda ()
+	      (unless (window-system)
 		(diff-hl-margin-local-mode))))
   (setq diff-hl-disable-on-remote t)
   (setq vc-git-diff-switches '("--histogram"))
@@ -641,46 +641,18 @@
   (setq prettify-symbols-unprettify-at-point 'right-edge)
   (global-prettify-symbols-mode)
   :config
-  ;; Enable PragmataPro ligatures
-  (ligature-set-ligatures 'prog-mode '("[INFO ]" "[WARN ]" "[PASS ]"
-				       "[VERBOSE]" "[KO]" "[OK]" "[PASS]"
-				       "[ERROR]" "[DEBUG]" "[INFO]" "[WARN]"
-				       "[WARNING]" "[ERR]" "[FATAL]" "[TRACE]"
-				       "[FIXME]" "[TODO]" "[BUG]" "[NOTE]" "[HACK]" "[MARK]" "[FAIL]"
-				       "# ERROR" "# DEBUG" "# INFO" "# WARN"
-				       "# WARNING" "# ERR" "# FATAL" "# TRACE"
-				       "# FIXME" "# TODO" "# BUG" "# NOTE" "# HACK" "# MARK" "# FAIL"
-				       "// ERROR" "// DEBUG" "// INFO" "// WARN"
-				       "// WARNING" "// ERR" "// FATAL" "// TRACE"
-				       "// FIXME" "// TODO" "// BUG" "// NOTE" "// HACK" "// MARK" "// FAIL"
-				       "!=" "!==" "!==" "!≡" "!≡≡"
-				       "#(" "#_" "#{" "#?" "##" "#_(" "#["
-				       "%=" "&%" "&&" "&+" "&-" "&/" "&=" "&&&"
-				       "$>" "(|" "*>"
-				       "++" "+++" "+=" "+>" "++="
-				       "--" "-<" "-<<" "-=" "->" "->>" "---" "-->" "-+-"
-				       "-\\/" "-|>" "-<|" "->-" "-<-"
-				       "-|" "-||" "-|:"
-				       ".=" "//=" "/=" "/=="
-				       "/-\\" "/-:" "/->" "/=>" "/-<" "/=<" "/=:" ":=" ":≡" ":=>"
-				       ":-\\" ":=\\" ":-/" ":=/" ":-|" ":=|" ":|-" ":|="
-				       "<$>" "<*" "<*>" "<+>"
-				       "<-" "<<=" "<=>" "<>" "<|>" "<<-" "<|" "<=<" "<~" "<~~" "<<~"
-				       "<$" "<+" "<!>" "<@>" "<#>" "<%>" "<^>" "<&>" "<?>" "<.>"
-				       "</>" "<\\>" "<\">" "<:>" "<~>" "<**>" "<<^" "<=" "<->"
-				       "<!--" "<--" "<~<" "<==>" "<|-" "<||" "<<|" "<-<" "<-->"
-				       "<<==" "<==" "<-\\" "<-/" "<=\\" "<=/"
-				       "=<<" "==" "===" "==>" "=>" "=~" "=>>" "=~=" "==>>"
-				       "=>=" "=<=" "=<" "==<" "=<|" "=/=" "=/<" "=|" "=||" "=|:"
-				       ">-" ">>-" ">>=" ">=>" ">>^" ">>|" ">!=" ">->"
-				       ">==" ">=" ">/=" ">-|" ">=|" ">-\\" ">=\\" ">-/" ">=/"
-				       ">λ=" "?." "^=" "^<<" "^>>"
-				       "\\=" "\\==" "\\/=" "\\-/" "\\-:" "\\->" "\\=>" "\\-<" "\\=<" "\\=:"
-				       "|=" "|>=" "|>" "|+|" "|->" "|-->" "|=>" "|==>" "|>-" "|<<" "||>" "|>>"
-				       "|-" "||-" "||=" "|)" "|]" "|-:" "|=:" "|-<" "|=<" "|--<" "|==<"
-				       "~=" "~>" "~~>" "~>>"
-				       "[[" "[|" "_|_" "]]"
-				       "≡≡" "≡≡≡" "≡:≡" "≡/" "≡/≡"))
+  ;; Enable all JetBrains Mono ligatures
+  (ligature-set-ligatures 'prog-mode '("-|" "-~" "---" "-<<" "-<" "--" "->" "->>" "-->" "///" "/=" "/=="
+				       "/>" "//" "/*" "*>" "***" "*/" "<-" "<<-" "<=>" "<=" "<|" "<||"
+				       "<|||" "<|>" "<:" "<>" "<-<" "<<<" "<==" "<<=" "<=<" "<==>" "<-|"
+				       "<<" "<~>" "<=|" "<~~" "<~" "<$>" "<$" "<+>" "<+" "</>" "</" "<*"
+				       "<*>" "<->" "<!--" ":>" ":<" ":::" "::" ":?" ":?>" ":=" "::=" "=>>"
+				       "==>" "=/=" "=!=" "=>" "===" "=:=" "==" "!==" "!!" "!=" ">]" ">:"
+				       ">>-" ">>=" ">=>" ">>>" ">-" ">=" "&&&" "&&" "|||>" "||>" "|>" "|]"
+				       "|}" "|=>" "|->" "|=" "||-" "|-" "||=" "||" ".." ".?" ".=" ".-" "..<"
+				       "..." "+++" "+>" "++" "[||]" "[<" "[|" "{|" "??" "?." "?=" "?:" "##"
+				       "###" "####" "#[" "#{" "#=" "#!" "#:" "#_(" "#_" "#?" "#(" ";;" "_|_"
+				       "__" "~~" "~~>" "~>" "~-" "~@" "$>" "^=" "]#"))
   ;; Enables ligature checks globally in all buffers. You can also do it
   ;; per mode with `ligature-mode'.
   (global-ligature-mode t))
@@ -770,12 +742,12 @@
   calfw)
 
 ;; elcord
-(use-package elcord
-  :init
-  (elcord-mode)
-  :config
-  (setq elcord-use-major-mode-as-main-icon t
-	elcord--editor-name (concat "Emacs " emacs-version)))
+;; (use-package elcord
+;;   :init
+;;   (elcord-mode)
+;;   :config
+;;   (setq elcord-use-major-mode-as-main-icon t
+;; 	elcord--editor-name (concat "Emacs " emacs-version)))
 
 ;; notmuch
 (use-package notmuch
@@ -840,13 +812,13 @@
 	(add-hook
 	 'compilation-finish-functions
 	 (lambda (buf status)
-           (if (equal status "finished\n")
-               (progn
+	   (if (equal status "finished\n")
+	       (progn
 		 (delete-windows-on buf)
 		 (bury-buffer buf)
 		 (notmuch-refresh-all-buffers)
 		 (message "Notmuch sync successful"))
-             (user-error "Failed to sync notmuch data")))
+	     (user-error "Failed to sync notmuch data")))
 	 nil
 	 'local))))
   (define-key notmuch-search-mode-map "G" 'notmuch-update))

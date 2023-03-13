@@ -12,6 +12,7 @@
 ;; bootstrap straight and use-package
 (setq package-enable-at-startup nil
       package-quickstart nil)
+(setq native-comp-deferred-compilation-deny-list nil)
 
 ;; inhibit resize
 (setq frame-inhibit-implied-resize t)
