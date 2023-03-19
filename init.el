@@ -47,10 +47,10 @@
 
 ;; install use-package support
 (elpaca elpaca-use-package
-	;; enable :elpaca use-package keyword.
-	(elpaca-use-package-mode)
-	;; assume :elpaca t unless otherwise specified.
-	(setq elpaca-use-package-by-default t))
+  ;; enable :elpaca use-package keyword.
+  (elpaca-use-package-mode)
+  ;; assume :elpaca t unless otherwise specified.
+  (setq elpaca-use-package-by-default t))
 
 ;; block until current queue processed.
 (elpaca-wait)
@@ -828,6 +828,7 @@
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
+  :defer t
   :elpaca nil
   :init
   (add-hook 'prog-mode-hook (lambda ()
