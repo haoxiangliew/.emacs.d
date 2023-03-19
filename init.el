@@ -8,29 +8,52 @@
 
 ;;; Code:
 
-;; bootstrap straight and use-package
-(setq warning-minimum-level :emergency)
-(setq straight-check-for-modifications 'live-with-find
-      straight--native-comp-available t
-      straight-cache-autoloads t
-      straight-use-package-by-default t
-      straight-vc-git-default-clone-depth 1
-      straight-recipes-gnu-elpa-use-mirror t)
-(unless (featurep 'straight)
-  (defvar bootstrap-version)
-  (let ((bootstrap-file
-	 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-	(bootstrap-version 5))
-    (unless (file-exists-p bootstrap-file)
-      (with-current-buffer
-          (url-retrieve-synchronously
-           "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
-           'silent 'inhibit-cookies)
-	(goto-char (point-max))
-	(eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage)))
-(require 'straight)
-(straight-use-package 'use-package)
+;; bootstrap elpaca and setup use-package
+(defvar elpaca-installer-version 0.3)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (call-process "git" nil buffer t "clone"
+                                       (plist-get order :repo) repo)))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (kill-buffer buffer)
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+
+;; install use-package support
+(elpaca elpaca-use-package
+	;; enable :elpaca use-package keyword.
+	(elpaca-use-package-mode)
+	;; assume :elpaca t unless otherwise specified.
+	(setq elpaca-use-package-by-default t))
+
+;; block until current queue processed.
+(elpaca-wait)
 
 ;; gcmh
 (use-package gcmh
@@ -53,17 +76,12 @@
 
 ;; emacs config
 (use-package emacs
-  :straight (:type built-in)
+  :elpaca nil
   :init
   ;; less noise when compiling elisp
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
 	native-comp-async-report-warnings-errors nil
 	load-prefer-newer t)
-  ;; speed up load-file
-  (define-advice load-file (:override (file) silence)
-    (load file nil 'nomessage))
-  (define-advice startup--load-user-init-file (:before (&rest _) undo-silence)
-    (advice-remove #'load-file #'load-file@silence))
   ;; much safer networking
   (setq gnutls-verify-error noninteractive
 	gnutls-algorithm-priority
@@ -99,7 +117,7 @@
   ;; configure scratch
   (setq initial-scratch-message (concat
 				 ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
-				 ";; [INFO] Emacs loaded " (format "%s" (hash-table-count straight--profile-cache)) " packages in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
+				 ";; [INFO] Emacs loaded in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
@@ -172,31 +190,25 @@
 
 ;; tramp
 (use-package tramp
-  :straight (:type built-in)
+  :elpaca nil
   :config
   (setq tramp-verbose 0
 	tramp-auto-save-directory (expand-file-name "tramp/autosave" user-emacs-directory)
 	tramp-chunksize 2000
 	tramp-use-ssh-controlmaster-options nil))
 
-;; doom-themes
-(use-package doom-themes
+;; catppuccin
+(use-package catppuccin-theme
   :config
-  (setq doom-themes-enable-bold t
-	doom-themes-enable-italic t
-	doom-themes-padded-modeline t)
+  (setq catppuccin-flavor 'mocha)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
-    (load-theme 'doom-dracula t))
-  (doom-themes-visual-bell-config)
-  (setq doom-themes-treemacs-theme "doom-colors")
-  (doom-themes-treemacs-config)
-  (doom-themes-org-config))
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'catppuccin t)))
+    (load-theme 'catppuccin t)))
 
 ;; solaire-mode
 (use-package solaire-mode
   :config
-  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+  (add-to-list 'solaire-mode-themes-to-face-swap "^catppuccin")
   (solaire-global-mode +1))
 
 ;; doom-modeline
@@ -212,17 +224,14 @@
   (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding)
   (doom-modeline-mode 1)
   :config
+  (setq doom-modeline-height 33)
   (column-number-mode)
   (size-indication-mode))
 
 ;; all-the-icons
 (use-package all-the-icons
   :if
-  (display-graphic-p)
-  :config
-  (if ((find-font (font-spec :name "all-the-icons")))
-      (message "all-the-icons is installed!")
-    (and (all-the-icons-install-fonts) (restart-emacs))))
+  (display-graphic-p))
 (use-package all-the-icons-completion
   :after
   all-the-icons
@@ -231,8 +240,6 @@
 
 ;; vertico
 (use-package vertico
-  :straight (vertico :files (:defaults "extensions/*")
-		     :includes (vertico-mouse))
   :init
   (defun crm-indicator (args)
     "CRM indicator for Vertico support"
@@ -247,8 +254,8 @@
 	'(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
-  (vertico-mode)
-  (vertico-mouse-mode))
+  (setq read-extended-command-predicate #'command-completion-default-include-p)
+  (vertico-mode))
 (use-package marginalia
   :init
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
@@ -270,9 +277,6 @@
 
 ;; corfu
 (use-package corfu
-  :straight (corfu :files (:defaults "extensions/*")
-		   :includes (corfu-info
-			      corfu-popupinfo))
   :bind
   (:map corfu-map
 	("TAB" . corfu-next)
@@ -291,8 +295,6 @@
   (with-eval-after-load 'eglot
     (setq completion-category-defaults nil))
   (global-corfu-mode)
-  (setq corfu-popupinfo-delay 0.5)
-  (corfu-popupinfo-mode)
   :config
   (setq corfu-auto t
 	corfu-auto-delay 0
@@ -325,8 +327,7 @@
       (comint-send-input))))
   (advice-add #'corfu-insert :after #'corfu-send-shell))
 (use-package corfu-terminal
-  :straight (corfu-terminal :type git
-			    :repo "https://codeberg.org/akib/emacs-corfu-terminal")
+  :elpaca (:repo "https://codeberg.org/akib/emacs-corfu-terminal")
   :init
   (unless (display-graphic-p)
     (corfu-terminal-mode +1)))
@@ -346,10 +347,7 @@
   :config
   (setq yas-triggers-in-field t))
 (use-package doom-snippets
-  :straight (doom-snippets :type git
-			   :host github
-			   :repo "hlissner/doom-snippets"
-			   :files ("*.el" "*"))
+  :elpaca (:repo "https://github.com/doomemacs/snippets")
   :after
   yasnippet)
 
@@ -367,7 +365,7 @@
 (use-package eshell
   :bind
   ("C-x C-e" . eshell)
-  :straight (:type built-in)
+  :elpaca nil
   :init
   (defun eshell-add-aliases ()
     "Alias for eshell"
@@ -399,16 +397,7 @@
 
 ;; eat
 (use-package eat
-  :straight
-  (eat
-   :type git
-   :host codeberg
-   :repo "akib/emacs-eat"
-   :files ("*.el" ("term" "term/*.el") "*.texi"
-	   "*.ti" ("terminfo/e" "terminfo/e/*")
-	   ("terminfo/65" "terminfo/65/*")
-	   ("integration" "integration/*")
-	   (:exclude ".dir-locals.el" "*-tests.el")))
+  :elpaca (:repo "https://codeberg.org/akib/emacs-eat")
   :init
   (add-hook 'eshell-load-hook #'eat-eshell-mode)
   (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode)
@@ -448,7 +437,7 @@
   :bind
   ("C-x C-t" . vterm)
   ;; if vterm is installed through nix
-  :straight f
+  :elpaca nil
   :config
   (add-to-list 'vterm-eval-cmds '("magit-status" magit-status))
   (add-to-list 'vterm-eval-cmds '("magit-clone" magit-clone))
@@ -457,7 +446,7 @@
 
 ;; dired
 (use-package dired
-  :straight (:type built-in)
+  :elpaca nil
   :init
   (setq dired-auto-revert-buffer t
 	dired-dwim-target t
@@ -491,7 +480,7 @@
 
 ;; ansi-color (we use eat for full terminal emulation)
 ;; (use-package ansi-color
-;;   :straight (:type built-in)
+;;   :elpaca nil
 ;;   :config
 ;;   (defun colorize-compilation-buffer ()
 ;;     "Colorize the compilation buffer with ansi-color"
@@ -539,6 +528,7 @@
 
 ;; ibuffer
 (use-package ibuffer
+  :elpaca nil
   :bind
   ("C-x C-b" . ibuffer)
   :config
@@ -578,11 +568,7 @@
 
 ;; project-x
 (use-package project-x
-  :straight
-  (project-x
-   :type git
-   :host github
-   :repo "karthink/project-x")
+  :elpaca (:repo "https://github.com/karthink/project-x")
   :after project
   :config
   (project-x-mode 1))
@@ -634,9 +620,7 @@
 
 ;; ligatures
 (use-package ligature
-  :straight (ligature :type git
-		      :host github
-		      :repo "mickeynp/ligature.el")
+  :elpaca (:repo "https://github.com/mickeynp/ligature.el")
   :init
   (setq prettify-symbols-unprettify-at-point 'right-edge)
   (global-prettify-symbols-mode)
@@ -665,7 +649,7 @@
 
 ;; org-mode
 (use-package org
-  :straight (:type built-in)
+  :elpaca nil
   :bind
   ("C-x C-a" . org-agenda)
   :config
@@ -844,7 +828,7 @@
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
-  :straight (:type built-in)
+  :elpaca nil
   :init
   (add-hook 'prog-mode-hook (lambda ()
 			      (cond ((derived-mode-p 'emacs-lisp-mode) (ignore))
@@ -859,7 +843,7 @@
 
 ;; copilot
 (use-package copilot
-  :straight (:host github :repo "zerolfx/copilot.el" :files ("dist" "*.el"))
+  :elpaca (:repo "https://github.com/zerolfx/copilot.el")
   :init
   (setq copilot-node-executable (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-nodejs-16*/bin/node"))))
   :config
@@ -893,7 +877,7 @@
 
 ;; cc-mode
 (use-package cc-mode
-  :straight (:type built-in)
+  :elpaca nil
   :mode
   ("\\.tpp\\'" . c++-mode)
   ("\\.txx\\'" . c++-mode)
