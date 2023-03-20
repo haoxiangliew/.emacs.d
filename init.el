@@ -66,7 +66,8 @@
 
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
-      url-history-file (expand-file-name "url/history" user-emacs-directory))
+      url-history-file (expand-file-name "url/history" user-emacs-directory)
+      tramp-auto-save-directory (expand-file-name "tramp/autosave" user-emacs-directory))
 (use-package no-littering)
 (setq custom-file
       (if (boundp 'server-socket-dir)
@@ -192,15 +193,6 @@
 (use-package esup
   :config
   (setq esup-depth 0))
-
-;; tramp
-(use-package tramp
-  :elpaca nil
-  :config
-  (setq tramp-verbose 0
-	tramp-auto-save-directory (expand-file-name "tramp/autosave" user-emacs-directory)
-	tramp-chunksize 2000
-	tramp-use-ssh-controlmaster-options nil))
 
 ;; catppuccin
 (use-package catppuccin-theme
@@ -604,20 +596,11 @@
   :after magit
   :config
   (setq magit-todos-keyword-suffix "\\(?:([^)]+)\\)?:?"))
-(use-package diff-hl
-  :hook (find-file    . diff-hl-mode)
-  :hook (vc-dir-mode  . diff-hl-dir-mode)
-  :hook (dired-mode   . diff-hl-dired-mode)
-  :hook (diff-hl-mode . diff-hl-flydiff-mode)
+(use-package git-gutter
+  :hook prog-mode
   :config
-  (add-hook 'diff-hl-mode-on-hook
-	    (lambda ()
-	      (unless (window-system)
-		(diff-hl-margin-local-mode))))
-  (setq diff-hl-disable-on-remote t)
-  (setq vc-git-diff-switches '("--histogram"))
-  (add-hook 'magit-pre-refresh-hook  #'diff-hl-magit-pre-refresh)
-  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
+  (global-git-gutter-mode +1))
+(use-package git-timemachine)
 
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
@@ -848,10 +831,9 @@
 (use-package eglot
   :elpaca nil
   :init
-  (add-hook 'prog-mode-hook (lambda ()
-			      (cond ((derived-mode-p 'emacs-lisp-mode) (ignore))
-				    (t (eglot-ensure)))))
-  (add-hook 'markdown-mode 'eglot-ensure)
+  :hook ((prog-mode . (lambda ()
+                        (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
+                          (eglot-ensure)))))
   :config
   (setq eglot-sync-connect 1
 	eglot-connect-timeout 10
@@ -882,9 +864,7 @@
   ("C-c ! n" . flymake-goto-next-error)
   ("C-c ! p" . flymake-goto-prev-error)
   :init
-  (add-hook 'prog-mode-hook 'flymake-mode)
-  :config
-  (setq flymake-fringe-indicator-position 'right-fringe))
+  (add-hook 'prog-mode-hook 'flymake-mode))
 
 ;; arduino-mode
 (use-package arduino-mode
@@ -953,7 +933,8 @@
 ;; verilog-mode
 (use-package verilog-mode
   :mode
-  "\\.v\\'"
+  ("\\.v\\'"
+   "\\.sv\\'")
   :init
   (add-to-list 'eglot-server-programs '(verilog-mode "verible-verilog-ls"))
   (push '(verible-verilog-format . ("verible-verilog-format"
