@@ -82,6 +82,11 @@
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
 	native-comp-async-report-warnings-errors nil
 	load-prefer-newer t)
+  ;; speed up load-file
+  (define-advice load-file (:override (file) silence)
+    (load file nil 'nomessage))
+  (define-advice startup--load-user-init-file (:before (&rest _) undo-silence)
+    (advice-remove #'load-file #'load-file@silence))
   ;; much safer networking
   (setq gnutls-verify-error noninteractive
 	gnutls-algorithm-priority
@@ -240,6 +245,8 @@
 
 ;; vertico
 (use-package vertico
+  :elpaca (vertico :files (:defaults "extensions/*")
+		   :includes (vertico-mouse))
   :init
   (defun crm-indicator (args)
     "CRM indicator for Vertico support"
@@ -255,7 +262,8 @@
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
   (setq read-extended-command-predicate #'command-completion-default-include-p)
-  (vertico-mode))
+  (vertico-mode)
+  (vertico-mouse-mode))
 (use-package marginalia
   :init
   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
@@ -277,6 +285,9 @@
 
 ;; corfu
 (use-package corfu
+  :elpaca (corfu :files (:defaults "extensions/*")
+		 :includes (corfu-info
+			    corfu-popupinfo))
   :bind
   (:map corfu-map
 	("TAB" . corfu-next)
@@ -295,6 +306,8 @@
   (with-eval-after-load 'eglot
     (setq completion-category-defaults nil))
   (global-corfu-mode)
+  (setq corfu-popupinfo-delay 0.5)
+  (corfu-popupinfo-mode)
   :config
   (setq corfu-auto t
 	corfu-auto-delay 0
@@ -397,7 +410,12 @@
 
 ;; eat
 (use-package eat
-  :elpaca (:repo "https://codeberg.org/akib/emacs-eat")
+  :elpaca (eat :repo "https://codeberg.org/akib/emacs-eat"
+	       :files ("*.el" ("term" "term/*.el") "*.texi"
+		       "*.ti" ("terminfo/e" "terminfo/e/*")
+		       ("terminfo/65" "terminfo/65/*")
+		       ("integration" "integration/*")
+		       (:exclude ".dir-locals.el" "*-tests.el")))
   :init
   (add-hook 'eshell-load-hook #'eat-eshell-mode)
   (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode)
@@ -828,7 +846,6 @@
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
-  :defer t
   :elpaca nil
   :init
   (add-hook 'prog-mode-hook (lambda ()
