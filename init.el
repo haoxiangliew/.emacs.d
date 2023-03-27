@@ -8,7 +8,10 @@
 
 ;;; Code:
 
-;; bootstrap elpaca and setup use-package
+;; default to maximized emacs frames
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; bootstrap elpaca and use-package
 (defvar elpaca-installer-version 0.3)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -52,11 +55,12 @@
   ;; assume :elpaca t unless otherwise specified.
   (setq elpaca-use-package-by-default t))
 
-;; block until current queue processed.
+;; block until queue is finished
 (elpaca-wait)
 
 ;; gcmh
 (use-package gcmh
+  :demand t
   :init
   (gcmh-mode 1)
   :config
@@ -162,10 +166,10 @@
 	auto-window-vscroll nil
 	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
 	mouse-wheel-scroll-amount-horizontal 2)
-  (pixel-scroll-precision-mode)
-  (setq pixel-scroll-precision-interpolate-page t
-	pixel-scroll-precision-use-momentum t
-	pixel-scroll-precision-momentum-seconds 0.1)
+  ;; (pixel-scroll-precision-mode)
+  ;; (setq pixel-scroll-precision-interpolate-page t
+  ;;       pixel-scroll-precision-use-momentum t
+  ;;       pixel-scroll-precision-momentum-seconds 0.1)
   (setq fast-but-imprecise-scrolling t)
   (setq redisplay-skip-fontification-on-input t)
   ;; disable bells
@@ -352,7 +356,8 @@
   :config
   (setq yas-triggers-in-field t))
 (use-package doom-snippets
-  :elpaca (:repo "https://github.com/doomemacs/snippets")
+  :elpaca (:repo "https://github.com/doomemacs/snippets"
+		 :files ("*.el" "*"))
   :after
   yasnippet)
 
@@ -596,28 +601,23 @@
   :after magit
   :config
   (setq magit-todos-keyword-suffix "\\(?:([^)]+)\\)?:?"))
-(use-package git-gutter
-  :hook prog-mode
-  :config
-  (global-git-gutter-mode +1))
-(use-package git-timemachine)
-
-;; highlight-indent-guides
-(use-package highlight-indent-guides
-  :hook
-  ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
+(use-package diff-hl
+  :hook (find-file    . diff-hl-mode)
+  :hook (vc-dir-mode  . diff-hl-dir-mode)
+  :hook (dired-mode   . diff-hl-dired-mode)
+  :hook (diff-hl-mode . diff-hl-flydiff-mode)
   :init
-  (setq highlight-indent-guides-method 'character
-	highlight-indent-guides-responsive 'top
-	highlight-indent-guides-auto-character-face-perc 50
-	highlight-indent-guides-auto-top-character-face-perc 300)
+  (if (fboundp 'fringe-mode) (fringe-mode '5))
+  (setq-default fringes-outside-margins t)
   :config
-  (defun disable-indent-guides ()
-    "Disable indent guides in org-mode"
-    (and highlight-indent-guides-mode
-	 (bound-and-true-p org-indent-mode)
-	 (highlight-indent-guides-mode -1)))
-  (add-hook 'org-mode-hook #'disable-indent-guides))
+  (add-hook 'diff-hl-mode-on-hook
+	    (lambda ()
+	      (unless (window-system)
+		(diff-hl-margin-local-mode))))
+  (setq diff-hl-disable-on-remote t)
+  (setq vc-git-diff-switches '("--histogram"))
+  (add-hook 'magit-pre-refresh-hook  #'diff-hl-magit-pre-refresh)
+  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
 
 ;; ligatures
 (use-package ligature
@@ -829,7 +829,6 @@
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
-  :elpaca nil
   :init
   :hook ((prog-mode . (lambda ()
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
@@ -843,7 +842,8 @@
 
 ;; copilot
 (use-package copilot
-  :elpaca (:repo "https://github.com/zerolfx/copilot.el")
+  :elpaca (:repo "https://github.com/zerolfx/copilot.el"
+		 :files ("dist" "*.el"))
   :init
   (setq copilot-node-executable (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-nodejs-16*/bin/node"))))
   :config
@@ -864,7 +864,14 @@
   ("C-c ! n" . flymake-goto-next-error)
   ("C-c ! p" . flymake-goto-prev-error)
   :init
-  (add-hook 'prog-mode-hook 'flymake-mode))
+  (add-hook 'prog-mode-hook 'flymake-mode)
+  :config
+  (setq flymake-fringe-indicator-position 'right-fringe))
+
+;; envrc
+(use-package envrc
+  :config
+  (envrc-global-mode))
 
 ;; arduino-mode
 (use-package arduino-mode
@@ -918,7 +925,6 @@
 (use-package nix-mode
   :mode
   "\\.nix\\'")
-(use-package reformatter)
 
 ;; rust-mode
 (use-package rust-mode
