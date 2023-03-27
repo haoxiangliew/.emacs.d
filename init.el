@@ -8,9 +8,6 @@
 
 ;;; Code:
 
-;; default to maximized emacs frames
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-
 ;; bootstrap elpaca and use-package
 (defvar elpaca-installer-version 0.3)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -618,6 +615,21 @@
   (setq vc-git-diff-switches '("--histogram"))
   (add-hook 'magit-pre-refresh-hook  #'diff-hl-magit-pre-refresh)
   (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
+
+;; highlight-indent-guides
+(use-package highlight-indent-guides
+  :hook
+  ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
+  :init
+  (setq highlight-indent-guides-method 'character
+	highlight-indent-guides-responsive 'top)
+  :config
+  (defun disable-indent-guides ()
+    "Disable indent guides in org-mode"
+    (and highlight-indent-guides-mode
+	 (bound-and-true-p org-indent-mode)
+	 (highlight-indent-guides-mode -1)))
+  (add-hook 'org-mode-hook #'disable-indent-guides))
 
 ;; ligatures
 (use-package ligature
