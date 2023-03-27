@@ -231,7 +231,8 @@
 
 ;; all-the-icons
 (use-package all-the-icons
-  :if (display-graphic-p))
+  :if
+  (display-graphic-p))
 (use-package all-the-icons-completion
   :after all-the-icons
   :init
@@ -282,11 +283,12 @@
   :elpaca (corfu :files (:defaults "extensions/*")
 		 :includes (corfu-info
 			    corfu-popupinfo))
-  :bind (:map corfu-map
-	      ("TAB" . corfu-next)
-	      ([tab] . corfu-next)
-	      ("S-TAB" . corfu-previous)
-	      ([backtab] . corfu-previous))
+  :bind
+  (:map corfu-map
+	("TAB" . corfu-next)
+	([tab] . corfu-next)
+	("S-TAB" . corfu-previous)
+	([backtab] . corfu-previous))
   :init
   (setq completion-cycle-threshold 3
 	tab-always-indent 'complete)
@@ -369,7 +371,8 @@
 ;; eshell
 (use-package eshell
   :elpaca nil
-  :bind ("C-x C-e" . eshell)
+  :bind
+  ("C-x C-e" . eshell)
   :init
   (defun eshell-add-aliases ()
     "Alias for eshell"
@@ -445,7 +448,8 @@
 (use-package vterm
   ;; if vterm is installed through nix
   :elpaca nil
-  :bind ("C-x C-t" . vterm)
+  :bind
+  ("C-x C-t" . vterm)
   :config
   (add-to-list 'vterm-eval-cmds '("magit-status" magit-status))
   (add-to-list 'vterm-eval-cmds '("magit-clone" magit-clone))
@@ -535,7 +539,8 @@
 ;; ibuffer
 (use-package ibuffer
   :elpaca nil
-  :bind ("C-x C-b" . ibuffer)
+  :bind
+  ("C-x C-b" . ibuffer)
   :config
   (setq ibuffer-show-empty-filter-groups nil
 	ibuffer-filter-group-name-face '(:inherit (success bold))))
@@ -548,7 +553,8 @@
   :init
   (undo-fu-session-global-mode))
 (use-package vundo
-  :bind ("C-x u" . vundo)
+  :bind
+  ("C-x u" . vundo)
   :config
   (defun vundo-diff ()
     (interactive)
@@ -578,7 +584,8 @@
 
 ;; magit
 (use-package magit
-  :bind ("C-x g" . magit-status)
+  :bind
+  ("C-x g" . magit-status)
   :init
   (require 'git-commit)
   (setq transient-default-level 5))
@@ -646,13 +653,15 @@
 
 ;; multiple-cursors
 (use-package multiple-cursors
-  :bind ("C-c c" . mc/edit-lines
-	 "C-c <mouse-1>" . mc/add-cursor-on-click))
+  :bind
+  ("C-c c" . mc/edit-lines)
+  ("C-c <mouse-1>" . mc/add-cursor-on-click))
 
 ;; org-mode
 (use-package org
   :elpaca nil
-  :bind ("C-x C-a" . org-agenda)
+  :bind
+  ("C-x C-a" . org-agenda)
   :config
   (add-to-list 'org-export-backends 'md)
   (setq org-startup-indented t)
@@ -705,7 +714,8 @@
 
 ;; calfw (calendar)
 (use-package calfw
-  :bind ("C-c C-c" . open-my-calendar)
+  :bind
+  ("C-c C-c" . open-my-calendar)
   :config
   (setq cfw:face-item-separator-color nil
 	cfw:render-line-breaker 'cfw:render-line-breaker-none)
@@ -733,7 +743,8 @@
 
 ;; notmuch
 (use-package notmuch
-  :bind ("C-x C-m" . notmuch-hello)
+  :bind
+  ("C-x C-m" . notmuch-hello)
   :init
   (setq +notmuch-mail-folder "~/.mail/")
   (setq +notmuch-sync-backend "notmuch new")
@@ -871,15 +882,17 @@
 
 ;; arduino-mode
 (use-package arduino-mode
-  :mode "\\.ino\\'"
+  :mode
+  "\\.ino\\'"
   :config
   (setq arduino-tab-width 4))
 
 ;; cc-mode
 (use-package cc-mode
   :elpaca nil
-  :mode ("\\.tpp\\'" . c++-mode
-	 "\\.txx\\'" . c++-mode)
+  :mode
+  ("\\.tpp\\'" . c++-mode)
+  ("\\.txx\\'" . c++-mode)
   :config
   (add-to-list 'eglot-server-programs
 	       '((c-mode c++-mode cc-mode)
@@ -894,41 +907,49 @@
 
 ;; go-mode
 (use-package go-mode
-  :mode "\\.go\\'")
+  :mode
+  "\\.go\\'")
 
 ;; lua-mode
 (use-package lua-mode
-  :mode "\\.lua\\'")
+  :mode
+  "\\.lua\\'")
 
 ;; markdown-mode
 (use-package markdown-mode
-  :mode ("README\\.md\\'" . gfm-mode
-	 "\\.md\\'"))
+  :mode
+  ("README\\.md\\'" . gfm-mode)
+  "\\.md\\'")
 
 ;; matlab-mode
 (use-package matlab-mode
-  :mode "\\.m\\'"
+  :mode
+  "\\.m\\'"
   :config
   (setq matlab-indent-function t))
 
 ;; nix-mode
 (use-package nix-mode
-  :mode "\\.nix\\'")
+  :mode
+  "\\.nix\\'")
 
 ;; rust-mode
 (use-package rust-mode
-  :mode "\\.rs\\'")
+  :mode
+  "\\.rs\\'")
 
 ;; udev-mode
 (use-package udev-mode
-  :mode "\\.rules\\'")
+  :mode
+  "\\.rules\\'")
 
 ;; verilog-mode
 (use-package verilog-mode
-  :mode ("\\.v\\'"
-	 "\\.sv\\'"
-	 "\\.vh\\'"
-	 "\\.svh\\'")
+  :mode
+  ("\\.v\\'"
+   "\\.sv\\'"
+   "\\.vh\\'"
+   "\\.svh\\'")
   :init
   (add-to-list 'eglot-server-programs '(verilog-mode "verible-verilog-ls"))
   (push '(verible-verilog-format . ("verible-verilog-format"
@@ -945,6 +966,7 @@
 
 ;; yaml-mode
 (use-package yaml-mode
-  :mode "\\.yaml\\'")
+  :mode
+  "\\.yaml\\'")
 
 ;;; init.el ends here
