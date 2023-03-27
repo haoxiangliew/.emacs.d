@@ -592,6 +592,7 @@
   :init
   (require 'git-commit)
   (setq transient-default-level 5))
+(use-package magit-section)
 (use-package magit-gitflow
   :hook (magit-mode . turn-on-magit-gitflow))
 (use-package magit-todos
@@ -952,7 +953,9 @@
 (use-package verilog-mode
   :mode
   ("\\.v\\'"
-   "\\.sv\\'")
+   "\\.sv\\'"
+   "\\.vh\\'"
+   "\\.svh\\'")
   :init
   (add-to-list 'eglot-server-programs '(verilog-mode "verible-verilog-ls"))
   (push '(verible-verilog-format . ("verible-verilog-format"
