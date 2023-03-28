@@ -24,9 +24,6 @@
 ;; disable native-comp errors
 (setq native-comp-async-report-warnings-errors nil)
 
-;; disable deferred compilation
-(setq comp-deferred-compilation nil)
-
 ;; defer gc until loaded
 (setq gc-cons-threshold most-positive-fixnum
       gc-cons-percentage 1)

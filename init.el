@@ -163,10 +163,10 @@
 	auto-window-vscroll nil
 	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
 	mouse-wheel-scroll-amount-horizontal 2)
-  ;; (pixel-scroll-precision-mode)
-  ;; (setq pixel-scroll-precision-interpolate-page t
-  ;;       pixel-scroll-precision-use-momentum t
-  ;;       pixel-scroll-precision-momentum-seconds 0.1)
+  (pixel-scroll-precision-mode)
+  (setq pixel-scroll-precision-interpolate-page t
+        pixel-scroll-precision-use-momentum t
+        pixel-scroll-precision-momentum-seconds 0.1)
   (setq fast-but-imprecise-scrolling t)
   (setq redisplay-skip-fontification-on-input t)
   ;; disable bells
@@ -350,6 +350,7 @@
 ;; yasnippet
 (use-package yasnippet
   :init
+  (load "yasnippet.el")
   (yas-global-mode 1)
   :config
   (setq yas-triggers-in-field t))
@@ -618,6 +619,7 @@
 (use-package highlight-indent-guides
   :hook ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
   :init
+  (load "highlight-indent-guides.el")
   (setq highlight-indent-guides-method 'character
 	highlight-indent-guides-responsive 'top)
   :config
@@ -836,6 +838,7 @@
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
+  :elpaca nil
   :init
   :hook ((prog-mode . (lambda ()
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
