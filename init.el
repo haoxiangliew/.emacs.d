@@ -163,6 +163,7 @@
 	auto-window-vscroll nil
 	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
 	mouse-wheel-scroll-amount-horizontal 2)
+  (setq mouse-wheel-progressive-speed t)
   (pixel-scroll-precision-mode)
   (setq pixel-scroll-precision-interpolate-page t
         pixel-scroll-precision-use-momentum t
@@ -190,6 +191,7 @@
 		bidi-paragraph-direction 'left-to-right)
   (setq bidi-inhibit-bpa t))
 
+;; tramp
 (use-package tramp
   :elpaca nil)
 
