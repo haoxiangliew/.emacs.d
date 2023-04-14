@@ -111,6 +111,7 @@
 	(load-file (expand-file-name f))))
   (load-if-exists "~/.emacs.d/secrets.el")
   (setq auth-sources '("~/.authinfo"))
+  (setq auth-source-save-behavior nil)
   ;; Add frame borders and window dividers
   (modify-all-frames-parameters
    '((right-divider-width . 10)
@@ -352,7 +353,6 @@
 ;; yasnippet
 (use-package yasnippet
   :init
-  (load "yasnippet.el")
   (yas-global-mode 1)
   :config
   (setq yas-triggers-in-field t))
@@ -621,9 +621,10 @@
 (use-package highlight-indent-guides
   :hook ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
   :init
-  (load "highlight-indent-guides.el")
   (setq highlight-indent-guides-method 'character
-	highlight-indent-guides-responsive 'top)
+	highlight-indent-guides-responsive 'top
+	highlight-indent-guides-auto-character-face-perc 50
+	highlight-indent-guides-auto-top-character-face-perc 300)
   :config
   (defun disable-indent-guides ()
     "Disable indent guides in org-mode"
