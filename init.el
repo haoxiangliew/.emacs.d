@@ -716,6 +716,11 @@
   (global-org-modern-mode)
   :config
   (setq org-modern-label-border nil))
+(use-package olivetti
+  :hook
+  (org-mode . olivetti-mode)
+  :config
+  (setq olivetti-body-width 0.8))
 
 ;; calfw (calendar)
 (use-package calfw
@@ -951,6 +956,7 @@
     ;; global keybindings
     (define-key global-map (kbd "M-C-<return>") #'copilot-complete-or-accept)
     (define-key global-map (kbd "M-C-<escape>") #'copilot-change-activation)
+    (define-key global-map (kbd "<tab>") #'copilot-tab)
 
     ;; Do copilot-quit when pressing C-g
     (advice-add 'keyboard-quit :before #'copilot-quit)
