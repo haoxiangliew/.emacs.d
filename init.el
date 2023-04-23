@@ -956,7 +956,6 @@
     ;; global keybindings
     (define-key global-map (kbd "M-C-<return>") #'copilot-complete-or-accept)
     (define-key global-map (kbd "M-C-<escape>") #'copilot-change-activation)
-    (define-key global-map (kbd "<tab>") #'copilot-tab)
 
     ;; Do copilot-quit when pressing C-g
     (advice-add 'keyboard-quit :before #'copilot-quit)
