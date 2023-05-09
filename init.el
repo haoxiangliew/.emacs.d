@@ -9,7 +9,7 @@
 ;;; Code:
 
 ;; bootstrap elpaca and use-package
-(defvar elpaca-installer-version 0.3)
+(defvar elpaca-installer-version 0.4)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -24,6 +24,7 @@
   (add-to-list 'load-path (if (file-exists-p build) build repo))
   (unless (file-exists-p repo)
     (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
     (condition-case-unless-debug err
         (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
                  ((zerop (call-process "git" nil buffer t "clone"
@@ -126,6 +127,9 @@
   (setq initial-scratch-message (concat
 				 ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
 				 ";; [INFO] Emacs loaded in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
+  ;; better completion
+  (fido-mode t)
+  (icomplete-vertical-mode t)
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
@@ -192,14 +196,8 @@
 		bidi-paragraph-direction 'left-to-right)
   (setq bidi-inhibit-bpa t))
 
-;; tramp
 (use-package tramp
   :elpaca nil)
-
-;; esup
-(use-package esup
-  :config
-  (setq esup-depth 0))
 
 ;; catppuccin
 (use-package catppuccin-theme
@@ -207,7 +205,14 @@
   (setq catppuccin-flavor 'mocha)
   (if (daemonp)
       (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'catppuccin t)))
-    (load-theme 'catppuccin t)))
+    (load-theme 'catppuccin t))
+  (let ((line (face-attribute 'mode-line :underline)))
+    (set-face-attribute 'mode-line          nil :overline   line)
+    (set-face-attribute 'mode-line-inactive nil :overline   line)
+    (set-face-attribute 'mode-line-inactive nil :underline  line)
+    (set-face-attribute 'mode-line          nil :box        nil)
+    (set-face-attribute 'mode-line-inactive nil :box        nil)
+    (set-face-attribute 'mode-line-inactive nil :background "#11111b")))
 
 ;; solaire-mode
 (use-package solaire-mode
@@ -215,63 +220,26 @@
   (add-to-list 'solaire-mode-themes-to-face-swap "^catppuccin")
   (solaire-global-mode +1))
 
-;; doom-modeline
-(use-package doom-modeline
-  :init
-  (defun doom-modeline-conditional-buffer-encoding ()
-    "We expect the encoding to be LF UTF-8, so only show the modeline when this is not the case"
-    (setq-local doom-modeline-buffer-encoding
-		(unless (and (memq (plist-get (coding-system-plist buffer-file-coding-system) :category)
-				   '(coding-category-undecided coding-category-utf-8))
-			     (not (memq (coding-system-eol-type buffer-file-coding-system) '(1 2))))
-		  t)))
-  (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding)
-  (doom-modeline-mode 1)
+;; modeline
+(use-package moody
   :config
-  (setq doom-modeline-height 33)
-  (column-number-mode)
-  (size-indication-mode))
-
-;; all-the-icons
-(use-package all-the-icons
-  :if
-  (display-graphic-p))
-(use-package all-the-icons-completion
-  :after all-the-icons
-  :init
-  (all-the-icons-completion-mode))
-
-;; vertico
-(use-package vertico
-  :elpaca (vertico :files (:defaults "extensions/*")
-		   :includes (vertico-mouse))
-  :init
-  (defun crm-indicator (args)
-    "CRM indicator for Vertico support"
-    (cons (format "[CRM%s] %s"
-		  (replace-regexp-in-string
-		   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-		   crm-separator)
-		  (car args))
-	  (cdr args)))
-  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
-  (setq minibuffer-prompt-properties
-	'(read-only t cursor-intangible t face minibuffer-prompt))
-  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-  (setq enable-recursive-minibuffers t)
-  (setq read-extended-command-predicate #'command-completion-default-include-p)
-  (vertico-mode)
-  (vertico-mouse-mode))
-(use-package marginalia
-  :init
-  (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup)
+  (setq x-underline-at-descent-line t)
+  (moody-replace-mode-line-buffer-identification)
+  (moody-replace-vc-mode)
+  (moody-replace-eldoc-minibuffer-message-function))
+(use-package minions
   :config
-  (marginalia-mode))
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless basic)
-	completion-category-defaults nil
-	completion-category-overrides '((file (styles basic partial-completion)))))
+  (minions-mode 1))
+
+;; nerd-icons
+(use-package nerd-icons)
+(use-package nerd-icons-completion
+  :config
+  (nerd-icons-completion-mode))
+(use-package nerd-icons-ibuffer
+  :hook (ibuffer-mode . nerd-icons-ibuffer-mode))
+(use-package nerd-icons-dired
+  :hook (dired-mode . nerd-icons-dired-mode))
 
 ;; which-key
 (use-package which-key
@@ -307,6 +275,45 @@
   (setq corfu-popupinfo-delay 0.5)
   (corfu-popupinfo-mode)
   :config
+  (setq kind-icon-use-icons nil)
+  (setq kind-icon-mapping
+	`(
+          (array ,(nerd-icons-codicon "nf-cod-symbol_array") :face font-lock-type-face)
+          (boolean ,(nerd-icons-codicon "nf-cod-symbol_boolean") :face font-lock-builtin-face)
+          (class ,(nerd-icons-codicon "nf-cod-symbol_class") :face font-lock-type-face)
+          (color ,(nerd-icons-codicon "nf-cod-symbol_color") :face success)
+          (command ,(nerd-icons-codicon "nf-cod-terminal") :face default)
+          (constant ,(nerd-icons-codicon "nf-cod-symbol_constant") :face font-lock-constant-face)
+          (constructor ,(nerd-icons-codicon "nf-cod-triangle_right") :face font-lock-function-name-face)
+          (enummember ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+          (enum-member ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
+          (enum ,(nerd-icons-codicon "nf-cod-symbol_enum") :face font-lock-builtin-face)
+          (event ,(nerd-icons-codicon "nf-cod-symbol_event") :face font-lock-warning-face)
+          (field ,(nerd-icons-codicon "nf-cod-symbol_field") :face font-lock-variable-name-face)
+          (file ,(nerd-icons-codicon "nf-cod-symbol_file") :face font-lock-string-face)
+          (folder ,(nerd-icons-codicon "nf-cod-folder") :face font-lock-doc-face)
+          (interface ,(nerd-icons-codicon "nf-cod-symbol_interface") :face font-lock-type-face)
+          (keyword ,(nerd-icons-codicon "nf-cod-symbol_keyword") :face font-lock-keyword-face)
+          (macro ,(nerd-icons-codicon "nf-cod-symbol_misc") :face font-lock-keyword-face)
+          (magic ,(nerd-icons-codicon "nf-cod-wand") :face font-lock-builtin-face)
+          (method ,(nerd-icons-codicon "nf-cod-symbol_method") :face font-lock-function-name-face)
+          (function ,(nerd-icons-codicon "nf-cod-symbol_method") :face font-lock-function-name-face)
+          (module ,(nerd-icons-codicon "nf-cod-file_submodule") :face font-lock-preprocessor-face)
+          (numeric ,(nerd-icons-codicon "nf-cod-symbol_numeric") :face font-lock-builtin-face)
+          (operator ,(nerd-icons-codicon "nf-cod-symbol_operator") :face font-lock-comment-delimiter-face)
+          (param ,(nerd-icons-codicon "nf-cod-symbol_parameter") :face default)
+          (property ,(nerd-icons-codicon "nf-cod-symbol_property") :face font-lock-variable-name-face)
+          (reference ,(nerd-icons-codicon "nf-cod-references") :face font-lock-variable-name-face)
+          (snippet ,(nerd-icons-codicon "nf-cod-symbol_snippet") :face font-lock-string-face)
+          (string ,(nerd-icons-codicon "nf-cod-symbol_string") :face font-lock-string-face)
+          (struct ,(nerd-icons-codicon "nf-cod-symbol_structure") :face font-lock-variable-name-face)
+          (text ,(nerd-icons-codicon "nf-cod-text_size") :face font-lock-doc-face)
+          (typeparameter ,(nerd-icons-codicon "nf-cod-list_unordered") :face font-lock-type-face)
+          (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered") :face font-lock-type-face)
+          (unit ,(nerd-icons-codicon "nf-cod-symbol_ruler") :face font-lock-constant-face)
+          (value ,(nerd-icons-codicon "nf-cod-symbol_field") :face font-lock-builtin-face)
+          (variable ,(nerd-icons-codicon "nf-cod-symbol_variable") :face font-lock-variable-name-face)
+          (t ,(nerd-icons-codicon "nf-cod-code") :face font-lock-warning-face)))
   (setq corfu-auto t
 	corfu-auto-delay 0
 	corfu-auto-prefix 0)
@@ -342,12 +349,6 @@
   :init
   (unless (display-graphic-p)
     (corfu-terminal-mode +1)))
-(use-package kind-icon
-  :after corfu
-  :init
-  (setq kind-icon-default-face 'corfu-default)
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 (use-package pcmpl-args)
 
 ;; yasnippet
@@ -356,9 +357,7 @@
   (yas-global-mode 1)
   :config
   (setq yas-triggers-in-field t))
-(use-package doom-snippets
-  :elpaca (:repo "https://github.com/doomemacs/snippets"
-		 :files ("*.el" "*"))
+(use-package yasnippet-snippets
   :after yasnippet)
 
 ;; pdf-tools
@@ -475,8 +474,6 @@
 	image-dired-temp-image-file (concat image-dired-dir "temp-image")
 	image-dired-temp-rotate-image-file (concat image-dired-dir "temp-rotate-image")
 	image-dired-thumb-size 150))
-(use-package all-the-icons-dired
-  :hook (dired-mode . all-the-icons-dired-mode))
 
 ;; ranger
 (use-package ranger
@@ -491,54 +488,6 @@
 	ranger-show-literal nil
 	ranger-hide-cursor nil))
 
-;; ansi-color (we use eat for full terminal emulation)
-;; (use-package ansi-color
-;;   :elpaca nil
-;;   :config
-;;   (defun colorize-compilation-buffer ()
-;;     "Colorize the compilation buffer with ansi-color"
-;;     (let ((inhibit-read-only t))
-;;       (ansi-color-apply-on-region
-;;        compilation-filter-start (point))))
-;;   (add-hook 'compilation-filter-hook
-;; 	    #'colorize-compilation-buffer)
-;;   (defun regexp-alternatives (regexps)
-;;     "Return the alternation of a list of regexps."
-;;     (mapconcat (lambda (regexp)
-;; 		 (concat "\\(?:" regexp "\\)"))
-;; 	       regexps "\\|"))
-;;   (defvar non-sgr-control-sequence-regexp nil
-;;     "Regexp that matches non-SGR control sequences.")
-;;   (setq non-sgr-control-sequence-regexp
-;; 	(regexp-alternatives
-;; 	 '(;; icon name escape sequences
-;; 	   "\033\\][0-2];.*?\007"
-;; 	   ;; non-SGR CSI escape sequences
-;; 	   "\033\\[\\??[0-9;]*[^0-9;m]"
-;; 	   ;; noop
-;; 	   "\012\033\\[2K\033\\[1F"
-;; 	   )))
-;;   (defun filter-non-sgr-control-sequences-in-region (begin end)
-;;     "Filter non-sgr control sequences in region"
-;;     (save-excursion
-;;       (goto-char begin)
-;;       (while (re-search-forward
-;; 	      non-sgr-control-sequence-regexp end t)
-;; 	(replace-match ""))))
-;;   (defun filter-non-sgr-control-sequences-in-output (ignored)
-;;     "Filter non-sgr control sequences in output"
-;;     (let ((start-marker
-;; 	   (or comint-last-output-start
-;; 	       (point-min-marker)))
-;; 	  (end-marker
-;; 	   (process-mark
-;; 	    (get-buffer-process (current-buffer)))))
-;;       (filter-non-sgr-control-sequences-in-region
-;;        start-marker
-;;        end-marker)))
-;;   (add-hook 'comint-output-filter-functions
-;; 	    'filter-non-sgr-control-sequences-in-output))
-
 ;; ibuffer
 (use-package ibuffer
   :elpaca nil
@@ -547,8 +496,6 @@
   :config
   (setq ibuffer-show-empty-filter-groups nil
 	ibuffer-filter-group-name-face '(:inherit (success bold))))
-(use-package all-the-icons-ibuffer
-  :hook (ibuffer-mode . all-the-icons-ibuffer-mode))
 
 ;; undo-fu
 (use-package undo-fu)
@@ -578,7 +525,7 @@
   (define-key vundo-mode-map "d" #'vundo-diff)
   (setq vundo-glyph-alist vundo-unicode-symbols))
 
-;; project-x
+;; project.el
 (use-package project-x
   :elpaca (:repo "https://github.com/karthink/project-x")
   :after project
@@ -656,11 +603,27 @@
   ;; per mode with `ligature-mode'.
   (global-ligature-mode t))
 
-;; multiple-cursors
-(use-package multiple-cursors
-  :bind
-  ("C-c c" . mc/edit-lines)
-  ("C-c <mouse-1>" . mc/add-cursor-on-click))
+;; macrursors
+(use-package macrursors
+  :elpaca (:repo "https://github.com/corytertel/macrursors")
+  :config
+  (dolist (mode '(corfu-mode))
+    (add-hook 'macrursors-pre-finish-hook mode)
+    (add-hook 'macrursors-post-finish-hook mode))
+  (define-prefix-command 'macrursors-mark-map)
+  (global-set-key (kbd "C-c SPC") #'macrursors-select)
+  (global-set-key (kbd "C->") #'macrursors-mark-next-instance-of)
+  (global-set-key (kbd "C-<") #'macrursors-mark-previous-instance-of)
+  (global-set-key (kbd "C-;") 'macrursors-mark-map)
+  (define-key macrursors-mark-map (kbd "C-;") #'macrursors-mark-all-lines-or-instances)
+  (define-key macrursors-mark-map (kbd ";") #'macrursors-mark-all-lines-or-instances)
+  (define-key macrursors-mark-map (kbd "l") #'macrursors-mark-all-lists)
+  (define-key macrursors-mark-map (kbd "s") #'macrursors-mark-all-symbols)
+  (define-key macrursors-mark-map (kbd "e") #'macrursors-mark-all-sexps)
+  (define-key macrursors-mark-map (kbd "f") #'macrursors-mark-all-defuns)
+  (define-key macrursors-mark-map (kbd "n") #'macrursors-mark-all-numbers)
+  (define-key macrursors-mark-map (kbd ".") #'macrursors-mark-all-sentences)
+  (define-key macrursors-mark-map (kbd "r") #'macrursors-mark-all-lines))
 
 ;; org-mode
 (use-package org
@@ -721,27 +684,6 @@
   (org-mode . olivetti-mode)
   :config
   (setq olivetti-body-width 0.8))
-
-;; calfw (calendar)
-(use-package calfw
-  :bind
-  ("C-c C-c" . open-my-calendar)
-  :config
-  (setq cfw:face-item-separator-color nil
-	cfw:render-line-breaker 'cfw:render-line-breaker-none)
-  (defun open-my-calendar ()
-    "Open my calfw configuration"
-    (interactive)
-    (cfw:open-calendar-buffer
-     :contents-sources
-     (list
-      (cfw:org-create-source "#50fa7b")
-      (cfw:ical-create-source "Canvas" "https://canvas.vt.edu/feeds/calendars/user_B7azceel162srPg4Nw9Ax13hcF0aPcJ57bcriQbK.ics" "#ff5555")
-      ))))
-(use-package calfw-org
-  :after calfw)
-(use-package calfw-ical
-  :after calfw)
 
 ;; elcord
 (use-package elcord
@@ -864,116 +806,19 @@
 		 :files ("dist" "*.el"))
   :init
   (setq copilot-node-executable (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-nodejs-16*/bin/node"))))
-  (defvar copilot-disabled-modes '(shell-mode
-				   inferior-python-mode
-				   eshell-mode
-				   term-mode
-				   vterm-mode
-				   comint-mode
-				   compilation-mode
-				   debugger-mode
-				   dired-mode-hook
-				   compilation-mode-hook
-				   flutter-mode-hook
-				   minibuffer-mode-hook)
-    "Modes in which copilot is inconvenient.")
-  (defvar copilot-manual-mode nil
-    "When `t' will only show completions when manually triggered, e.g. via M-C-<return>.")
-  (defvar copilot-enable-for-org nil
-    "Should copilot be enabled for org-mode buffers?")
+  :config
   (defun copilot-tab ()
-    "Copilot completion for tab, else corfu-complete, else indent"
+    "Copilot completion for tab"
     (interactive)
     (or (copilot-accept-completion)
-	(corfu-complete)
 	(indent-for-tab-command)))
-  (defun copilot-complete-or-accept ()
-    "Accept completion if it exists"
-    (interactive)
-    (if (copilot--overlay-visible)
-	(progn
-	  (copilot-accept-completion)
-	  (open-line 1)
-	  (next-line))
-      (copilot-complete)))
-  (defun copilot-quit ()
-    "Clear the overlay"
-    (interactive)
-    (condition-case err
-	(when copilot--overlay
-          (lexical-let ((pre-copilot-disable-predicates copilot-disable-predicates))
-		       (setq copilot-disable-predicates (list (lambda () t)))
-		       (copilot-clear-overlay)
-		       (run-with-idle-timer 1.0 nil
-					    (lambda ()
-					      (setq copilot-disable-predicates pre-copilot-disable-predicates)))))
-      (error handler)))
-  (defun copilot-complete-if-active (next-func n)
-    (let ((completed (when copilot-mode (copilot-accept-completion))))
-      (unless completed (funcall next-func n))))
-  (defun copilot-disable ()
-    "Helper for `copilot-disabled-modes'."
-    (copilot-mode -1))
-  (defun copilot-enable-predicate ()
-    "Show completions"
-    (and
-     (eq (get-buffer-window) (selected-window))))
-  (defun copilot-disable-predicate ()
-    "Disable completions."
-    (or copilot-manual-mode
-	(member major-mode copilot-disabled-modes)
-	(and (not copilot-enable-for-org) (eq major-mode 'org-mode))))
-  (defun copilot-change-activation ()
-    "Switch between three activation modes:
-     - automatic (default): copilot will automatically overlay completions
-     - manual: you need to press a key (M-C-<return>) to trigger completions
-     - off: copilot is completely disabled"
-    (interactive)
-    (if (and copilot-mode copilot-manual-mode)
-	(progn
-          (message "deactivating copilot")
-          (global-copilot-mode -1)
-          (setq copilot-manual-mode nil))
-      (if copilot-mode
-          (progn
-            (message "activating copilot in manual mode")
-            (setq copilot-manual-mode t))
-	(message "activating copilot")
-	(global-copilot-mode))))
-  (defun copilot-toggle-for-org ()
-    "Toggle copilot activation in org mode"
-    (interactive)
-    (setq copilot-enable-for-org (not copilot-enable-for-org))
-    (message "copilot for org is %s" (if copilot-enable-for-org "enabled" "disabled")))
-  :config
   (with-eval-after-load 'copilot
-    ;; keybindings that are active when copilot shows completions
-    (define-key copilot-mode-map (kbd "M-C-<next>") #'copilot-next-completion)
-    (define-key copilot-mode-map (kbd "M-C-<prior>") #'copilot-previous-completion)
-    (define-key copilot-mode-map (kbd "M-C-<right>") #'copilot-accept-completion-by-word)
-    (define-key copilot-mode-map (kbd "M-C-<down>") #'copilot-accept-completion-by-line)
-
-    ;; global keybindings
-    (define-key global-map (kbd "M-C-<return>") #'copilot-complete-or-accept)
-    (define-key global-map (kbd "M-C-<escape>") #'copilot-change-activation)
-
-    ;; Do copilot-quit when pressing C-g
-    (advice-add 'keyboard-quit :before #'copilot-quit)
-
-    ;; complete by pressing right or tab but only when copilot completions are
-    ;; shown. This means we leave the normal functionality intact
-    (advice-add 'right-char :around #'copilot-complete-if-active)
-    (advice-add 'indent-for-tab-command :around #'copilot-complete-if-active)
-
-    ;; deactivate copilot for certain modes
-    (add-to-list 'copilot-enable-predicates #'copilot-enable-predicate)
-    (add-to-list 'copilot-disable-predicates #'copilot-disable-predicate)
-
-    (global-copilot-mode)))
+    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)))
 
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
 (use-package flymake
+  :elpaca nil
   :bind
   ("C-c ! c" . flymake-start)
   ("C-c ! l" . flymake-show-buffer-diagnostics)

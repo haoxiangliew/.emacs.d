@@ -44,12 +44,6 @@
 (advice-add #'display-startup-echo-area-message :override #'ignore)
 (advice-add #'display-startup-screen :override #'ignore)
 
-;; load a better modeline later
-(put 'mode-line-format 'initial-value (default-toplevel-value 'mode-line-format))
-(setq-default mode-line-format nil)
-(dolist (buf (buffer-list))
-  (with-current-buffer buf (setq mode-line-format nil)))
-
 ;; use bar cursor
 (setq-default cursor-type 'bar)
 
