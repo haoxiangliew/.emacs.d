@@ -127,9 +127,6 @@
   (setq initial-scratch-message (concat
 				 ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
 				 ";; [INFO] Emacs loaded in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
-  ;; better completion
-  (fido-mode t)
-  (icomplete-vertical-mode t)
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
@@ -196,6 +193,7 @@
 		bidi-paragraph-direction 'left-to-right)
   (setq bidi-inhibit-bpa t))
 
+;; tramp
 (use-package tramp
   :elpaca nil)
 
@@ -240,6 +238,36 @@
   :hook (ibuffer-mode . nerd-icons-ibuffer-mode))
 (use-package nerd-icons-dired
   :hook (dired-mode . nerd-icons-dired-mode))
+
+;; vertico
+(use-package vertico
+  :elpaca (vertico :files (:defaults "extensions/*")
+		   :includes (vertico-mouse))
+  :init
+  (defun crm-indicator (args)
+    "CRM indicator for Vertico support"
+    (cons (format "[CRM%s] %s"
+		  (replace-regexp-in-string
+		   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+		   crm-separator)
+		  (car args))
+	  (cdr args)))
+  (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+  (setq minibuffer-prompt-properties
+	'(read-only t cursor-intangible t face minibuffer-prompt))
+  (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+  (setq enable-recursive-minibuffers t)
+  (setq read-extended-command-predicate #'command-completion-default-include-p)
+  (vertico-mode)
+  (vertico-mouse-mode))
+(use-package marginalia
+  :config
+  (marginalia-mode))
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless basic)
+	completion-category-defaults nil
+	completion-category-overrides '((file (styles basic partial-completion)))))
 
 ;; which-key
 (use-package which-key
@@ -349,6 +377,12 @@
   :init
   (unless (display-graphic-p)
     (corfu-terminal-mode +1)))
+(use-package kind-icon
+  :after corfu
+  :init
+  (setq kind-icon-default-face 'corfu-default)
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 (use-package pcmpl-args)
 
 ;; yasnippet
