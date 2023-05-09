@@ -203,31 +203,13 @@
   (setq catppuccin-flavor 'mocha)
   (if (daemonp)
       (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'catppuccin t)))
-    (load-theme 'catppuccin t))
-  (let ((line (face-attribute 'mode-line :underline)))
-    (set-face-attribute 'mode-line          nil :overline   line)
-    (set-face-attribute 'mode-line-inactive nil :overline   line)
-    (set-face-attribute 'mode-line-inactive nil :underline  line)
-    (set-face-attribute 'mode-line          nil :box        nil)
-    (set-face-attribute 'mode-line-inactive nil :box        nil)
-    (set-face-attribute 'mode-line-inactive nil :background "#11111b")))
+    (load-theme 'catppuccin t)))
 
 ;; solaire-mode
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^catppuccin")
   (solaire-global-mode +1))
-
-;; modeline
-(use-package moody
-  :config
-  (setq x-underline-at-descent-line t)
-  (moody-replace-mode-line-buffer-identification)
-  (moody-replace-vc-mode)
-  (moody-replace-eldoc-minibuffer-message-function))
-(use-package minions
-  :config
-  (minions-mode 1))
 
 ;; nerd-icons
 (use-package nerd-icons)
@@ -238,6 +220,23 @@
   :hook (ibuffer-mode . nerd-icons-ibuffer-mode))
 (use-package nerd-icons-dired
   :hook (dired-mode . nerd-icons-dired-mode))
+
+;; modeline
+(use-package doom-modeline
+  :init
+  (defun doom-modeline-conditional-buffer-encoding ()
+    "We expect the encoding to be LF UTF-8, so only show the modeline when this is not the case"
+    (setq-local doom-modeline-buffer-encoding
+		(unless (and (memq (plist-get (coding-system-plist buffer-file-coding-system) :category)
+				   '(coding-category-undecided coding-category-utf-8))
+			     (not (memq (coding-system-eol-type buffer-file-coding-system) '(1 2))))
+		  t)))
+  (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding)
+  (doom-modeline-mode 1)
+  :config
+  (setq doom-modeline-height 33)
+  (column-number-mode)
+  (size-indication-mode))
 
 ;; vertico
 (use-package vertico
