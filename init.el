@@ -5,6 +5,7 @@
 
 ;;; Dependencies:
 ;; git
+;; fzf
 
 ;;; Code:
 
@@ -304,23 +305,34 @@
 			    corfu-popupinfo))
   :bind
   (:map corfu-map
-	("TAB" . corfu-next)
-	([tab] . corfu-next)
-	("S-TAB" . corfu-previous)
-	([backtab] . corfu-previous))
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous))
+
   :init
-  (setq completion-cycle-threshold 3
-	tab-always-indent 'complete)
   (defun corfu-enable-always-in-minibuffer ()
-    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
     (unless (or (bound-and-true-p mct--active)
-		(bound-and-true-p vertico--input))
+		(bound-and-true-p vertico--input)
+		(eq (current-local-map) read-passwd-map))
+      (setq-local corfu-echo-delay nil
+                  corfu-popupinfo-delay nil)
       (corfu-mode 1)))
   (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+  (add-hook 'eshell-mode-hook
+            (lambda ()
+              (setq-local corfu-auto nil)
+              (corfu-mode)))
   (global-corfu-mode)
   (setq corfu-popupinfo-delay 0.5)
   (corfu-popupinfo-mode)
   :config
+  (setq corfu-auto t
+        corfu-auto-delay 0
+        corfu-auto-prefix 0
+	corfu-quit-no-match t)
+  (setq corfu-cycle t
+	corfu-preselect 'prompt)
   (setq kind-icon-use-icons nil)
   (setq kind-icon-mapping
 	`(
@@ -360,11 +372,14 @@
           (value ,(nerd-icons-codicon "nf-cod-symbol_field") :face font-lock-builtin-face)
           (variable ,(nerd-icons-codicon "nf-cod-symbol_variable") :face font-lock-variable-name-face)
           (t ,(nerd-icons-codicon "nf-cod-code") :face font-lock-warning-face)))
-  (setq corfu-auto t
-	corfu-auto-delay 0
-	corfu-auto-prefix 0)
-  (setq corfu-cycle t
-	corfu-preselect 'prompt))
+  (defun corfu-send-shell (&rest _)
+    "Send completion candidate when inside comint/eshell."
+    (cond
+     ((and (derived-mode-p 'eshell-mode) (fboundp 'eshell-send-input))
+      (eshell-send-input))
+     ((and (derived-mode-p 'comint-mode)  (fboundp 'comint-send-input))
+      (comint-send-input))))
+  (advice-add #'corfu-insert :after #'corfu-send-shell))
 (use-package corfu-terminal
   :elpaca (:repo "https://codeberg.org/akib/emacs-corfu-terminal")
   :init
