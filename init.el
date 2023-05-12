@@ -238,6 +238,30 @@
   (column-number-mode)
   (size-indication-mode))
 
+;; fussy fitering
+(use-package fussy
+  :config
+  (push 'fussy completion-styles)
+  (setq completion-category-defaults nil
+	completion-category-overrides nil)
+  (setq fussy-filter-fn 'fussy-filter-default)
+  (setq fussy-use-cache t)
+  (advice-add 'corfu--capf-wrapper :before 'fussy-wipe-cache)
+  (add-hook 'corfu-mode-hook
+            (lambda ()
+              (setq-local fussy-max-candidate-limit 5000
+                          fussy-default-regex-fn 'fussy-pattern-first-letter
+                          fussy-prefer-prefix nil)))
+  (with-eval-after-load 'eglot
+    (add-to-list 'completion-category-overrides
+		 '(eglot (styles fussy basic)))))
+(use-package fzf-native
+  :elpaca (:repo "https://github.com/dangduc/fzf-native"
+		 :files (:defaults "bin"))
+  :config
+  (setq fussy-score-fn 'fussy-fzf-native-score)
+  (fzf-native-load-dyn))
+
 ;; vertico
 (use-package vertico
   :elpaca (vertico :files (:defaults "extensions/*")
@@ -260,13 +284,10 @@
   (vertico-mode)
   (vertico-mouse-mode))
 (use-package marginalia
+  :init
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)
   :config
   (marginalia-mode))
-(use-package orderless
-  :init
-  (setq completion-styles '(orderless basic)
-	completion-category-defaults nil
-	completion-category-overrides '((file (styles basic partial-completion)))))
 
 ;; which-key
 (use-package which-key
@@ -296,8 +317,6 @@
 		(bound-and-true-p vertico--input))
       (corfu-mode 1)))
   (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
-  (with-eval-after-load 'eglot
-    (setq completion-category-defaults nil))
   (global-corfu-mode)
   (setq corfu-popupinfo-delay 0.5)
   (corfu-popupinfo-mode)
@@ -345,32 +364,7 @@
 	corfu-auto-delay 0
 	corfu-auto-prefix 0)
   (setq corfu-cycle t
-	corfu-preselect 'prompt)
-  (defun basic-limited-all-completions (string table pred point)
-    "Basic orderless fast filtering"
-    (when (length< string 4)
-      (completion-emacs21-all-completions string table pred point)))
-  (defun basic-limited-try-completion (string table pred point)
-    "Apply above algorithm to completions"
-    (when (length< string 4)
-      (completion-emacs21-try-completion string table pred point)))
-  (add-to-list 'completion-styles-alist
-	       '(basic-limited
-		 basic-limited-try-completion
-		 basic-limited-all-completions
-		 "Limited basic completion."))
-  (add-hook 'eshell-mode-hook
-	    (lambda ()
-	      (setq-local corfu-auto nil)
-	      (corfu-mode)))
-  (defun corfu-send-shell (&rest _)
-    "Send completion candidate when inside comint/eshell."
-    (cond
-     ((and (derived-mode-p 'eshell-mode) (fboundp 'eshell-send-input))
-      (eshell-send-input))
-     ((and (derived-mode-p 'comint-mode)  (fboundp 'comint-send-input))
-      (comint-send-input))))
-  (advice-add #'corfu-insert :after #'corfu-send-shell))
+	corfu-preselect 'prompt))
 (use-package corfu-terminal
   :elpaca (:repo "https://codeberg.org/akib/emacs-corfu-terminal")
   :init
@@ -636,27 +630,11 @@
   ;; per mode with `ligature-mode'.
   (global-ligature-mode t))
 
-;; macrursors
-(use-package macrursors
-  :elpaca (:repo "https://github.com/corytertel/macrursors")
-  :config
-  (dolist (mode '(corfu-mode))
-    (add-hook 'macrursors-pre-finish-hook mode)
-    (add-hook 'macrursors-post-finish-hook mode))
-  (define-prefix-command 'macrursors-mark-map)
-  (global-set-key (kbd "C-c SPC") #'macrursors-select)
-  (global-set-key (kbd "C->") #'macrursors-mark-next-instance-of)
-  (global-set-key (kbd "C-<") #'macrursors-mark-previous-instance-of)
-  (global-set-key (kbd "C-;") 'macrursors-mark-map)
-  (define-key macrursors-mark-map (kbd "C-;") #'macrursors-mark-all-lines-or-instances)
-  (define-key macrursors-mark-map (kbd ";") #'macrursors-mark-all-lines-or-instances)
-  (define-key macrursors-mark-map (kbd "l") #'macrursors-mark-all-lists)
-  (define-key macrursors-mark-map (kbd "s") #'macrursors-mark-all-symbols)
-  (define-key macrursors-mark-map (kbd "e") #'macrursors-mark-all-sexps)
-  (define-key macrursors-mark-map (kbd "f") #'macrursors-mark-all-defuns)
-  (define-key macrursors-mark-map (kbd "n") #'macrursors-mark-all-numbers)
-  (define-key macrursors-mark-map (kbd ".") #'macrursors-mark-all-sentences)
-  (define-key macrursors-mark-map (kbd "r") #'macrursors-mark-all-lines))
+;; multiple-cursors
+(use-package multiple-cursors
+  :bind
+  ("C-c c" . mc/edit-lines)
+  ("C-c <mouse-1>" . mc/add-cursor-on-click))
 
 ;; org-mode
 (use-package org
