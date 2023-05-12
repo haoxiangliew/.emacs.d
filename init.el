@@ -5,13 +5,12 @@
 
 ;;; Dependencies:
 ;; git
-;; fzf
 
 ;;; Code:
 
 ;; bootstrap elpaca and use-package
 (defvar elpaca-installer-version 0.4)
-(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-directory (expand-file-name "~/.cache/emacs/elpaca/"))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
@@ -69,9 +68,10 @@
 
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
-      url-history-file (expand-file-name "url/history" user-emacs-directory)
-      tramp-auto-save-directory (expand-file-name "tramp/autosave" user-emacs-directory))
-(use-package no-littering)
+      auto-save-list-file-prefix nil)
+(use-package no-littering
+  :config
+  (no-littering-theme-backups))
 (setq custom-file
       (if (boundp 'server-socket-dir)
           (expand-file-name "custom.el" server-socket-dir)
@@ -236,6 +236,7 @@
   (doom-modeline-mode 1)
   :config
   (setq doom-modeline-height 33)
+  (setq nerd-icons-scale-factor 1.2)
   (column-number-mode)
   (size-indication-mode))
 

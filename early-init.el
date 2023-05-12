@@ -5,6 +5,12 @@
 
 ;;; Code:
 
+;; no littering
+(when (fboundp 'startup-redirect-eln-cache)
+  (startup-redirect-eln-cache
+   (convert-standard-filename
+    (expand-file-name  "~/.cache/emacs/eln-cache/"))))
+
 ;; elpaca bootstrap
 (setq package-enable-at-startup nil
       package-quickstart nil
