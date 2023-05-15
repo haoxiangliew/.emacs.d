@@ -701,6 +701,11 @@
   :config
   (setq org-download-method 'directory
 	org-download-image-dir "images"))
+(use-package org-xournalpp
+  :elpaca (:repo "https://gitlab.com/vherrmann/org-xournalpp"
+		 :files ("*.el" "resources"))
+  :config
+  (add-hook 'org-mode-hook 'org-xournalpp-mode))
 (use-package org-modern
   :init
   (global-org-modern-mode)
