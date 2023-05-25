@@ -167,10 +167,11 @@
 	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
 	mouse-wheel-scroll-amount-horizontal 2)
   (setq mouse-wheel-progressive-speed t)
-  (pixel-scroll-precision-mode)
-  (setq pixel-scroll-precision-interpolate-page t
-        pixel-scroll-precision-use-momentum t
-        pixel-scroll-precision-momentum-seconds 0.1)
+  ;; emacs 29+
+  ;; (pixel-scroll-precision-mode)
+  ;; (setq pixel-scroll-precision-interpolate-page t
+  ;;       pixel-scroll-precision-use-momentum t
+  ;;       pixel-scroll-precision-momentum-seconds 0.1)
   (setq fast-but-imprecise-scrolling t)
   (setq redisplay-skip-fontification-on-input t)
   ;; disable bells
@@ -240,29 +241,12 @@
   (column-number-mode)
   (size-indication-mode))
 
-;; fussy fitering
-(use-package fussy
-  :config
-  (push 'fussy completion-styles)
-  (setq completion-category-defaults nil
-	completion-category-overrides nil)
-  (setq fussy-filter-fn 'fussy-filter-default)
-  (setq fussy-use-cache t)
-  (advice-add 'corfu--capf-wrapper :before 'fussy-wipe-cache)
-  (add-hook 'corfu-mode-hook
-            (lambda ()
-              (setq-local fussy-max-candidate-limit 5000
-                          fussy-default-regex-fn 'fussy-pattern-first-letter
-                          fussy-prefer-prefix nil)))
-  (with-eval-after-load 'eglot
-    (add-to-list 'completion-category-overrides
-		 '(eglot (styles fussy basic)))))
-(use-package fzf-native
-  :elpaca (:repo "https://github.com/dangduc/fzf-native"
-		 :files (:defaults "bin"))
-  :config
-  (setq fussy-score-fn 'fussy-fzf-native-score)
-  (fzf-native-load-dyn))
+;; orderless
+(use-package orderless
+  :init
+  (setq completion-styles '(orderless basic)
+	completion-category-defaults nil
+	completion-category-overrides '((file (styles basic partial-completion)))))
 
 ;; vertico
 (use-package vertico
@@ -429,7 +413,7 @@
 		     ("ll" "ls -lah $*")
 		     ("git" "git --no-pager $*")
 		     ("gg" "magit-status")
-		     ("cdp" "cd-to-project")
+		     ("cdp" "project-find-file")
 		     ("clear" "clear-scrollback")))
       (add-to-list 'eshell-command-aliases-list var)))
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases)
@@ -496,8 +480,16 @@
   :bind
   ("C-x C-t" . vterm)
   :config
-  (add-to-list 'vterm-eval-cmds '("magit-status" magit-status))
-  (add-to-list 'vterm-eval-cmds '("magit-clone" magit-clone))
+  (defun vterm-add-aliases ()
+    "Alias for vterm"
+    (dolist (var   '(("gg" magit-status)
+		     ("ff" find-file)
+		     ("magit-status" magit-status)
+		     ("magit-clone" magit-clone)
+		     ("cdp" project-find-file)
+		     ("project-find-file" project-find-file)))
+      (add-to-list 'vterm-eval-cmds var)))
+  (add-hook 'vterm-mode-hook 'vterm-add-aliases)
   (setq vterm-kill-buffer-on-exit t
 	vterm-max-scrollback 5000))
 
@@ -718,12 +710,12 @@
   (setq olivetti-body-width 0.8))
 
 ;; elcord
-(use-package elcord
-  :init
-  (elcord-mode)
-  :config
-  (setq elcord-use-major-mode-as-main-icon t
-	elcord--editor-name (concat "Emacs " emacs-version)))
+;; (use-package elcord
+;;   :init
+;;   (elcord-mode)
+;;   :config
+;;   (setq elcord-use-major-mode-as-main-icon t
+;; 	elcord--editor-name (concat "Emacs " emacs-version)))
 
 ;; notmuch
 (use-package notmuch
@@ -817,11 +809,18 @@
   (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
   (setq apheleia-remote-algorithm 'remote))
 
+;; jinx
+(use-package jinx
+  :elpaca nil
+  :hook
+  (emacs-startup . global-jinx-mode)
+  :bind
+  (("M-$" . jinx-correct)
+   ("C-M-$" . jinx-languages)))
+
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
-  :elpaca nil
-  :init
   :hook ((prog-mode . (lambda ()
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
@@ -917,7 +916,9 @@
 ;; nix-mode
 (use-package nix-mode
   :mode
-  "\\.nix\\'")
+  "\\.nix\\'"
+  :init
+  (add-to-list 'eglot-server-programs '(nix-mode . ("nil"))))
 
 ;; rust-mode
 (use-package rust-mode
