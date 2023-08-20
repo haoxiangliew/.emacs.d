@@ -9,7 +9,7 @@
 ;;; Code:
 
 ;; bootstrap elpaca and use-package
-(defvar elpaca-installer-version 0.4)
+(defvar elpaca-installer-version 0.5)
 (defvar elpaca-directory (expand-file-name "~/.cache/emacs/elpaca/"))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -36,7 +36,7 @@
                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
                  ((require 'elpaca))
                  ((elpaca-generate-autoloads "elpaca" repo)))
-            (kill-buffer buffer)
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
           (error "%s" (with-current-buffer buffer (buffer-string))))
       ((error) (warn "%s" err) (delete-directory repo 'recursive))))
   (unless (require 'elpaca-autoloads nil t)
@@ -167,11 +167,10 @@
 	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
 	mouse-wheel-scroll-amount-horizontal 2)
   (setq mouse-wheel-progressive-speed t)
-  ;; emacs 29+
-  ;; (pixel-scroll-precision-mode)
-  ;; (setq pixel-scroll-precision-interpolate-page t
-  ;;       pixel-scroll-precision-use-momentum t
-  ;;       pixel-scroll-precision-momentum-seconds 0.1)
+  (pixel-scroll-precision-mode)
+  (setq pixel-scroll-precision-interpolate-page t
+        pixel-scroll-precision-use-momentum t
+        pixel-scroll-precision-momentum-seconds 0.1)
   (setq fast-but-imprecise-scrolling t)
   (setq redisplay-skip-fontification-on-input t)
   ;; disable bells
@@ -710,12 +709,12 @@
   (setq olivetti-body-width 0.8))
 
 ;; elcord
-;; (use-package elcord
-;;   :init
-;;   (elcord-mode)
-;;   :config
-;;   (setq elcord-use-major-mode-as-main-icon t
-;; 	elcord--editor-name (concat "Emacs " emacs-version)))
+(use-package elcord
+  :init
+  (elcord-mode)
+  :config
+  (setq elcord-use-major-mode-as-main-icon t
+	elcord--editor-name (concat "Emacs " emacs-version)))
 
 ;; notmuch
 (use-package notmuch
@@ -809,15 +808,6 @@
   (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
   (setq apheleia-remote-algorithm 'remote))
 
-;; jinx
-(use-package jinx
-  :elpaca nil
-  :hook
-  (emacs-startup . global-jinx-mode)
-  :bind
-  (("M-$" . jinx-correct)
-   ("C-M-$" . jinx-languages)))
-
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
@@ -835,8 +825,6 @@
 (use-package copilot
   :elpaca (:repo "https://github.com/zerolfx/copilot.el"
 		 :files ("dist" "*.el"))
-  :init
-  (setq copilot-node-executable (replace-regexp-in-string "[()]" "" (format "%s" (file-expand-wildcards "/nix/store/*-nodejs-16*/bin/node"))))
   :config
   (defun copilot-tab ()
     "Copilot completion for tab"
