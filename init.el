@@ -13,8 +13,12 @@
 (defvar elpaca-directory (expand-file-name "~/.cache/emacs/elpaca/"))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+;; (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+;;                               :ref nil
+;;                               :files (:defaults (:exclude "extensions"))
+;;                               :build (:not elpaca--activate-package)))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil
+                              :ref "feat/aot-native-comp"
                               :files (:defaults (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
@@ -198,18 +202,24 @@
 (use-package tramp
   :elpaca nil)
 
-;; catppuccin
-(use-package catppuccin-theme
+;; doom-themes
+(use-package doom-themes
   :config
-  (setq catppuccin-flavor 'mocha)
+  (setq doom-themes-enable-bold t
+	doom-themes-enable-italic t
+	doom-themes-padded-modeline t)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'catppuccin t)))
-    (load-theme 'catppuccin t)))
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
+    (load-theme 'doom-dracula t))
+  (doom-themes-visual-bell-config)
+  (setq doom-themes-treemacs-theme "doom-colors")
+  (doom-themes-treemacs-config)
+  (doom-themes-org-config))
 
 ;; solaire-mode
 (use-package solaire-mode
   :config
-  (add-to-list 'solaire-mode-themes-to-face-swap "^catppuccin")
+  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
   (solaire-global-mode +1))
 
 ;; nerd-icons
@@ -235,7 +245,6 @@
   (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding)
   (doom-modeline-mode 1)
   :config
-  (setq doom-modeline-height 33)
   (setq nerd-icons-scale-factor 1.2)
   (column-number-mode)
   (size-indication-mode))
@@ -793,11 +802,10 @@
 ;; language configuration
 
 ;; tree-sitter
-(use-package tree-sitter
-  :init
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook 'tree-sitter-hl-mode))
-(use-package tree-sitter-langs)
+(use-package treesit-auto
+  :config
+  (setq treesit-auto-install 'prompt)
+  (global-treesit-auto-mode))
 
 ;; apheleia
 ;; check (describe-variable (apheleia-formatters))

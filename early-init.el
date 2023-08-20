@@ -15,6 +15,7 @@
 (setq package-enable-at-startup nil
       package-quickstart nil
       inhibit-default-init nil)
+(setq elpaca-aot-native-compilation t)
 
 ;; inhibit messages
 (setq inhibit-message t)
