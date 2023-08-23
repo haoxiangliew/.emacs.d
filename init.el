@@ -137,10 +137,10 @@
   (setq user-full-name "Hao Xiang Liew"
 	user-mail-address "haoxiangliew@gmail.com")
   ;; font
-  (add-to-list 'default-frame-alist '(font . "Monospace-10.5"))
-  (set-face-attribute 'default nil :font "Monospace-10.5")
-  (set-face-attribute 'fixed-pitch nil :font "Monospace-10.5")
-  (set-face-attribute 'variable-pitch nil :font "sans-10.5")
+  (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-10.5"))
+  (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-10.5")
+  (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-10.5")
+  (set-face-attribute 'variable-pitch nil :font "Helvetica Neue-10.5")
   (setq inhibit-compacting-font-caches t)
   ;; highlight and match parentheses
   (show-paren-mode 1)
@@ -171,10 +171,10 @@
 	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
 	mouse-wheel-scroll-amount-horizontal 2)
   (setq mouse-wheel-progressive-speed t)
-  (pixel-scroll-precision-mode)
-  (setq pixel-scroll-precision-interpolate-page t
-        pixel-scroll-precision-use-momentum t
-        pixel-scroll-precision-momentum-seconds 0.1)
+  ;; (pixel-scroll-precision-mode)
+  ;; (setq pixel-scroll-precision-interpolate-page t
+  ;;       pixel-scroll-precision-use-momentum t
+  ;;       pixel-scroll-precision-momentum-seconds 0.1)
   (setq fast-but-imprecise-scrolling t)
   (setq redisplay-skip-fontification-on-input t)
   ;; disable bells
