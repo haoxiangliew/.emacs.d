@@ -483,8 +483,8 @@
 
 ;; vterm
 (use-package vterm
-  ;; if vterm is installed through nix
-  :elpaca nil
+  ;; if vterm is installed via nix
+  ;; :elpaca nil
   :bind
   ("C-x C-t" . vterm)
   :config
@@ -498,6 +498,11 @@
 		     ("project-find-file" project-find-file)))
       (add-to-list 'vterm-eval-cmds var)))
   (add-hook 'vterm-mode-hook 'vterm-add-aliases)
+  (setq vterm-tramp-shells '(("docker" "sh")
+                             ("scp" "'zsh'")
+			     ("scp" "'bash'")
+                             ("ssh" "'zsh'")
+			     ("ssh" "'bash'")))
   (setq vterm-kill-buffer-on-exit t
 	vterm-max-scrollback 5000))
 
@@ -727,6 +732,7 @@
 
 ;; notmuch
 (use-package notmuch
+  :disabled t ;; notmuch doesn't build on nix-darwin
   :bind
   ("C-x C-m" . notmuch-hello)
   :init
@@ -861,6 +867,9 @@
   :config
   (envrc-global-mode))
 
+;; applescript-mode
+(use-package applescript-mode)
+
 ;; arduino-mode
 (use-package arduino-mode
   :mode
@@ -914,7 +923,11 @@
   :mode
   "\\.nix\\'"
   :init
-  (add-to-list 'eglot-server-programs '(nix-mode . ("nil"))))
+  (add-to-list 'eglot-server-programs '(nix-mode . ("nil")))
+  (push '(nixpkgs-format . ("nixpkgs-fmt"
+			    filepath))
+	apheleia-formatters)
+  (add-to-list 'apheleia-mode-alist '(nix-mode . nixpkgs-format)))
 
 ;; rust-mode
 (use-package rust-mode
