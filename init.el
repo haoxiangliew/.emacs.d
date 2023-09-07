@@ -725,6 +725,7 @@
 ;; elcord
 (use-package elcord
   :init
+
   (elcord-mode)
   :config
   (setq elcord-use-major-mode-as-main-icon t
@@ -732,7 +733,7 @@
 
 ;; notmuch
 (use-package notmuch
-  :disabled t ;; notmuch doesn't build on nix-darwin
+  :disabled t ;; lieer doesn't build on nix-darwin
   :bind
   ("C-x C-m" . notmuch-hello)
   :init
@@ -810,6 +811,10 @@
 ;; tree-sitter
 (use-package treesit-auto
   :config
+  (setq treesit-auto-opt-out-list '(markdown ;; for some reason, these don't build on darwin
+				    protobuf
+				    ruby
+				    yaml))
   (setq treesit-auto-install 'prompt)
   (global-treesit-auto-mode))
 
@@ -845,8 +850,23 @@
     (interactive)
     (or (copilot-accept-completion)
 	(indent-for-tab-command)))
+  (defun copilot-quit()
+    "Copilot clear overlay for keyboard-quit"
+    (interactive)
+    (condition-case err
+	(when copilot--overlay
+	  (lexical-let ((pre-copilot-disable-predicates copilot-disable-predicates))
+		       (setq copilot-disable-predicates (list (lambda () t)))
+		       (copilot-clear-overlay)
+		       (run-with-idle-timer
+			1.0
+			nil
+			(lambda ()
+			  (setq copilot-disable-predicates pre-copilot-disable-predicates)))))
+      (error handler)))
   (with-eval-after-load 'copilot
-    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)))
+    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)
+    (advice-add 'keyboard-quit :before #'copilot-quit)))
 
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
@@ -923,7 +943,7 @@
   :mode
   "\\.nix\\'"
   :init
-  (add-to-list 'eglot-server-programs '(nix-mode . ("nil")))
+  (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
   (push '(nixpkgs-format . ("nixpkgs-fmt"
 			    filepath))
 	apheleia-formatters)
@@ -947,7 +967,7 @@
    "\\.vh\\'"
    "\\.svh\\'")
   :init
-  (add-to-list 'eglot-server-programs '(verilog-mode "verible-verilog-ls"))
+  (add-to-list 'eglot-server-programs '(verilog-mode . ("verible-verilog-ls")))
   (push '(verible-verilog-format . ("verible-verilog-format"
 				    filepath))
 	apheleia-formatters)
