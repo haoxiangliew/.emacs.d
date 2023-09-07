@@ -733,7 +733,6 @@
 
 ;; notmuch
 (use-package notmuch
-  :disabled t ;; lieer doesn't build on nix-darwin
   :bind
   ("C-x C-m" . notmuch-hello)
   :init
