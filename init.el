@@ -70,6 +70,11 @@
 	gcmh-idle-delay-factor 10
 	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
 
+(use-package mac-pseudo-daemon
+  :elpaca (:repo "https://github.com/DarwinAwardWinner/mac-pseudo-daemon")
+  :init
+  (mac-pseudo-daemon-mode))
+
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
       auto-save-list-file-prefix nil)
