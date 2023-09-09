@@ -71,7 +71,6 @@
 	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
 
 (use-package mac-pseudo-daemon
-  :elpaca (:repo "https://github.com/DarwinAwardWinner/mac-pseudo-daemon")
   :init
   (mac-pseudo-daemon-mode))
 
