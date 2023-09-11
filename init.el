@@ -144,7 +144,7 @@
   (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-10.5"))
   (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-10.5")
   (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-10.5")
-  (set-face-attribute 'variable-pitch nil :font "Helvetica Neue-10.5")
+  (set-face-attribute 'variable-pitch nil :font "SF Pro-10.5")
   (setq inhibit-compacting-font-caches t)
   ;; highlight and match parentheses
   (show-paren-mode 1)
@@ -209,12 +209,15 @@
 ;; doom-themes
 (use-package doom-themes
   :config
+  (defun load-my-theme (frame)
+    (load-theme 'doom-dracula t))
   (setq doom-themes-enable-bold t
 	doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
   (if (daemonp)
       (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
     (load-theme 'doom-dracula t))
+  (add-hook 'after-make-frame-functions #'load-my-theme)
   (doom-themes-visual-bell-config)
   (setq doom-themes-treemacs-theme "doom-colors")
   (doom-themes-treemacs-config)
