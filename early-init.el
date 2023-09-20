@@ -11,6 +11,9 @@
    (convert-standard-filename
     (expand-file-name  "~/.cache/emacs/eln-cache/"))))
 
+;; prevent white flash
+(add-to-list 'default-frame-alist '(background . "#1E2029"))
+
 ;; elpaca bootstrap
 (setq package-enable-at-startup nil
       package-quickstart nil

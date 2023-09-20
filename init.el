@@ -467,26 +467,26 @@
       (setq eat--synchronize-scroll-function #'eat--synchronize-scroll)
       (get-buffer-process (current-buffer))))
   (advice-add #'compilation-start :around
-	      (defun hijack-start-file-process-shell-command (o &rest args)
+              (defun hijack-start-file-process-shell-command (o &rest args)
 		(advice-add #'start-file-process-shell-command :override
-			    #'start-file-process-shell-command-using-eat-exec)
+                            #'start-file-process-shell-command-using-eat-exec)
 		(unwind-protect
-		    (apply o args)
+                    (apply o args)
                   (advice-remove
-		   #'start-file-process-shell-command
-		   #'start-file-process-shell-command-using-eat-exec))))
+                   #'start-file-process-shell-command
+                   #'start-file-process-shell-command-using-eat-exec))))
   (add-hook #'compilation-start-hook
-	    (defun revert-to-eat-setup (proc)
-	      (set-process-filter proc #'eat--filter)
-	      (add-function :after (process-sentinel proc) #'eat--sentinel)))
+            (defun revert-to-eat-setup (proc)
+              (set-process-filter proc #'eat--filter)
+              (add-function :after (process-sentinel proc) #'eat--sentinel)))
   (advice-add #'kill-compilation :override
-	      (defun kill-compilation-by-sending-C-c ()
+              (defun kill-compilation-by-sending-C-c ()
 		(interactive)
 		(let ((buffer (compilation-find-buffer)))
                   (if (get-buffer-process buffer)
-		      ;; interrupt-process does not work
-		      (process-send-string (get-buffer-process buffer) (kbd "C-c"))
-		    (error "The %s process is not running" (downcase mode-name)))))))
+	              ;; interrupt-process does not work
+                      (process-send-string (get-buffer-process buffer) (kbd "C-c"))
+                    (error "The %s process is not running" (downcase mode-name)))))))
 
 ;; vterm
 (use-package vterm
@@ -678,6 +678,9 @@
 	org-agenda-skip-deadline-if-done t
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
+(use-package ox-moderncv
+  :elpaca (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
+  :requires ox-moderncv)
 (use-package ox-gfm)
 (use-package ox-pandoc
   :config
