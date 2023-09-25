@@ -122,16 +122,6 @@
   (load-if-exists "~/.emacs.d/secrets.el")
   (setq auth-sources '("~/.authinfo"))
   (setq auth-source-save-behavior nil)
-  ;; Add frame borders and window dividers
-  (modify-all-frames-parameters
-   '((right-divider-width . 10)
-     (internal-border-width . 10)))
-  (dolist (face '(window-divider
-		  window-divider-first-pixel
-		  window-divider-last-pixel))
-    (face-spec-reset-face face)
-    (set-face-foreground face (face-attribute 'default :background)))
-  (set-face-background 'fringe (face-attribute 'default :background))
   ;; configure scratch
   (setq initial-scratch-message (concat
 				 ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
@@ -209,19 +199,22 @@
 ;; doom-themes
 (use-package doom-themes
   :config
-  (defun load-my-theme (frame)
-    (load-theme 'doom-dracula t))
   (setq doom-themes-enable-bold t
 	doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
   (if (daemonp)
       (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
     (load-theme 'doom-dracula t))
-  (add-hook 'after-make-frame-functions #'load-my-theme)
   (doom-themes-visual-bell-config)
   (setq doom-themes-treemacs-theme "doom-colors")
   (doom-themes-treemacs-config)
   (doom-themes-org-config))
+
+;; spacious-padding
+(use-package spacious-padding
+  :config
+  (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0))
+  (spacious-padding-mode))
 
 ;; solaire-mode
 (use-package solaire-mode
@@ -333,45 +326,6 @@
 	corfu-quit-no-match t)
   (setq corfu-cycle t
 	corfu-preselect 'prompt)
-  (setq kind-icon-use-icons nil)
-  (setq kind-icon-mapping
-	`(
-          (array ,(nerd-icons-codicon "nf-cod-symbol_array") :face font-lock-type-face)
-          (boolean ,(nerd-icons-codicon "nf-cod-symbol_boolean") :face font-lock-builtin-face)
-          (class ,(nerd-icons-codicon "nf-cod-symbol_class") :face font-lock-type-face)
-          (color ,(nerd-icons-codicon "nf-cod-symbol_color") :face success)
-          (command ,(nerd-icons-codicon "nf-cod-terminal") :face default)
-          (constant ,(nerd-icons-codicon "nf-cod-symbol_constant") :face font-lock-constant-face)
-          (constructor ,(nerd-icons-codicon "nf-cod-triangle_right") :face font-lock-function-name-face)
-          (enummember ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-          (enum-member ,(nerd-icons-codicon "nf-cod-symbol_enum_member") :face font-lock-builtin-face)
-          (enum ,(nerd-icons-codicon "nf-cod-symbol_enum") :face font-lock-builtin-face)
-          (event ,(nerd-icons-codicon "nf-cod-symbol_event") :face font-lock-warning-face)
-          (field ,(nerd-icons-codicon "nf-cod-symbol_field") :face font-lock-variable-name-face)
-          (file ,(nerd-icons-codicon "nf-cod-symbol_file") :face font-lock-string-face)
-          (folder ,(nerd-icons-codicon "nf-cod-folder") :face font-lock-doc-face)
-          (interface ,(nerd-icons-codicon "nf-cod-symbol_interface") :face font-lock-type-face)
-          (keyword ,(nerd-icons-codicon "nf-cod-symbol_keyword") :face font-lock-keyword-face)
-          (macro ,(nerd-icons-codicon "nf-cod-symbol_misc") :face font-lock-keyword-face)
-          (magic ,(nerd-icons-codicon "nf-cod-wand") :face font-lock-builtin-face)
-          (method ,(nerd-icons-codicon "nf-cod-symbol_method") :face font-lock-function-name-face)
-          (function ,(nerd-icons-codicon "nf-cod-symbol_method") :face font-lock-function-name-face)
-          (module ,(nerd-icons-codicon "nf-cod-file_submodule") :face font-lock-preprocessor-face)
-          (numeric ,(nerd-icons-codicon "nf-cod-symbol_numeric") :face font-lock-builtin-face)
-          (operator ,(nerd-icons-codicon "nf-cod-symbol_operator") :face font-lock-comment-delimiter-face)
-          (param ,(nerd-icons-codicon "nf-cod-symbol_parameter") :face default)
-          (property ,(nerd-icons-codicon "nf-cod-symbol_property") :face font-lock-variable-name-face)
-          (reference ,(nerd-icons-codicon "nf-cod-references") :face font-lock-variable-name-face)
-          (snippet ,(nerd-icons-codicon "nf-cod-symbol_snippet") :face font-lock-string-face)
-          (string ,(nerd-icons-codicon "nf-cod-symbol_string") :face font-lock-string-face)
-          (struct ,(nerd-icons-codicon "nf-cod-symbol_structure") :face font-lock-variable-name-face)
-          (text ,(nerd-icons-codicon "nf-cod-text_size") :face font-lock-doc-face)
-          (typeparameter ,(nerd-icons-codicon "nf-cod-list_unordered") :face font-lock-type-face)
-          (type-parameter ,(nerd-icons-codicon "nf-cod-list_unordered") :face font-lock-type-face)
-          (unit ,(nerd-icons-codicon "nf-cod-symbol_ruler") :face font-lock-constant-face)
-          (value ,(nerd-icons-codicon "nf-cod-symbol_field") :face font-lock-builtin-face)
-          (variable ,(nerd-icons-codicon "nf-cod-symbol_variable") :face font-lock-variable-name-face)
-          (t ,(nerd-icons-codicon "nf-cod-code") :face font-lock-warning-face)))
   (defun corfu-send-shell (&rest _)
     "Send completion candidate when inside comint/eshell."
     (cond
@@ -726,11 +680,6 @@
   (global-org-modern-mode)
   :config
   (setq org-modern-label-border nil))
-(use-package olivetti
-  :hook
-  (org-mode . olivetti-mode)
-  :config
-  (setq olivetti-body-width 0.8))
 
 ;; elcord
 (use-package elcord
