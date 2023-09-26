@@ -767,10 +767,11 @@
 ;; language configuration
 
 ;; tree-sitter
-(use-package tree-sitter-langs)
 (use-package tree-sitter
   :init
-  (global-tree-sitter-mode))
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook 'tree-sitter-hl-mode))
+(use-package tree-sitter-langs)
 
 ;; apheleia
 ;; check (describe-variable (apheleia-formatters))
