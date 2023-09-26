@@ -767,14 +767,10 @@
 ;; language configuration
 
 ;; tree-sitter
-(use-package treesit-auto
-  :config
-  (setq treesit-auto-opt-out-list '(markdown ;; for some reason, these don't build on darwin
-				    protobuf
-				    ruby
-				    yaml))
-  (setq treesit-auto-install 'prompt)
-  (global-treesit-auto-mode))
+(use-package tree-sitter-langs)
+(use-package tree-sitter
+  :init
+  (global-tree-sitter-mode))
 
 ;; apheleia
 ;; check (describe-variable (apheleia-formatters))
@@ -792,10 +788,8 @@
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
   :config
-  (setq eglot-sync-connect 1
-	eglot-connect-timeout 10
+  (setq eglot-connect-timeout 10
 	eglot-autoshutdown t
-	eglot-send-changes-idle-time 0.5
 	eglot-extend-to-xref t))
 
 ;; copilot
