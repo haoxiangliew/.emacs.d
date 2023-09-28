@@ -789,8 +789,7 @@
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
   :config
-  (setq eglot-connect-timeout 10
-	eglot-autoshutdown t
+  (setq eglot-autoshutdown t
 	eglot-extend-to-xref t))
 
 ;; copilot
@@ -861,7 +860,6 @@
 	       '((c-mode c++-mode cc-mode)
 		 . ("clangd"
 		    "-j=8"
-		    "--malloc-trim"
 		    "--background-index"
 		    "--clang-tidy"
 		    "--completion-style=detailed"
