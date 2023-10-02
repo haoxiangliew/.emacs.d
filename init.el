@@ -767,11 +767,11 @@
 ;; language configuration
 
 ;; tree-sitter
-(use-package tree-sitter
-  :init
-  (global-tree-sitter-mode)
-  (add-hook 'tree-sitter-after-on-hook 'tree-sitter-hl-mode))
-(use-package tree-sitter-langs)
+(use-package treesit-auto
+  :config
+  (setq treesit-auto-opt-out-list '(protobuf))
+  (setq treesit-auto-install 'prompt)
+  (global-treesit-auto-mode))
 
 ;; apheleia
 ;; check (describe-variable (apheleia-formatters))
@@ -789,8 +789,7 @@
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
   :config
-  (setq eglot-autoshutdown t
-	eglot-extend-to-xref t))
+  (setq eglot-autoshutdown t))
 
 ;; copilot
 (use-package copilot
