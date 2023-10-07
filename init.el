@@ -770,8 +770,9 @@
 (use-package treesit-auto
   :config
   (setq treesit-auto-opt-out-list '(protobuf))
-  (setq treesit-auto-install 'prompt)
-  (global-treesit-auto-mode))
+  (setq treesit-auto-install 't)
+  (global-treesit-auto-mode)
+  (treesit-auto-install-all))
 
 ;; apheleia
 ;; check (describe-variable (apheleia-formatters))
@@ -789,7 +790,9 @@
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
   :config
-  (setq eglot-autoshutdown t))
+  (setq eglot-sync-connect 0
+	eglot-autoshutdown t
+	eglot-extend-to-xref t))
 
 ;; copilot
 (use-package copilot
