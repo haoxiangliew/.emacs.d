@@ -14,7 +14,7 @@
 ;; elpaca bootstrap
 (setq package-enable-at-startup nil
       package-quickstart nil
-      inhibit-default-init nil)
+      inhibit-default-init t)
 (setq elpaca-aot-native-compilation t)
 
 ;; inhibit messages
