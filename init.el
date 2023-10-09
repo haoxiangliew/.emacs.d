@@ -918,7 +918,9 @@
 ;; rust-mode
 (use-package rust-mode
   :mode
-  "\\.rs\\'")
+  "\\.rs\\'"
+  :config
+  (add-to-list 'apheleia-mode-alist '(rust-mode . eglot-managed)))
 
 ;; udev-mode
 (use-package udev-mode
@@ -934,10 +936,7 @@
    "\\.svh\\'")
   :init
   (add-to-list 'eglot-server-programs '(verilog-mode . ("verible-verilog-ls")))
-  (push '(verible-verilog-format . ("verible-verilog-format"
-				    filepath))
-	apheleia-formatters)
-  (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format))
+  (add-to-list 'apheleia-mode-alist '(verilog-mode . eglot-managed))
   (add-hook 'verilog-mode-hook (lambda () (setq indent-tabs-mode nil)))
   :config
   (setq verilog-indent-level 2
