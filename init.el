@@ -70,10 +70,6 @@
 	gcmh-idle-delay-factor 10
 	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
 
-(use-package mac-pseudo-daemon
-  :init
-  (mac-pseudo-daemon-mode))
-
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
       auto-save-list-file-prefix nil)
@@ -190,7 +186,16 @@
   ;; disable bidirectional text scanning
   (setq-default bidi-display-reordering 'left-to-right
 		bidi-paragraph-direction 'left-to-right)
-  (setq bidi-inhibit-bpa t))
+  (setq bidi-inhibit-bpa t)
+  ;; macOS pseudo-daemon
+  (when (eq system-type 'darwin)
+    (defun pseudo-exit (event)
+      (switch-to-buffer "*scratch*")
+      (suspend-frame))
+    (advice-add 'handle-delete-frame :override
+		#'pseudo-exit)
+    (advice-add 'save-buffers-kill-terminal :override
+		#'pseudo-exit)))
 
 ;; tramp
 (use-package tramp
