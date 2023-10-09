@@ -211,15 +211,15 @@
       (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
     (load-theme 'doom-dracula t))
   (doom-themes-visual-bell-config)
-  (setq doom-themes-treemacs-theme "doom-colors")
-  (doom-themes-treemacs-config)
   (doom-themes-org-config))
 
-;; spacious-padding
-(use-package spacious-padding
+;; modeline
+(use-package doom-modeline
+  :init
+  (doom-modeline-mode)
   :config
-  (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0))
-  (spacious-padding-mode))
+  (column-number-mode)
+  (size-indication-mode))
 
 ;; solaire-mode
 (use-package solaire-mode
@@ -227,65 +227,61 @@
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
   (solaire-global-mode +1))
 
+;; spacious-padding
+(use-package spacious-padding
+  :config
+  (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0))
+  (spacious-padding-mode))
+
 ;; nerd-icons
 (use-package nerd-icons)
 (use-package nerd-icons-completion
+  :after marginalia
   :config
-  (nerd-icons-completion-mode))
+  (nerd-icons-completion-mode)
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
+(use-package nerd-icons-corfu
+  :after corfu
+  :config
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 (use-package nerd-icons-ibuffer
   :hook (ibuffer-mode . nerd-icons-ibuffer-mode))
 (use-package nerd-icons-dired
   :hook (dired-mode . nerd-icons-dired-mode))
 
-;; modeline
-(use-package doom-modeline
-  :init
-  (defun doom-modeline-conditional-buffer-encoding ()
-    "We expect the encoding to be LF UTF-8, so only show the modeline when this is not the case"
-    (setq-local doom-modeline-buffer-encoding
-		(unless (and (memq (plist-get (coding-system-plist buffer-file-coding-system) :category)
-				   '(coding-category-undecided coding-category-utf-8))
-			     (not (memq (coding-system-eol-type buffer-file-coding-system) '(1 2))))
-		  t)))
-  (add-hook 'after-change-major-mode-hook #'doom-modeline-conditional-buffer-encoding)
-  (doom-modeline-mode 1)
-  :config
-  (setq nerd-icons-scale-factor 1.2)
-  (column-number-mode)
-  (size-indication-mode))
-
 ;; orderless
 (use-package orderless
   :init
   (setq completion-styles '(orderless basic)
-	completion-category-defaults nil
-	completion-category-overrides '((file (styles basic partial-completion)))))
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles partial-completion)))))
 
 ;; vertico
 (use-package vertico
   :elpaca (vertico :files (:defaults "extensions/*")
-		   :includes (vertico-mouse))
+		   :includes (vertico-buffer
+			      vertico-mouse))
   :init
   (defun crm-indicator (args)
-    "CRM indicator for Vertico support"
     (cons (format "[CRM%s] %s"
-		  (replace-regexp-in-string
-		   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
-		   crm-separator)
-		  (car args))
-	  (cdr args)))
+                  (replace-regexp-in-string
+                   "\\`\\[.*?]\\*\\|\\[.*?]\\*\\'" ""
+                   crm-separator)
+                  (car args))
+          (cdr args)))
   (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
   (setq minibuffer-prompt-properties
-	'(read-only t cursor-intangible t face minibuffer-prompt))
+        '(read-only t cursor-intangible t face minibuffer-prompt))
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
-  (setq read-extended-command-predicate #'command-completion-default-include-p)
   (vertico-mode)
+  (setq vertico-buffer-display-action '(display-buffer-in-side-window
+					(window-height . ,(+ 3 vertico-count))
+					(side . top)))
+  (vertico-buffer-mode)
   (vertico-mouse-mode))
 (use-package marginalia
   :init
-  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup)
-  :config
   (marginalia-mode))
 
 ;; which-key
@@ -307,9 +303,21 @@
         ([tab] . corfu-next)
         ("S-TAB" . corfu-previous)
         ([backtab] . corfu-previous))
-
   :init
+  (setq completion-cycle-threshold 3)
+  (setq tab-always-indent 'complete)
+  (global-corfu-mode)
+  (setq corfu-popupinfo-delay 0.5)
+  (corfu-popupinfo-mode)
+  :config
+  (setq corfu-auto t
+	corfu-auto-delay 0
+	corfu-auto-prefix 1
+	corfu-cycle t
+	corfu-preselect 'prompt)
+  ;; minibuffer
   (defun corfu-enable-always-in-minibuffer ()
+    "Enable Corfu in the minibuffer if Vertico/Mct are not active."
     (unless (or (bound-and-true-p mct--active)
 		(bound-and-true-p vertico--input)
 		(eq (current-local-map) read-passwd-map))
@@ -317,20 +325,11 @@
                   corfu-popupinfo-delay nil)
       (corfu-mode 1)))
   (add-hook 'minibuffer-setup-hook #'corfu-enable-always-in-minibuffer 1)
+  ;; eshell
   (add-hook 'eshell-mode-hook
             (lambda ()
               (setq-local corfu-auto nil)
               (corfu-mode)))
-  (global-corfu-mode)
-  (setq corfu-popupinfo-delay 0.5)
-  (corfu-popupinfo-mode)
-  :config
-  (setq corfu-auto t
-        corfu-auto-delay 0
-        corfu-auto-prefix 0
-	corfu-quit-no-match t)
-  (setq corfu-cycle t
-	corfu-preselect 'prompt)
   (defun corfu-send-shell (&rest _)
     "Send completion candidate when inside comint/eshell."
     (cond
@@ -344,12 +343,6 @@
   :init
   (unless (display-graphic-p)
     (corfu-terminal-mode +1)))
-(use-package kind-icon
-  :after corfu
-  :init
-  (setq kind-icon-default-face 'corfu-default)
-  :config
-  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 (use-package pcmpl-args)
 
 ;; yasnippet
@@ -417,7 +410,6 @@
   (add-hook 'eshell-load-hook #'eat-eshell-mode)
   (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode)
   :config
-  (setq eshell-visual-commands nil)
   (defun start-file-process-shell-command-using-eat-exec
       (name buffer command)
     (require 'eat)
@@ -689,7 +681,6 @@
 ;; elcord
 (use-package elcord
   :init
-
   (elcord-mode)
   :config
   (setq elcord-use-major-mode-as-main-icon t
@@ -769,178 +760,178 @@
 	 'local))))
   (define-key notmuch-search-mode-map "G" 'notmuch-update))
 
-;; language configuration
+;; ;; language configuration
 
-;; tree-sitter
-(use-package treesit-auto
-  :config
-  (setq treesit-auto-opt-out-list '(protobuf))
-  (setq treesit-auto-install 't)
-  (global-treesit-auto-mode)
-  (treesit-auto-install-all))
+;; ;; tree-sitter
+;; (use-package treesit-auto
+;;   :config
+;;   (setq treesit-auto-opt-out-list '(protobuf))
+;;   (setq treesit-auto-install 't)
+;;   (global-treesit-auto-mode)
+;;   (treesit-auto-install-all))
 
-;; apheleia
-;; check (describe-variable (apheleia-formatters))
-(use-package apheleia
-  :init
-  (apheleia-global-mode)
-  :config
-  (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
-  (setq apheleia-remote-algorithm 'remote))
+;; ;; apheleia
+;; ;; check (describe-variable (apheleia-formatters))
+;; (use-package apheleia
+;;   :init
+;;   (apheleia-global-mode)
+;;   :config
+;;   (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
+;;   (setq apheleia-remote-algorithm 'remote))
 
-;; eglot
-;; check https://github.com/joaotavora/eglot#connecting-to-a-server
-(use-package eglot
-  :hook ((prog-mode . (lambda ()
-                        (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
-                          (eglot-ensure)))))
-  :config
-  (setq eglot-sync-connect 0
-	eglot-autoshutdown t
-	eglot-extend-to-xref t))
+;; ;; eglot
+;; ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
+;; (use-package eglot
+;;   :hook ((prog-mode . (lambda ()
+;;                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
+;;                           (eglot-ensure)))))
+;;   :config
+;;   (setq eglot-sync-connect 0
+;; 	eglot-autoshutdown t
+;; 	eglot-extend-to-xref t))
 
-;; copilot
-(use-package copilot
-  :elpaca (:repo "https://github.com/zerolfx/copilot.el"
-		 :files ("dist" "*.el"))
-  :config
-  (defun copilot-tab ()
-    "Copilot completion for tab"
-    (interactive)
-    (or (copilot-accept-completion)
-	(indent-for-tab-command)))
-  (defun copilot-quit()
-    "Copilot clear overlay for keyboard-quit"
-    (interactive)
-    (condition-case err
-	(when copilot--overlay
-	  (lexical-let ((pre-copilot-disable-predicates copilot-disable-predicates))
-		       (setq copilot-disable-predicates (list (lambda () t)))
-		       (copilot-clear-overlay)
-		       (run-with-idle-timer
-			1.0
-			nil
-			(lambda ()
-			  (setq copilot-disable-predicates pre-copilot-disable-predicates)))))
-      (error handler)))
-  (with-eval-after-load 'copilot
-    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)
-    (advice-add 'keyboard-quit :before #'copilot-quit)))
+;; ;; copilot
+;; (use-package copilot
+;;   :elpaca (:repo "https://github.com/zerolfx/copilot.el"
+;; 		 :files ("dist" "*.el"))
+;;   :config
+;;   (defun copilot-tab ()
+;;     "Copilot completion for tab"
+;;     (interactive)
+;;     (or (copilot-accept-completion)
+;; 	(indent-for-tab-command)))
+;;   (defun copilot-quit()
+;;     "Copilot clear overlay for keyboard-quit"
+;;     (interactive)
+;;     (condition-case err
+;; 	(when copilot--overlay
+;; 	  (lexical-let ((pre-copilot-disable-predicates copilot-disable-predicates))
+;; 		       (setq copilot-disable-predicates (list (lambda () t)))
+;; 		       (copilot-clear-overlay)
+;; 		       (run-with-idle-timer
+;; 			1.0
+;; 			nil
+;; 			(lambda ()
+;; 			  (setq copilot-disable-predicates pre-copilot-disable-predicates)))))
+;;       (error handler)))
+;;   (with-eval-after-load 'copilot
+;;     (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)
+;;     (advice-add 'keyboard-quit :before #'copilot-quit)))
 
-;; flymake
-;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
-(use-package flymake
-  :elpaca nil
-  :bind
-  ("C-c ! c" . flymake-start)
-  ("C-c ! l" . flymake-show-buffer-diagnostics)
-  ("C-c ! n" . flymake-goto-next-error)
-  ("C-c ! p" . flymake-goto-prev-error)
-  :init
-  (add-hook 'prog-mode-hook 'flymake-mode)
-  :config
-  (setq flymake-fringe-indicator-position 'right-fringe))
+;; ;; flymake
+;; ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
+;; (use-package flymake
+;;   :elpaca nil
+;;   :bind
+;;   ("C-c ! c" . flymake-start)
+;;   ("C-c ! l" . flymake-show-buffer-diagnostics)
+;;   ("C-c ! n" . flymake-goto-next-error)
+;;   ("C-c ! p" . flymake-goto-prev-error)
+;;   :init
+;;   (add-hook 'prog-mode-hook 'flymake-mode)
+;;   :config
+;;   (setq flymake-fringe-indicator-position 'right-fringe))
 
-;; envrc
-(use-package envrc
-  :config
-  (envrc-global-mode))
+;; ;; envrc
+;; (use-package envrc
+;;   :config
+;;   (envrc-global-mode))
 
-;; applescript-mode
-(use-package applescript-mode)
+;; ;; applescript-mode
+;; (use-package applescript-mode)
 
-;; arduino-mode
-(use-package arduino-mode
-  :mode
-  "\\.ino\\'"
-  :config
-  (setq arduino-tab-width 4))
+;; ;; arduino-mode
+;; (use-package arduino-mode
+;;   :mode
+;;   "\\.ino\\'"
+;;   :config
+;;   (setq arduino-tab-width 4))
 
-;; cc-mode
-(use-package cc-mode
-  :elpaca nil
-  :mode
-  ("\\.tpp\\'" . c++-mode)
-  ("\\.txx\\'" . c++-mode)
-  :config
-  (add-to-list 'eglot-server-programs
-	       '((c-mode c++-mode cc-mode)
-		 . ("clangd"
-		    "-j=8"
-		    "--background-index"
-		    "--clang-tidy"
-		    "--completion-style=detailed"
-		    "--pch-storage=memory"))))
-(use-package cmake-mode)
+;; ;; cc-mode
+;; (use-package cc-mode
+;;   :elpaca nil
+;;   :mode
+;;   ("\\.tpp\\'" . c++-mode)
+;;   ("\\.txx\\'" . c++-mode)
+;;   :config
+;;   (add-to-list 'eglot-server-programs
+;; 	       '((c-mode c++-mode cc-mode)
+;; 		 . ("clangd"
+;; 		    "-j=8"
+;; 		    "--background-index"
+;; 		    "--clang-tidy"
+;; 		    "--completion-style=detailed"
+;; 		    "--pch-storage=memory"))))
+;; (use-package cmake-mode)
 
-;; go-mode
-(use-package go-mode
-  :mode
-  "\\.go\\'")
+;; ;; go-mode
+;; (use-package go-mode
+;;   :mode
+;;   "\\.go\\'")
 
-;; lua-mode
-(use-package lua-mode
-  :mode
-  "\\.lua\\'")
+;; ;; lua-mode
+;; (use-package lua-mode
+;;   :mode
+;;   "\\.lua\\'")
 
-;; markdown-mode
-(use-package markdown-mode
-  :mode
-  ("README\\.md\\'" . gfm-mode)
-  "\\.md\\'")
+;; ;; markdown-mode
+;; (use-package markdown-mode
+;;   :mode
+;;   ("README\\.md\\'" . gfm-mode)
+;;   "\\.md\\'")
 
-;; matlab-mode
-(use-package matlab-mode
-  :mode
-  "\\.m\\'"
-  :config
-  (setq matlab-indent-function t))
+;; ;; matlab-mode
+;; (use-package matlab-mode
+;;   :mode
+;;   "\\.m\\'"
+;;   :config
+;;   (setq matlab-indent-function t))
 
-;; nix-mode
-(use-package nix-mode
-  :mode
-  "\\.nix\\'"
-  :init
-  (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
-  (push '(nixpkgs-format . ("nixpkgs-fmt"
-			    filepath))
-	apheleia-formatters)
-  (add-to-list 'apheleia-mode-alist '(nix-mode . nixpkgs-format)))
+;; ;; nix-mode
+;; (use-package nix-mode
+;;   :mode
+;;   "\\.nix\\'"
+;;   :init
+;;   (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
+;;   (push '(nixpkgs-format . ("nixpkgs-fmt"
+;; 			    filepath))
+;; 	apheleia-formatters)
+;;   (add-to-list 'apheleia-mode-alist '(nix-mode . nixpkgs-format)))
 
-;; rust-mode
-(use-package rust-mode
-  :mode
-  "\\.rs\\'")
+;; ;; rust-mode
+;; (use-package rust-mode
+;;   :mode
+;;   "\\.rs\\'")
 
-;; udev-mode
-(use-package udev-mode
-  :mode
-  "\\.rules\\'")
+;; ;; udev-mode
+;; (use-package udev-mode
+;;   :mode
+;;   "\\.rules\\'")
 
-;; verilog-mode
-(use-package verilog-mode
-  :mode
-  ("\\.v\\'"
-   "\\.sv\\'"
-   "\\.vh\\'"
-   "\\.svh\\'")
-  :init
-  (add-to-list 'eglot-server-programs '(verilog-mode . ("verible-verilog-ls")))
-  (push '(verible-verilog-format . ("verible-verilog-format"
-				    filepath))
-	apheleia-formatters)
-  (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format))
-  (add-hook 'verilog-mode-hook (lambda () (setq indent-tabs-mode nil)))
-  :config
-  (setq verilog-indent-level 2
-	verilog-indent-level-module 2
-	verilog-indent-level-directive 2
-	verilog-indent-level-behavioral 2
-	verilog-indent-level-declaration 2))
+;; ;; verilog-mode
+;; (use-package verilog-mode
+;;   :mode
+;;   ("\\.v\\'"
+;;    "\\.sv\\'"
+;;    "\\.vh\\'"
+;;    "\\.svh\\'")
+;;   :init
+;;   (add-to-list 'eglot-server-programs '(verilog-mode . ("verible-verilog-ls")))
+;;   (push '(verible-verilog-format . ("verible-verilog-format"
+;; 				    filepath))
+;; 	apheleia-formatters)
+;;   (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format))
+;;   (add-hook 'verilog-mode-hook (lambda () (setq indent-tabs-mode nil)))
+;;   :config
+;;   (setq verilog-indent-level 2
+;; 	verilog-indent-level-module 2
+;; 	verilog-indent-level-directive 2
+;; 	verilog-indent-level-behavioral 2
+;; 	verilog-indent-level-declaration 2))
 
-;; yaml-mode
-(use-package yaml-mode
-  :mode
-  "\\.yaml\\'")
+;; ;; yaml-mode
+;; (use-package yaml-mode
+;;   :mode
+;;   "\\.yaml\\'")
 
 ;;; init.el ends here
