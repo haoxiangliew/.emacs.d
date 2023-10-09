@@ -762,176 +762,193 @@
 
 ;; ;; language configuration
 
-;; ;; tree-sitter
-;; (use-package treesit-auto
-;;   :config
-;;   (setq treesit-auto-opt-out-list '(protobuf))
-;;   (setq treesit-auto-install 't)
-;;   (global-treesit-auto-mode)
-;;   (treesit-auto-install-all))
+;; tree-sitter
+(use-package treesit-auto
+  :config
+  (setq treesit-auto-opt-out-list '(protobuf))
+  (setq treesit-auto-install 't)
+  (global-treesit-auto-mode)
+  (treesit-auto-install-all))
 
-;; ;; apheleia
-;; ;; check (describe-variable (apheleia-formatters))
-;; (use-package apheleia
-;;   :init
-;;   (apheleia-global-mode)
-;;   :config
-;;   (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
-;;   (setq apheleia-remote-algorithm 'remote))
+;; apheleia
+;; check (describe-variable (apheleia-formatters))
+(use-package apheleia
+  :init
+  (apheleia-global-mode)
+  :config
+  (cl-defun apheleia-indent-eglot-managed-buffer
+      (&key buffer scratch callback &allow-other-keys)
+    "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
+    (with-current-buffer scratch
+      (setq-local eglot--cached-server
+                  (with-current-buffer buffer
+                    (eglot-current-server)))
+      (let ((buffer-file-name (buffer-local-value 'buffer-file-name buffer)))
+        (eglot-format-buffer))
+      (funcall callback)))
+  (add-to-list 'apheleia-formatters
+               '(eglot-managed . apheleia-indent-eglot-managed-buffer))
+  (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
+  (setq apheleia-remote-algorithm 'remote))
 
-;; ;; eglot
-;; ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
-;; (use-package eglot
-;;   :hook ((prog-mode . (lambda ()
-;;                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
-;;                           (eglot-ensure)))))
-;;   :config
-;;   (setq eglot-sync-connect 0
-;; 	eglot-autoshutdown t
-;; 	eglot-extend-to-xref t))
+;; eglot
+;; check https://github.com/joaotavora/eglot#connecting-to-a-server
+(use-package eglot
+  :hook ((prog-mode . (lambda ()
+                        (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
+                          (eglot-ensure)))))
+  :config
+  (setq eglot-sync-connect 0
+	eglot-autoshutdown t
+	eglot-extend-to-xref t))
 
-;; ;; copilot
-;; (use-package copilot
-;;   :elpaca (:repo "https://github.com/zerolfx/copilot.el"
-;; 		 :files ("dist" "*.el"))
-;;   :config
-;;   (defun copilot-tab ()
-;;     "Copilot completion for tab"
-;;     (interactive)
-;;     (or (copilot-accept-completion)
-;; 	(indent-for-tab-command)))
-;;   (defun copilot-quit()
-;;     "Copilot clear overlay for keyboard-quit"
-;;     (interactive)
-;;     (condition-case err
-;; 	(when copilot--overlay
-;; 	  (lexical-let ((pre-copilot-disable-predicates copilot-disable-predicates))
-;; 		       (setq copilot-disable-predicates (list (lambda () t)))
-;; 		       (copilot-clear-overlay)
-;; 		       (run-with-idle-timer
-;; 			1.0
-;; 			nil
-;; 			(lambda ()
-;; 			  (setq copilot-disable-predicates pre-copilot-disable-predicates)))))
-;;       (error handler)))
-;;   (with-eval-after-load 'copilot
-;;     (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)
-;;     (advice-add 'keyboard-quit :before #'copilot-quit)))
+;; copilot
+(use-package copilot
+  :elpaca (:repo "https://github.com/zerolfx/copilot.el"
+		 :files ("dist" "*.el"))
+  :config
+  (defun copilot-tab ()
+    "Copilot completion for tab"
+    (interactive)
+    (or (copilot-accept-completion)
+	(indent-for-tab-command)))
+  (defun copilot-quit()
+    "Copilot clear overlay for keyboard-quit"
+    (interactive)
+    (condition-case err
+	(when copilot--overlay
+	  (lexical-let ((pre-copilot-disable-predicates copilot-disable-predicates))
+		       (setq copilot-disable-predicates (list (lambda () t)))
+		       (copilot-clear-overlay)
+		       (run-with-idle-timer
+			1.0
+			nil
+			(lambda ()
+			  (setq copilot-disable-predicates pre-copilot-disable-predicates)))))
+      (error handler)))
+  (with-eval-after-load 'copilot
+    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)
+    (advice-add 'keyboard-quit :before #'copilot-quit)))
 
-;; ;; flymake
-;; ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
-;; (use-package flymake
-;;   :elpaca nil
-;;   :bind
-;;   ("C-c ! c" . flymake-start)
-;;   ("C-c ! l" . flymake-show-buffer-diagnostics)
-;;   ("C-c ! n" . flymake-goto-next-error)
-;;   ("C-c ! p" . flymake-goto-prev-error)
-;;   :init
-;;   (add-hook 'prog-mode-hook 'flymake-mode)
-;;   :config
-;;   (setq flymake-fringe-indicator-position 'right-fringe))
+;; flymake
+;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
+(use-package flymake
+  :elpaca nil
+  :bind
+  ("C-c ! c" . flymake-start)
+  ("C-c ! l" . flymake-show-buffer-diagnostics)
+  ("C-c ! n" . flymake-goto-next-error)
+  ("C-c ! p" . flymake-goto-prev-error)
+  :init
+  (add-hook 'prog-mode-hook 'flymake-mode)
+  :config
+  (setq flymake-fringe-indicator-position 'right-fringe))
 
-;; ;; envrc
-;; (use-package envrc
-;;   :config
-;;   (envrc-global-mode))
+;; envrc
+(use-package envrc
+  :config
+  (envrc-global-mode))
 
-;; ;; applescript-mode
-;; (use-package applescript-mode)
+;; applescript-mode
+(use-package applescript-mode)
 
-;; ;; arduino-mode
-;; (use-package arduino-mode
-;;   :mode
-;;   "\\.ino\\'"
-;;   :config
-;;   (setq arduino-tab-width 4))
+;; arduino-mode
+(use-package arduino-mode
+  :mode
+  "\\.ino\\'"
+  :config
+  (setq arduino-tab-width 4))
 
-;; ;; cc-mode
-;; (use-package cc-mode
-;;   :elpaca nil
-;;   :mode
-;;   ("\\.tpp\\'" . c++-mode)
-;;   ("\\.txx\\'" . c++-mode)
-;;   :config
-;;   (add-to-list 'eglot-server-programs
-;; 	       '((c-mode c++-mode cc-mode)
-;; 		 . ("clangd"
-;; 		    "-j=8"
-;; 		    "--background-index"
-;; 		    "--clang-tidy"
-;; 		    "--completion-style=detailed"
-;; 		    "--pch-storage=memory"))))
-;; (use-package cmake-mode)
+;; cc-mode
+(use-package cc-mode
+  :elpaca nil
+  :mode
+  ("\\.tpp\\'" . c++-mode)
+  ("\\.txx\\'" . c++-mode)
+  :config
+  (add-to-list 'eglot-server-programs
+	       '((c-mode c++-mode cc-mode)
+		 . ("clangd"
+		    "-j=8"
+		    "--background-index"
+		    "--clang-tidy"
+		    "--completion-style=detailed"
+		    "--pch-storage=memory")))
+  (add-to-list 'apheleia-mode-alist '(c-mode . eglot-managed))
+  (add-to-list 'apheleia-mode-alist '(c++-mode . eglot-managed))
+  (add-to-list 'apheleia-mode-alist '(cc-mode . eglot-managed)))
+(use-package cmake-mode
+  :config
+  (add-to-list 'apheleia-mode-alist '(cmake-mode . eglot-managed)))
 
-;; ;; go-mode
-;; (use-package go-mode
-;;   :mode
-;;   "\\.go\\'")
+;; go-mode
+(use-package go-mode
+  :mode
+  "\\.go\\'")
 
-;; ;; lua-mode
-;; (use-package lua-mode
-;;   :mode
-;;   "\\.lua\\'")
+;; lua-mode
+(use-package lua-mode
+  :mode
+  "\\.lua\\'")
 
-;; ;; markdown-mode
-;; (use-package markdown-mode
-;;   :mode
-;;   ("README\\.md\\'" . gfm-mode)
-;;   "\\.md\\'")
+;; markdown-mode
+(use-package markdown-mode
+  :mode
+  ("README\\.md\\'" . gfm-mode)
+  "\\.md\\'")
 
-;; ;; matlab-mode
-;; (use-package matlab-mode
-;;   :mode
-;;   "\\.m\\'"
-;;   :config
-;;   (setq matlab-indent-function t))
+;; matlab-mode
+(use-package matlab-mode
+  :mode
+  "\\.m\\'"
+  :config
+  (setq matlab-indent-function t))
 
-;; ;; nix-mode
-;; (use-package nix-mode
-;;   :mode
-;;   "\\.nix\\'"
-;;   :init
-;;   (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
-;;   (push '(nixpkgs-format . ("nixpkgs-fmt"
-;; 			    filepath))
-;; 	apheleia-formatters)
-;;   (add-to-list 'apheleia-mode-alist '(nix-mode . nixpkgs-format)))
+;; nix-mode
+(use-package nix-mode
+  :mode
+  "\\.nix\\'"
+  :init
+  (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
+  (push '(nixpkgs-format . ("nixpkgs-fmt"
+			    filepath))
+	apheleia-formatters)
+  (add-to-list 'apheleia-mode-alist '(nix-mode . nixpkgs-format)))
 
-;; ;; rust-mode
-;; (use-package rust-mode
-;;   :mode
-;;   "\\.rs\\'")
+;; rust-mode
+(use-package rust-mode
+  :mode
+  "\\.rs\\'")
 
-;; ;; udev-mode
-;; (use-package udev-mode
-;;   :mode
-;;   "\\.rules\\'")
+;; udev-mode
+(use-package udev-mode
+  :mode
+  "\\.rules\\'")
 
-;; ;; verilog-mode
-;; (use-package verilog-mode
-;;   :mode
-;;   ("\\.v\\'"
-;;    "\\.sv\\'"
-;;    "\\.vh\\'"
-;;    "\\.svh\\'")
-;;   :init
-;;   (add-to-list 'eglot-server-programs '(verilog-mode . ("verible-verilog-ls")))
-;;   (push '(verible-verilog-format . ("verible-verilog-format"
-;; 				    filepath))
-;; 	apheleia-formatters)
-;;   (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format))
-;;   (add-hook 'verilog-mode-hook (lambda () (setq indent-tabs-mode nil)))
-;;   :config
-;;   (setq verilog-indent-level 2
-;; 	verilog-indent-level-module 2
-;; 	verilog-indent-level-directive 2
-;; 	verilog-indent-level-behavioral 2
-;; 	verilog-indent-level-declaration 2))
+;; verilog-mode
+(use-package verilog-mode
+  :mode
+  ("\\.v\\'"
+   "\\.sv\\'"
+   "\\.vh\\'"
+   "\\.svh\\'")
+  :init
+  (add-to-list 'eglot-server-programs '(verilog-mode . ("verible-verilog-ls")))
+  (push '(verible-verilog-format . ("verible-verilog-format"
+				    filepath))
+	apheleia-formatters)
+  (add-to-list 'apheleia-mode-alist '(verilog-mode . verible-verilog-format))
+  (add-hook 'verilog-mode-hook (lambda () (setq indent-tabs-mode nil)))
+  :config
+  (setq verilog-indent-level 2
+	verilog-indent-level-module 2
+	verilog-indent-level-directive 2
+	verilog-indent-level-behavioral 2
+	verilog-indent-level-declaration 2))
 
-;; ;; yaml-mode
-;; (use-package yaml-mode
-;;   :mode
-;;   "\\.yaml\\'")
+;; yaml-mode
+(use-package yaml-mode
+  :mode
+  "\\.yaml\\'")
 
 ;;; init.el ends here
