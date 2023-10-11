@@ -121,6 +121,15 @@
   (setq initial-scratch-message (concat
 				 ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
 				 ";; [INFO] Emacs loaded in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collections." "\n\n"))
+  ;; macOS pseudo-daemon
+  (when (eq system-type 'darwin)
+    (defun pseudo-exit (event)
+      (switch-to-buffer "*scratch*")
+      (suspend-frame))
+    (advice-add 'handle-delete-frame :override
+		#'pseudo-exit)
+    (advice-add 'save-buffers-kill-terminal :override
+		#'pseudo-exit))
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
@@ -185,16 +194,7 @@
   ;; disable bidirectional text scanning
   (setq-default bidi-display-reordering 'left-to-right
 		bidi-paragraph-direction 'left-to-right)
-  (setq bidi-inhibit-bpa t)
-  ;; macOS pseudo-daemon
-  (when (eq system-type 'darwin)
-    (defun pseudo-exit (event)
-      (switch-to-buffer "*scratch*")
-      (suspend-frame))
-    (advice-add 'handle-delete-frame :override
-		#'pseudo-exit)
-    (advice-add 'save-buffers-kill-terminal :override
-		#'pseudo-exit)))
+  (setq bidi-inhibit-bpa t))
 
 ;; tramp
 (use-package tramp
