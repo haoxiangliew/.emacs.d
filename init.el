@@ -390,8 +390,8 @@
 
 ;; eat
 (use-package eat
-  :hook (((eshell-mode eshell-load) . eat-eshell-mode)
-	 ((eshell-mode eshell-load) . eat-eshell-visual-command-mode))
+  :hook (((eshell-mode eshell-load compilation-mode) . eat-eshell-mode)
+	 ((eshell-mode eshell-load compilation-mode) . eat-eshell-visual-command-mode))
   :elpaca (eat :repo "https://codeberg.org/akib/emacs-eat"
 	       :files ("*.el" ("term" "term/*.el") "*.texi"
 		       "*.ti" ("terminfo/e" "terminfo/e/*")
