@@ -52,9 +52,7 @@
 
 ;; install use-package support
 (elpaca elpaca-use-package
-  ;; enable :elpaca use-package keyword.
   (elpaca-use-package-mode)
-  ;; assume :elpaca t unless otherwise specified.
   (setq elpaca-use-package-by-default t))
 
 ;; block until queue is finished
@@ -87,21 +85,15 @@
   :init
   ;; less noise when compiling elisp
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
-	native-comp-async-report-warnings-errors nil
+        native-comp-async-report-warnings-errors nil
 	load-prefer-newer t)
-  ;; speed up load-file
-  (define-advice load-file (:override (file) silence)
-    (load file nil 'nomessage))
-  (define-advice startup--load-user-init-file (:before (&rest _) undo-silence)
-    (advice-remove #'load-file #'load-file@silence))
-  ;; much safer networking
+  ;; safer networking
   (setq gnutls-verify-error noninteractive
-	gnutls-algorithm-priority
-	(when (boundp 'libgnutls-version)
-	  (concat "SECURE128:+SECURE192:-VERS-ALL"
-		  (if (>= libgnutls-version 30605)
-		      ":+VERS-TLS1.3")
-		  ":+VERS-TLS1.2"))
+	gnutls-algorithm-priority (when (boundp 'libgnutls-version)
+				    (concat "SECURE128:+SECURE192:-VERS-ALL"
+					    (if (>= libgnutls-version 30605)
+						":+VERS-TLS1.3")
+					    ":+VERS-TLS1.2"))
 	gnutls-min-prime-bits 3072
 	tls-checktrust gnutls-verify-error
 	tls-program '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
@@ -143,11 +135,9 @@
   ;; highlight and match parentheses
   (show-paren-mode 1)
   (setq show-paren-delay 0)
-  (add-hook 'prog-mode-hook 'electric-pair-mode)
+  (add-hook 'prog-mode-hook #'electric-pair-mode)
   ;; autosave
   (setq auto-save-default t)
-  ;; delete trailing whitespace
-  (add-hook 'before-save-hook 'delete-trailing-whitespace)
   ;; use system clipboard
   (setq select-enable-clipboard t)
   ;; raise undo limit
@@ -169,15 +159,15 @@
 	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
 	mouse-wheel-scroll-amount-horizontal 2)
   (setq mouse-wheel-progressive-speed t)
+  (setq fast-but-imprecise-scrolling t)
+  (setq redisplay-skip-fontification-on-input)
   ;; (pixel-scroll-precision-mode)
   ;; (setq pixel-scroll-precision-interpolate-page t
   ;;       pixel-scroll-precision-use-momentum t
   ;;       pixel-scroll-precision-momentum-seconds 0.1)
-  (setq fast-but-imprecise-scrolling t)
-  (setq redisplay-skip-fontification-on-input t)
   ;; disable bells
   (setq ring-bell-function 'ignore)
-  ;; change yes/no to y/n
+  ;; yes/no -> y/n
   (defalias 'yes-or-no-p 'y-or-n-p)
   ;; optimize terminal use
   (setq xterm-set-window-title t
@@ -186,9 +176,8 @@
   (setq read-process-output-max (* 1024 1024))
   ;; optimize frames
   (setq frame-resize-pixelwise t
-	pgtk-wait-for-event-timeout 0.001)
-  (setq-default cursor-in-non-selected-windows nil)
-  (setq highlight-nonselected-windows nil)
+	cursor-in-non-selected-windows nil
+	highlight-nonselected-windows nil)
   ;; disable flashing cursor
   (blink-cursor-mode 0)
   ;; disable bidirectional text scanning
@@ -212,7 +201,7 @@
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
-;; modeline
+;; doom-modeline
 (use-package doom-modeline
   :init
   (doom-modeline-mode)
@@ -620,7 +609,6 @@
   :bind
   ("C-x C-a" . org-agenda)
   :config
-  (add-to-list 'org-export-backends 'md)
   (setq org-startup-indented t)
   (setq org-directory "~/haoxiangliew/org")
   (setq org-agenda-files (list org-directory))
@@ -631,7 +619,9 @@
 (use-package ox-moderncv
   :elpaca (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
   :requires ox-moderncv)
-(use-package ox-gfm)
+(use-package ox-gfm
+  :config
+  (add-to-list 'org-export-backends 'md))
 (use-package ox-pandoc
   :config
   (add-to-list 'org-export-backends 'pandoc))
@@ -666,11 +656,6 @@
   :config
   (setq org-download-method 'directory
 	org-download-image-dir "images"))
-(use-package org-xournalpp
-  :elpaca (:repo "https://gitlab.com/vherrmann/org-xournalpp"
-		 :files ("*.el" "resources"))
-  :config
-  (add-hook 'org-mode-hook 'org-xournalpp-mode))
 (use-package org-modern
   :init
   (global-org-modern-mode)
@@ -759,7 +744,7 @@
 	 'local))))
   (define-key notmuch-search-mode-map "G" 'notmuch-update))
 
-;; ;; language configuration
+;;; language configuration
 
 ;; tree-sitter
 (use-package treesit-auto
@@ -769,10 +754,13 @@
   (global-treesit-auto-mode)
   (treesit-auto-install-all))
 
-;; apheleia
+;; apheleia (formatter)
 ;; check (describe-variable (apheleia-formatters))
 (use-package apheleia
   :init
+  (setq require-final-newline t
+	show-trailing-whitespace t)
+  (add-hook 'before-save-hook #'delete-trailing-whitespace)
   (apheleia-global-mode)
   :config
   (cl-defun apheleia-indent-eglot-managed-buffer
@@ -787,7 +775,6 @@
       (funcall callback)))
   (add-to-list 'apheleia-formatters
 	       '(eglot-managed . apheleia-indent-eglot-managed-buffer))
-  (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
   (setq apheleia-remote-algorithm 'remote))
 
 ;; eglot
@@ -800,34 +787,6 @@
   (setq eglot-sync-connect 0
 	eglot-autoshutdown t
 	eglot-extend-to-xref t))
-
-;; copilot
-(use-package copilot
-  :elpaca (:repo "https://github.com/zerolfx/copilot.el"
-		 :files ("dist" "*.el"))
-  :config
-  (defun copilot-tab ()
-    "Copilot completion for tab"
-    (interactive)
-    (or (copilot-accept-completion)
-	(indent-for-tab-command)))
-  (defun copilot-quit()
-    "Copilot clear overlay for keyboard-quit"
-    (interactive)
-    (condition-case err
-	(when copilot--overlay
-	  (lexical-let ((pre-copilot-disable-predicates copilot-disable-predicates))
-		       (setq copilot-disable-predicates (list (lambda () t)))
-		       (copilot-clear-overlay)
-		       (run-with-idle-timer
-			1.0
-			nil
-			(lambda ()
-			  (setq copilot-disable-predicates pre-copilot-disable-predicates)))))
-      (error handler)))
-  (with-eval-after-load 'copilot
-    (define-key copilot-mode-map (kbd "C-c <tab>") #'copilot-tab)
-    (advice-add 'keyboard-quit :before #'copilot-quit)))
 
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
@@ -842,6 +801,29 @@
   (add-hook 'prog-mode-hook 'flymake-mode)
   :config
   (setq flymake-fringe-indicator-position 'right-fringe))
+
+;; copilot
+(use-package copilot
+  :elpaca (:repo "https://github.com/zerolfx/copilot.el"
+		 :files ("dist" "*.el"))
+  :bind (:map copilot-completion-map
+	      ("C-g" . 'copilot-clear-overlay)
+	      ("<tab>" . 'copilot-tab)
+	      ("TAB" . 'copilot-tab))
+  :config
+  (defun copilot-tab ()
+    "Copilot completion for tab"
+    (interactive)
+    (if (copilot--overlay-visible)
+	(progn
+	  (copilot-accept-completion))
+      (copilot-complete))))
+
+;; elisp-mode
+(use-package elisp-mode
+  :elpaca nil
+  :config
+  (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent)))
 
 ;; envrc
 (use-package envrc
