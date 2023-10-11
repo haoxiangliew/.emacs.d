@@ -160,7 +160,7 @@
 	mouse-wheel-scroll-amount-horizontal 2)
   (setq mouse-wheel-progressive-speed t)
   (setq fast-but-imprecise-scrolling t)
-  (setq redisplay-skip-fontification-on-input)
+  (setq redisplay-skip-fontification-on-input t)
   ;; (pixel-scroll-precision-mode)
   ;; (setq pixel-scroll-precision-interpolate-page t
   ;;       pixel-scroll-precision-use-momentum t
@@ -821,6 +821,7 @@
 
 ;; elisp-mode
 (use-package elisp-mode
+  :after apheleia
   :elpaca nil
   :config
   (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent)))
