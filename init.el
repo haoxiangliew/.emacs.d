@@ -802,6 +802,24 @@
   :config
   (setq flymake-fringe-indicator-position 'right-fringe))
 
+;; flyspell
+(use-package flyspell
+  :elpaca nil
+  :hook (((org-mode markdown-mode TeX-mode rst-mode mu4e-compose-mode message-mode git-commit-mode) . flyspell-mode)
+	 ((yaml-mode conf-mode prog-mode) . flyspell-prog-mode))
+  :config
+  (setq flyspell-issue-welcome-flag nil
+	flyspell-issue-message-flag nil))
+(use-package flyspell-correct
+  :after flyspell
+  :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
+(use-package flyspell-lazy
+  :after flyspell
+  :config
+  (setq flyspell-lazy-idle-seconds 1
+	flyspell-lazy-window-idle-seconds 3)
+  (flyspell-lazy-mode +1))
+
 ;; copilot
 (use-package copilot
   :elpaca (:repo "https://github.com/zerolfx/copilot.el"
