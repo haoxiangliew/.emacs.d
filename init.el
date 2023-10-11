@@ -67,8 +67,7 @@
   (gcmh-mode 1)
   :config
   (setq gcmh-idle-delay 'auto
-	gcmh-idle-delay-factor 10
-	gcmh-high-cons-threshold (* 16 1024 1024))) ; 16mb
+	gcmh-auto-idle-delay-factor 10))
 
 ;; no littering
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
@@ -328,8 +327,8 @@
   ;; eshell
   (add-hook 'eshell-mode-hook
             (lambda ()
-              (setq-local corfu-auto nil)
-              (corfu-mode)))
+	      (setq-local corfu-auto nil)
+	      (corfu-mode)))
   (defun corfu-send-shell (&rest _)
     "Send completion candidate when inside comint/eshell."
     (cond
@@ -418,7 +417,7 @@
       (setq eat--synchronize-scroll-function #'eat--synchronize-scroll)
       (get-buffer-process (current-buffer))))
   (advice-add #'compilation-start :around
-              (defun hijack-start-file-process-shell-command (o &rest args)
+	      (defun hijack-start-file-process-shell-command (o &rest args)
 		(advice-add #'start-file-process-shell-command :override
                             #'start-file-process-shell-command-using-eat-exec)
 		(unwind-protect
@@ -428,15 +427,15 @@
                    #'start-file-process-shell-command-using-eat-exec))))
   (add-hook #'compilation-start-hook
             (defun revert-to-eat-setup (proc)
-              (set-process-filter proc #'eat--filter)
-              (add-function :after (process-sentinel proc) #'eat--sentinel)))
+	      (set-process-filter proc #'eat--filter)
+	      (add-function :after (process-sentinel proc) #'eat--sentinel)))
   (advice-add #'kill-compilation :override
-              (defun kill-compilation-by-sending-C-c ()
+	      (defun kill-compilation-by-sending-C-c ()
 		(interactive)
 		(let ((buffer (compilation-find-buffer)))
                   (if (get-buffer-process buffer)
-	              ;; interrupt-process does not work
-                      (process-send-string (get-buffer-process buffer) (kbd "C-c"))
+		      ;; interrupt-process does not work
+		      (process-send-string (get-buffer-process buffer) (kbd "C-c"))
                     (error "The %s process is not running" (downcase mode-name)))))))
 
 ;; vterm
@@ -787,7 +786,7 @@
         (eglot-format-buffer))
       (funcall callback)))
   (add-to-list 'apheleia-formatters
-               '(eglot-managed . apheleia-indent-eglot-managed-buffer))
+	       '(eglot-managed . apheleia-indent-eglot-managed-buffer))
   (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
   (setq apheleia-remote-algorithm 'remote))
 
