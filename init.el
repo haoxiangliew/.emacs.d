@@ -53,7 +53,8 @@
 ;; install use-package support
 (elpaca elpaca-use-package
   (elpaca-use-package-mode)
-  (setq elpaca-use-package-by-default t))
+  (setq elpaca-use-package-by-default t
+	use-package-always-defer t))
 
 ;; block until queue is finished
 (elpaca-wait)
@@ -71,6 +72,7 @@
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
       auto-save-list-file-prefix nil)
 (use-package no-littering
+  :demand t
   :config
   (no-littering-theme-backups))
 (setq custom-file
@@ -81,6 +83,8 @@
 
 ;; emacs config
 (use-package emacs
+  :demand t
+  :hook (prog-mode . electric-pair-mode)
   :elpaca nil
   :init
   ;; less noise when compiling elisp
@@ -135,7 +139,6 @@
   ;; highlight and match parentheses
   (show-paren-mode 1)
   (setq show-paren-delay 0)
-  (add-hook 'prog-mode-hook #'electric-pair-mode)
   ;; autosave
   (setq auto-save-default t)
   ;; use system clipboard
@@ -191,6 +194,7 @@
 
 ;; doom-themes
 (use-package doom-themes
+  :demand t
   :config
   (setq doom-themes-enable-bold t
 	doom-themes-enable-italic t
@@ -211,24 +215,29 @@
 
 ;; solaire-mode
 (use-package solaire-mode
+  :demand t
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
   (solaire-global-mode +1))
 
 ;; spacious-padding
 (use-package spacious-padding
+  :demand t
   :config
   (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0))
   (spacious-padding-mode))
 
 ;; nerd-icons
-(use-package nerd-icons)
+(use-package nerd-icons
+  :demand t)
 (use-package nerd-icons-completion
+  :demand t
   :after marginalia
   :config
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 (use-package nerd-icons-corfu
+  :demand t
   :after corfu
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
@@ -354,6 +363,7 @@
 
 ;; eshell
 (use-package eshell
+  :demand t
   :elpaca nil
   :bind
   ("C-x C-e" . eshell)
@@ -373,21 +383,21 @@
       (add-to-list 'eshell-command-aliases-list var)))
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases))
 (use-package eshell-prompt-extras
+  :demand t
   :config
   (setq eshell-highlight-prompt nil
         eshell-prompt-function 'epe-theme-lambda))
 
 ;; eat
 (use-package eat
+  :hook ((eshell-mode . eat-eshell-mode)
+	 (eshell-mode . eat-eshell-visual-command-mode))
   :elpaca (eat :repo "https://codeberg.org/akib/emacs-eat"
 	       :files ("*.el" ("term" "term/*.el") "*.texi"
 		       "*.ti" ("terminfo/e" "terminfo/e/*")
 		       ("terminfo/65" "terminfo/65/*")
 		       ("integration" "integration/*")
 		       (:exclude ".dir-locals.el" "*-tests.el")))
-  :init
-  (add-hook 'eshell-load-hook #'eat-eshell-mode)
-  (add-hook 'eshell-load-hook #'eat-eshell-visual-command-mode)
   :config
   (defun start-file-process-shell-command-using-eat-exec
       (name buffer command)
@@ -783,13 +793,12 @@
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
 (use-package flymake
   :elpaca nil
+  :hook (prog-mode . flymake-mode)
   :bind
   ("C-c ! c" . flymake-start)
   ("C-c ! l" . flymake-show-buffer-diagnostics)
   ("C-c ! n" . flymake-goto-next-error)
   ("C-c ! p" . flymake-goto-prev-error)
-  :init
-  (add-hook 'prog-mode-hook 'flymake-mode)
   :config
   (setq flymake-fringe-indicator-position 'right-fringe))
 
@@ -830,7 +839,7 @@
 
 ;; elisp-mode
 (use-package elisp-mode
-  :after apheleia
+  :after eglot apheleia
   :elpaca nil
   :config
   (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent)))
@@ -852,6 +861,7 @@
 
 ;; cc-mode
 (use-package cc-mode
+  :after eglot apheleia
   :elpaca nil
   :mode
   ("\\.tpp\\'" . c++-mode)
@@ -869,6 +879,7 @@
   (add-to-list 'apheleia-mode-alist '(c++-mode . eglot-managed))
   (add-to-list 'apheleia-mode-alist '(cc-mode . eglot-managed)))
 (use-package cmake-mode
+  :after eglot apheleia
   :config
   (add-to-list 'apheleia-mode-alist '(cmake-mode . eglot-managed)))
 
@@ -897,6 +908,7 @@
 
 ;; nix-mode
 (use-package nix-mode
+  :after eglot apheleia
   :mode
   "\\.nix\\'"
   :init
@@ -920,6 +932,7 @@
 
 ;; verilog-mode
 (use-package verilog-mode
+  :after eglot apheleia
   :mode
   ("\\.v\\'"
    "\\.sv\\'"
