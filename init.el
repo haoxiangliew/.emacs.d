@@ -371,20 +371,11 @@
 		     ("cdp" "project-find-file")
 		     ("clear" "clear-scrollback")))
       (add-to-list 'eshell-command-aliases-list var)))
-  (add-hook 'eshell-post-command-hook 'eshell-add-aliases)
+  (add-hook 'eshell-post-command-hook 'eshell-add-aliases))
+(use-package eshell-prompt-extras
   :config
-  (setq eshell-prompt-regexp "^.* λ "
-	eshell-prompt-function #'+eshell/prompt)
-  (defun +eshell/prompt ()
-    "Prompt for eshell"
-    (let ((base/dir (shrink-path-prompt default-directory)))
-      (concat (propertize (car base/dir)
-			  'face 'font-lock-comment-face)
-	      (propertize (cdr base/dir)
-			  'face 'font-lock-constant-face)
-	      (propertize " λ" 'face 'eshell-prompt-face)
-	      (propertize " " 'face 'default)))))
-(use-package shrink-path)
+  (setq eshell-highlight-prompt nil
+        eshell-prompt-function 'epe-theme-lambda))
 
 ;; eat
 (use-package eat
@@ -869,7 +860,7 @@
   (add-to-list 'eglot-server-programs
 	       '((c-mode c++-mode cc-mode)
 		 . ("clangd"
-		    "-j=8"
+		    "-j=20"
 		    "--background-index"
 		    "--clang-tidy"
 		    "--completion-style=detailed"
