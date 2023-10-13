@@ -618,15 +618,19 @@
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
 (use-package ox-moderncv
+  :demand t
   :elpaca (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
   :requires ox-moderncv)
 (use-package ox-gfm
+  :demand t
   :config
   (add-to-list 'org-export-backends 'md))
 (use-package ox-pandoc
+  :demand t
   :config
   (add-to-list 'org-export-backends 'pandoc))
 (use-package org-super-agenda
+  :demand t
   :init
   (org-super-agenda-mode)
   :config
@@ -654,10 +658,12 @@
 					 :tag "classes"
 					 :order 7))))
 (use-package org-download
+  :demand t
   :config
   (setq org-download-method 'directory
 	org-download-image-dir "images"))
 (use-package org-modern
+  :after org
   :init
   (global-org-modern-mode)
   :config
