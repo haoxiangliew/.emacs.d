@@ -81,6 +81,16 @@
         (expand-file-name (format "emacs-custom-%s.el" (user-uid)) temporary-file-directory)))
 (load custom-file t)
 
+;; load-path
+(use-package exec-path-from-shell
+  :demand t
+  :init
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize))
+  :config
+  (dolist (var '("SSH_AUTH_SOCK" "SSH_AGENT_PID" "GPG_AGENT_INFO" "CC" "CXX" "LANG" "LC_CTYPE" "LDFLAGS" "NIX_SSL_CERT_FILE" "NIX_PATH"))
+    (add-to-list 'exec-path-from-shell-variables var)))
+
 ;; emacs config
 (use-package emacs
   :demand t
@@ -310,6 +320,7 @@
   (setq corfu-auto t
 	corfu-auto-delay 0
 	corfu-auto-prefix 1
+	corfu-quit-no-match t
 	corfu-cycle t
 	corfu-preselect 'prompt)
   ;; minibuffer
@@ -782,6 +793,7 @@
       (funcall callback)))
   (add-to-list 'apheleia-formatters
 	       '(eglot-managed . apheleia-indent-eglot-managed-buffer))
+  (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent))
   (setq apheleia-remote-algorithm 'remote))
 
 ;; eglot
@@ -842,13 +854,6 @@
 	(progn
 	  (copilot-accept-completion))
       (copilot-complete))))
-
-;; elisp-mode
-(use-package elisp-mode
-  :after eglot apheleia
-  :elpaca nil
-  :config
-  (add-to-list 'apheleia-mode-alist '(emacs-lisp-mode . lisp-indent)))
 
 ;; envrc
 (use-package envrc
