@@ -128,10 +128,14 @@
 				 ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
 				 ";; [INFO] Emacs loaded in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " GCs." "\n\n"))
   ;; macOS pseudo-daemon
-  (when (eq system-type 'darwin)
+  (when (and (eq system-type 'darwin)
+	     (display-graphic-p))
     (defun pseudo-exit (event)
-      (switch-to-buffer "*scratch*")
-      (suspend-frame))
+      (call-process
+       "osascript" nil nil nil
+       "-e" "tell application \"Finder\""
+       "-e" "set visible of process \"Emacs\" to false"
+       "-e" "end tell"))
     (advice-add 'handle-delete-frame :override
 		#'pseudo-exit)
     (advice-add 'save-buffers-kill-terminal :override
@@ -766,6 +770,7 @@
 
 ;; tree-sitter
 (use-package treesit-auto
+  :demand t
   :config
   (setq treesit-auto-opt-out-list '(protobuf))
   (setq treesit-auto-install 't)
