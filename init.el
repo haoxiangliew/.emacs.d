@@ -209,13 +209,15 @@
 ;; doom-themes
 (use-package doom-themes
   :demand t
+  :init
+  (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
   (setq doom-themes-enable-bold t
 	doom-themes-enable-italic t
 	doom-themes-padded-modeline t)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula t)))
-    (load-theme 'doom-dracula t))
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula-pro t)))
+    (load-theme 'doom-dracula-pro t))
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
