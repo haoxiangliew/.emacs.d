@@ -214,7 +214,8 @@
   :config
   (setq doom-themes-enable-bold t
 	doom-themes-enable-italic t
-	doom-themes-padded-modeline t)
+	doom-themes-padded-modeline t
+	doom-dracula-pro-padded-modeline t)
   (if (daemonp)
       (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula-pro t)))
     (load-theme 'doom-dracula-pro t))
