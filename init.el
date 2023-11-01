@@ -126,7 +126,7 @@
   ;; configure scratch
   (setq initial-scratch-message (concat
 				 ";; Welcome " user-login-name " to Emacs " emacs-version "\n"
-				 ";; [INFO] Emacs loaded in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " GCs." "\n\n"))
+				 ";; [INFO] Emacs loaded in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collection(s)." "\n\n"))
   ;; macOS pseudo-daemon
   (when (and (eq system-type 'darwin)
 	     (display-graphic-p))
