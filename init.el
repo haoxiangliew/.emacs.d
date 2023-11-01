@@ -9,6 +9,14 @@
 ;;; Code:
 
 ;; bootstrap elpaca and use-package
+(declare-function elpaca-generate-autoloads ())
+(declare-function elpaca ())
+(declare-function elpaca-process-queues ())
+(defvar elpaca-use-package)
+(declare-function elpaca-use-package-mode ())
+(defvar elpaca-use-package-by-default)
+(defvar use-package-always-defer)
+(declare-function elpaca-wait ())
 (defvar elpaca-installer-version 0.5)
 (defvar elpaca-directory (expand-file-name "~/.cache/emacs/elpaca/"))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -18,9 +26,9 @@
 ;;                               :files (:defaults (:exclude "extensions"))
 ;;                               :build (:not elpaca--activate-package)))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref "feat/aot-native-comp"
-                              :files (:defaults (:exclude "extensions"))
-                              :build (:not elpaca--activate-package)))
+			      :ref "feat/aot-native-comp"
+			      :files (:defaults (:exclude "extensions"))
+			      :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
        (build (expand-file-name "elpaca/" elpaca-builds-directory))
        (order (cdr elpaca-order))
@@ -32,12 +40,12 @@
     (condition-case-unless-debug err
         (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
                  ((zerop (call-process "git" nil buffer t "clone"
-                                       (plist-get order :repo) repo)))
+				       (plist-get order :repo) repo)))
                  ((zerop (call-process "git" nil buffer t "checkout"
-                                       (or (plist-get order :ref) "--"))))
+				       (or (plist-get order :ref) "--"))))
                  (emacs (concat invocation-directory invocation-name))
                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+				       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
                  ((require 'elpaca))
                  ((elpaca-generate-autoloads "elpaca" repo)))
             (progn (message "%s" (buffer-string)) (kill-buffer buffer))
@@ -62,6 +70,7 @@
 ;; gcmh
 (use-package gcmh
   :demand t
+  :defines
   :init
   (gcmh-mode 1)
   :config
@@ -73,6 +82,7 @@
       auto-save-list-file-prefix nil)
 (use-package no-littering
   :demand t
+  :defines
   :config
   (no-littering-theme-backups))
 (setq custom-file
@@ -84,6 +94,7 @@
 ;; load-path
 (use-package exec-path-from-shell
   :demand t
+  :defines
   :init
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize))
@@ -209,6 +220,7 @@
 ;; doom-themes
 (use-package doom-themes
   :demand t
+  :defines
   :init
   (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
@@ -224,6 +236,7 @@
 
 ;; doom-modeline
 (use-package doom-modeline
+  :defines
   :init
   (doom-modeline-mode)
   :config
@@ -233,6 +246,7 @@
 ;; solaire-mode
 (use-package solaire-mode
   :demand t
+  :defines
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
   (solaire-global-mode +1))
@@ -240,6 +254,7 @@
 ;; spacious-padding
 (use-package spacious-padding
   :demand t
+  :defines
   :config
   (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0))
   (spacious-padding-mode))
@@ -250,12 +265,14 @@
 (use-package nerd-icons-completion
   :demand t
   :after marginalia
+  :defines
   :config
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 (use-package nerd-icons-corfu
   :demand t
   :after corfu
+  :defines
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 (use-package nerd-icons-ibuffer
@@ -295,11 +312,13 @@
   (vertico-buffer-mode)
   (vertico-mouse-mode))
 (use-package marginalia
+  :defines
   :init
   (marginalia-mode))
 
 ;; which-key
 (use-package which-key
+  :defines
   :init
   (which-key-mode)
   :config
@@ -362,6 +381,7 @@
 
 ;; yasnippet
 (use-package yasnippet
+  :defines
   :init
   (yas-global-mode 1)
   :config
@@ -373,6 +393,7 @@
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :magic ("%PDF" . pdf-view-mode)
+  :defines
   :config
   (pdf-tools-install-noverify)
   (setq-default pdf-view-display-size 'fit-page)
@@ -402,6 +423,7 @@
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases))
 (use-package eshell-prompt-extras
   :demand t
+  :defines
   :config
   (setq eshell-highlight-prompt nil
         eshell-prompt-function 'epe-theme-lambda))
@@ -450,6 +472,7 @@
 (use-package vterm
   ;; if vterm is installed via nix
   ;; :elpaca nil
+  :defines
   :bind
   ("C-x C-t" . vterm)
   :config
@@ -491,6 +514,7 @@
 ;; ranger
 (use-package ranger
   :after dired
+  :defines
   :config
   (unless (file-directory-p image-dired-dir)
     (make-directory image-dired-dir))
@@ -513,9 +537,11 @@
 ;; undo-fu
 (use-package undo-fu)
 (use-package undo-fu-session
+  :defines
   :init
   (undo-fu-session-global-mode))
 (use-package vundo
+  :defines
   :bind
   ("C-x u" . vundo)
   :config
@@ -547,6 +573,7 @@
 
 ;; magit
 (use-package magit
+  :defines
   :bind
   ("C-x g" . magit-status)
   :init
@@ -557,9 +584,11 @@
   :hook (magit-mode . turn-on-magit-gitflow))
 (use-package magit-todos
   :after magit
+  :defines
   :config
   (setq magit-todos-keyword-suffix "\\(?:([^)]+)\\)?:?"))
 (use-package diff-hl
+  :defines
   :hook (find-file    . diff-hl-mode)
   :hook (vc-dir-mode  . diff-hl-dir-mode)
   :hook (dired-mode   . diff-hl-dired-mode)
@@ -579,6 +608,7 @@
 
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
+  :defines
   :hook ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
   :init
   (setq highlight-indent-guides-method 'character
@@ -641,14 +671,17 @@
   :requires ox-moderncv)
 (use-package ox-gfm
   :demand t
+  :defines
   :config
   (add-to-list 'org-export-backends 'md))
 (use-package ox-pandoc
   :demand t
+  :defines
   :config
   (add-to-list 'org-export-backends 'pandoc))
 (use-package org-super-agenda
   :demand t
+  :defines
   :init
   (org-super-agenda-mode)
   :config
@@ -677,11 +710,13 @@
 					 :order 7))))
 (use-package org-download
   :demand t
+  :defines
   :config
   (setq org-download-method 'directory
 	org-download-image-dir "images"))
 (use-package org-modern
   :after org
+  :defines
   :init
   (global-org-modern-mode)
   :config
@@ -689,6 +724,7 @@
 
 ;; elcord
 (use-package elcord
+  :defines
   :init
   (elcord-mode)
   :config
@@ -697,6 +733,7 @@
 
 ;; notmuch
 (use-package notmuch
+  :defines
   :bind
   ("C-x C-m" . notmuch-hello)
   :init
@@ -774,6 +811,7 @@
 ;; tree-sitter
 (use-package treesit-auto
   :demand t
+  :defines
   :config
   (setq treesit-auto-install 't)
   (global-treesit-auto-mode)
@@ -782,6 +820,7 @@
 ;; apheleia (formatter)
 ;; check (describe-variable (apheleia-formatters))
 (use-package apheleia
+  :defines
   :init
   (setq require-final-newline t
 	show-trailing-whitespace t)
@@ -837,9 +876,11 @@
 	flyspell-issue-message-flag nil))
 (use-package flyspell-correct
   :after flyspell
+  :defines
   :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 (use-package flyspell-lazy
   :after flyspell
+  :defines
   :config
   (setq flyspell-lazy-idle-seconds 1
 	flyspell-lazy-window-idle-seconds 3)
@@ -864,6 +905,7 @@
 
 ;; envrc
 (use-package envrc
+  :defines
   :config
   (envrc-global-mode))
 
@@ -874,6 +916,7 @@
 (use-package arduino-mode
   :mode
   "\\.ino\\'"
+  :defines
   :config
   (setq arduino-tab-width 4))
 
@@ -898,6 +941,7 @@
   (add-to-list 'apheleia-mode-alist '(cc-mode . eglot-managed)))
 (use-package cmake-mode
   :after eglot apheleia
+  :defines
   :config
   (add-to-list 'apheleia-mode-alist '(cmake-mode . eglot-managed)))
 
@@ -921,6 +965,7 @@
 (use-package matlab-mode
   :mode
   "\\.m\\'"
+  :defines
   :config
   (setq matlab-indent-function t))
 
@@ -929,6 +974,7 @@
   :after eglot apheleia
   :mode
   "\\.nix\\'"
+  :defines
   :init
   (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
   (push '(nixpkgs-format . ("nixpkgs-fmt"
@@ -940,6 +986,7 @@
 (use-package rust-mode
   :mode
   "\\.rs\\'"
+  :defines
   :config
   (add-to-list 'apheleia-mode-alist '(rust-mode . eglot-managed)))
 
@@ -956,6 +1003,7 @@
    "\\.sv\\'"
    "\\.vh\\'"
    "\\.svh\\'")
+  :defines
   :init
   (add-to-list 'eglot-server-programs '(verilog-mode . ("verible-verilog-ls")))
   (add-to-list 'apheleia-mode-alist '(verilog-mode . eglot-managed))
