@@ -775,7 +775,6 @@
 (use-package treesit-auto
   :demand t
   :config
-  (setq treesit-auto-opt-out-list '(protobuf))
   (setq treesit-auto-install 't)
   (global-treesit-auto-mode)
   (treesit-auto-install-all))
