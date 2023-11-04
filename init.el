@@ -70,7 +70,8 @@
 ;; gcmh
 (use-package gcmh
   :demand t
-  :defines
+  :functions gcmh-mode
+  :defines gcmh-idle-delay gcmh-auto-idle-delay-factor
   :init
   (gcmh-mode 1)
   :config
@@ -82,7 +83,7 @@
       auto-save-list-file-prefix nil)
 (use-package no-littering
   :demand t
-  :defines
+  :functions no-littering-theme-backups
   :config
   (no-littering-theme-backups))
 (setq custom-file
@@ -94,7 +95,8 @@
 ;; load-path
 (use-package exec-path-from-shell
   :demand t
-  :defines
+  :functions exec-path-from-shell-initialize
+  :defines exec-path-from-shell-variables
   :init
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize))
@@ -220,7 +222,8 @@
 ;; doom-themes
 (use-package doom-themes
   :demand t
-  :defines
+  :functions load-if-exists doom-themes-visual-bell-config doom-themes-org-config
+  :defines doom-themes-enable-bold doom-themes-enable-italic doom-themes-padded-modeline doom-dracula-pro-padded-modeline
   :init
   (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
@@ -236,7 +239,7 @@
 
 ;; doom-modeline
 (use-package doom-modeline
-  :defines
+  :functions doom-modeline-mode
   :init
   (doom-modeline-mode)
   :config
@@ -246,7 +249,8 @@
 ;; solaire-mode
 (use-package solaire-mode
   :demand t
-  :defines
+  :functions solaire-global-mode
+  :defines solaire-mode-themes-to-face-swap
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
   (solaire-global-mode +1))
@@ -254,7 +258,8 @@
 ;; spacious-padding
 (use-package spacious-padding
   :demand t
-  :defines
+  :functions spacious-padding-mode
+  :defines spacious-padding-widths
   :config
   (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0))
   (spacious-padding-mode))
@@ -265,14 +270,15 @@
 (use-package nerd-icons-completion
   :demand t
   :after marginalia
-  :defines
+  :functions nerd-icons-completion-mode nerd-icons-completion-marginalia-setup
   :config
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 (use-package nerd-icons-corfu
   :demand t
   :after corfu
-  :defines
+  :functions nerd-icons-corfu-formatter
+  :defines corfu-margin-formatters
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 (use-package nerd-icons-ibuffer
@@ -312,13 +318,14 @@
   (vertico-buffer-mode)
   (vertico-mouse-mode))
 (use-package marginalia
-  :defines
+  :functions marginalia-mode
   :init
   (marginalia-mode))
 
 ;; which-key
 (use-package which-key
-  :defines
+  :functions which-key-mode
+  :defines which-key-idle-delay which-key-allow-multiple-replacements
   :init
   (which-key-mode)
   :config
@@ -381,7 +388,8 @@
 
 ;; yasnippet
 (use-package yasnippet
-  :defines
+  :functions yas-global-mode
+  :defines yas-triggers-in-field
   :init
   (yas-global-mode 1)
   :config
@@ -393,7 +401,8 @@
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :magic ("%PDF" . pdf-view-mode)
-  :defines
+  :functions pdf-tools-install-noverify
+  :defines pdf-view-use-scaling pdf-view-use-imagemagick
   :config
   (pdf-tools-install-noverify)
   (setq-default pdf-view-display-size 'fit-page)
@@ -423,7 +432,7 @@
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases))
 (use-package eshell-prompt-extras
   :demand t
-  :defines
+  :defines eshell-highlight-prompt eshell-prompt-function
   :config
   (setq eshell-highlight-prompt nil
         eshell-prompt-function 'epe-theme-lambda))
@@ -472,7 +481,7 @@
 (use-package vterm
   ;; if vterm is installed via nix
   ;; :elpaca nil
-  :defines
+  :defines vterm-eval-cmds vterm-tramp-shells vterm-kill-buffer-on-exit vterm-max-scrollback
   :bind
   ("C-x C-t" . vterm)
   :config
@@ -514,7 +523,7 @@
 ;; ranger
 (use-package ranger
   :after dired
-  :defines
+  :defines image-dired-dir ranger-cleanup-on-disable ranger-excluded-extensions ranger-deer-show-details ranger-max-preview-size ranger-show-literal ranger-hide-cursor
   :config
   (unless (file-directory-p image-dired-dir)
     (make-directory image-dired-dir))
@@ -537,11 +546,12 @@
 ;; undo-fu
 (use-package undo-fu)
 (use-package undo-fu-session
-  :defines
+  :functions undo-fu-session-global-mode
   :init
   (undo-fu-session-global-mode))
 (use-package vundo
-  :defines
+  :functions vundo--current-node vundo-m-parent vundo--move-to-node vundo--refresh-buffer vundo-diff
+  :defines vundo--orig-buffer vundo--prev-mod-list vundo-mode-map vundo-glyph-alist vundo-unicode-symbols
   :bind
   ("C-x u" . vundo)
   :config
@@ -555,7 +565,7 @@
 	(let ((buf (make-temp-name (concat (buffer-name orig) "-vundo-diff"))))
           (vundo--move-to-node source dest orig vundo--prev-mod-list)
           (with-current-buffer (get-buffer-create buf)
-	    (insert-buffer orig))
+	    (insert-buffer-substring orig))
           (vundo--refresh-buffer orig (current-buffer) 'incremental)
           (vundo--move-to-node dest source orig vundo--prev-mod-list)
           (vundo--refresh-buffer orig (current-buffer) 'incremental)
@@ -573,7 +583,7 @@
 
 ;; magit
 (use-package magit
-  :defines
+  :defines transient-default-level
   :bind
   ("C-x g" . magit-status)
   :init
@@ -584,15 +594,16 @@
   :hook (magit-mode . turn-on-magit-gitflow))
 (use-package magit-todos
   :after magit
-  :defines
+  :defines magit-todos-keyword-suffix
   :config
   (setq magit-todos-keyword-suffix "\\(?:([^)]+)\\)?:?"))
 (use-package diff-hl
-  :defines
   :hook (find-file    . diff-hl-mode)
   :hook (vc-dir-mode  . diff-hl-dir-mode)
   :hook (dired-mode   . diff-hl-dired-mode)
   :hook (diff-hl-mode . diff-hl-flydiff-mode)
+  :functions diff-hl-margin-local-mode diff-hl-magit-pre-refresh diff-hl-magit-post-refresh
+  :defines diff-hl-disable-on-remote vc-git-diff-switches
   :init
   (if (fboundp 'fringe-mode) (fringe-mode '5))
   (setq-default fringes-outside-margins t)
@@ -608,8 +619,9 @@
 
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
-  :defines
   :hook ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
+  :functions disable-indent-guides
+  :defines highlight-indent-guides-method highlight-indent-guides-responsive highlight-indent-guides-auto-character-face-perc highlight-indent-guides-auto-top-character-face-perc highlight-indent-guides-mode
   :init
   (setq highlight-indent-guides-method 'character
 	highlight-indent-guides-responsive 'top
@@ -671,17 +683,17 @@
   :requires ox-moderncv)
 (use-package ox-gfm
   :demand t
-  :defines
+  :defines org-export-backends
   :config
   (add-to-list 'org-export-backends 'md))
 (use-package ox-pandoc
   :demand t
-  :defines
   :config
   (add-to-list 'org-export-backends 'pandoc))
 (use-package org-super-agenda
   :demand t
-  :defines
+  :functions org-super-agenda-mode
+  :defines org-super-agenda-groups
   :init
   (org-super-agenda-mode)
   :config
@@ -710,13 +722,14 @@
 					 :order 7))))
 (use-package org-download
   :demand t
-  :defines
+  :defines org-download-method org-download-image-dir
   :config
   (setq org-download-method 'directory
 	org-download-image-dir "images"))
 (use-package org-modern
   :after org
-  :defines
+  :functions global-org-modern-mode
+  :defines org-modern-label-border
   :init
   (global-org-modern-mode)
   :config
@@ -724,7 +737,8 @@
 
 ;; elcord
 (use-package elcord
-  :defines
+  :functions elcord-mode
+  :defines elcord-use-major-mode-as-main-icon elcord--editor-name
   :init
   (elcord-mode)
   :config
@@ -733,7 +747,8 @@
 
 ;; notmuch
 (use-package notmuch
-  :defines
+  :functions message-remove-header message-fetch-field message-add-header message-send-and-exit notmuch-refresh-all-buffers
+  :defines +notmuch-mail-folder +notmuch-sync-backend notmuch-saved-searches notmuch-fcc-dirs message-kill-buffer-on-exit notmuch-search-result-format notmuch-tag-formats notmuch-archive-tags message-send-mail-function smtpmail-smtp-server smtpmail-stream-type smtpmail-smtp-service smtp-accounts notmuch-show-log notmuch-hello-sections notmuch-message-headers-visible notmuch-search-mode-map
   :bind
   ("C-x C-m" . notmuch-hello)
   :init
@@ -811,7 +826,8 @@
 ;; tree-sitter
 (use-package treesit-auto
   :demand t
-  :defines
+  :functions global-treesit-auto-mode treesit-auto-install-all
+  :defines treesit-auto-install
   :config
   (setq treesit-auto-install 't)
   (global-treesit-auto-mode)
@@ -820,7 +836,8 @@
 ;; apheleia (formatter)
 ;; check (describe-variable (apheleia-formatters))
 (use-package apheleia
-  :defines
+  :functions apheleia-global-mode eglot-current-server eglot-format-buffer
+  :defines apheleia-formatters apheleia-mode-alist apheleia-remote-algorithm
   :init
   (setq require-final-newline t
 	show-trailing-whitespace t)
@@ -876,11 +893,12 @@
 	flyspell-issue-message-flag nil))
 (use-package flyspell-correct
   :after flyspell
-  :defines
+  :defines flyspell-mode-map
   :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 (use-package flyspell-lazy
   :after flyspell
-  :defines
+  :functions flyspell-lazy-mode
+  :defines flyspell-lazy-idle-seconds flyspell-lazy-window-idle-seconds
   :config
   (setq flyspell-lazy-idle-seconds 1
 	flyspell-lazy-window-idle-seconds 3)
@@ -905,7 +923,7 @@
 
 ;; envrc
 (use-package envrc
-  :defines
+  :functions envrc-global-mode
   :config
   (envrc-global-mode))
 
@@ -916,7 +934,7 @@
 (use-package arduino-mode
   :mode
   "\\.ino\\'"
-  :defines
+  :defines arduino-tab-width
   :config
   (setq arduino-tab-width 4))
 
@@ -941,7 +959,6 @@
   (add-to-list 'apheleia-mode-alist '(cc-mode . eglot-managed)))
 (use-package cmake-mode
   :after eglot apheleia
-  :defines
   :config
   (add-to-list 'apheleia-mode-alist '(cmake-mode . eglot-managed)))
 
@@ -965,7 +982,7 @@
 (use-package matlab-mode
   :mode
   "\\.m\\'"
-  :defines
+  :defines matlab-indent-function
   :config
   (setq matlab-indent-function t))
 
@@ -974,7 +991,6 @@
   :after eglot apheleia
   :mode
   "\\.nix\\'"
-  :defines
   :init
   (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
   (push '(nixpkgs-format . ("nixpkgs-fmt"
@@ -986,7 +1002,6 @@
 (use-package rust-mode
   :mode
   "\\.rs\\'"
-  :defines
   :config
   (add-to-list 'apheleia-mode-alist '(rust-mode . eglot-managed)))
 
@@ -1003,7 +1018,6 @@
    "\\.sv\\'"
    "\\.vh\\'"
    "\\.svh\\'")
-  :defines
   :init
   (add-to-list 'eglot-server-programs '(verilog-mode . ("verible-verilog-ls")))
   (add-to-list 'apheleia-mode-alist '(verilog-mode . eglot-managed))
