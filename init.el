@@ -195,8 +195,6 @@
   ;; (setq pixel-scroll-precision-interpolate-page t
   ;;       pixel-scroll-precision-use-momentum t
   ;;       pixel-scroll-precision-momentum-seconds 0.1)
-  ;; disable bells
-  (setq ring-bell-function 'ignore)
   ;; yes/no -> y/n
   (defalias 'yes-or-no-p 'y-or-n-p)
   ;; optimize terminal use
@@ -296,8 +294,7 @@
 ;; vertico
 (use-package vertico
   :elpaca (vertico :files (:defaults "extensions/*")
-		   :includes (vertico-buffer
-			      vertico-mouse))
+		   :includes (vertico-mouse))
   :init
   (defun crm-indicator (args)
     (cons (format "[CRM%s] %s"
@@ -312,10 +309,6 @@
   (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
   (setq enable-recursive-minibuffers t)
   (vertico-mode)
-  (setq vertico-buffer-display-action '(display-buffer-in-side-window
-					(window-height . ,(+ 3 vertico-count))
-					(side . top)))
-  (vertico-buffer-mode)
   (vertico-mouse-mode))
 (use-package marginalia
   :functions marginalia-mode

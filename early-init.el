@@ -5,6 +5,11 @@
 
 ;;; Code:
 
+(defvar package-quickstart)
+(defvar elpaca-aot-native-compilation)
+(defvar server-client-instructions)
+(defvar native-comp-async-report-warnings-errors)
+
 ;; no littering
 (when (fboundp 'startup-redirect-eln-cache)
   (startup-redirect-eln-cache
