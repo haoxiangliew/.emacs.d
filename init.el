@@ -15,7 +15,6 @@
 (defvar elpaca-use-package)
 (declare-function elpaca-use-package-mode ())
 (defvar elpaca-use-package-by-default)
-(defvar use-package-always-defer)
 (declare-function elpaca-wait ())
 (defvar elpaca-installer-version 0.6)
 (defvar elpaca-directory (expand-file-name "~/.cache/emacs/elpaca/"))
