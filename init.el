@@ -21,12 +21,8 @@
 (defvar elpaca-directory (expand-file-name "~/.cache/emacs/elpaca/"))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-;; (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-;;                               :ref nil
-;;                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-;;                               :build (:not elpaca--activate-package)))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref "feat/aot-native-comp"
+                              :ref nil
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
@@ -61,15 +57,13 @@
 ;; install use-package support
 (elpaca elpaca-use-package
   (elpaca-use-package-mode)
-  (setq elpaca-use-package-by-default t
-	use-package-always-defer t))
+  (setq elpaca-use-package-by-default t))
 
 ;; block until queue is finished
 (elpaca-wait)
 
 ;; gcmh
 (use-package gcmh
-  :demand t
   :functions gcmh-mode
   :defines gcmh-idle-delay gcmh-auto-idle-delay-factor
   :init
@@ -82,7 +76,6 @@
 (setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
       auto-save-list-file-prefix nil)
 (use-package no-littering
-  :demand t
   :functions no-littering-theme-backups
   :config
   (no-littering-theme-backups))
@@ -94,7 +87,6 @@
 
 ;; load-path
 (use-package exec-path-from-shell
-  :demand t
   :functions exec-path-from-shell-initialize
   :defines exec-path-from-shell-variables
   :init
@@ -106,7 +98,6 @@
 
 ;; emacs config
 (use-package emacs
-  :demand t
   :hook (prog-mode . electric-pair-mode)
   :elpaca nil
   :init
@@ -219,7 +210,6 @@
 
 ;; doom-themes
 (use-package doom-themes
-  :demand t
   :functions load-if-exists doom-themes-visual-bell-config doom-themes-org-config
   :defines doom-themes-enable-bold doom-themes-enable-italic doom-themes-padded-modeline doom-dracula-pro-padded-modeline
   :init
@@ -246,7 +236,6 @@
 
 ;; solaire-mode
 (use-package solaire-mode
-  :demand t
   :functions solaire-global-mode
   :defines solaire-mode-themes-to-face-swap
   :config
@@ -255,7 +244,6 @@
 
 ;; spacious-padding
 (use-package spacious-padding
-  :demand t
   :functions spacious-padding-mode
   :defines spacious-padding-widths
   :config
@@ -263,17 +251,14 @@
   (spacious-padding-mode))
 
 ;; nerd-icons
-(use-package nerd-icons
-  :demand t)
+(use-package nerd-icons)
 (use-package nerd-icons-completion
-  :demand t
   :after marginalia
   :functions nerd-icons-completion-mode nerd-icons-completion-marginalia-setup
   :config
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 (use-package nerd-icons-corfu
-  :demand t
   :after corfu
   :functions nerd-icons-corfu-formatter
   :defines corfu-margin-formatters
@@ -404,7 +389,6 @@
 
 ;; eshell
 (use-package eshell
-  :demand t
   :elpaca nil
   :bind
   ("C-x C-e" . eshell)
@@ -424,7 +408,6 @@
       (add-to-list 'eshell-command-aliases-list var)))
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases))
 (use-package eshell-prompt-extras
-  :demand t
   :defines eshell-highlight-prompt eshell-prompt-function
   :config
   (setq eshell-highlight-prompt nil
@@ -671,20 +654,16 @@
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
 (use-package ox-moderncv
-  :demand t
   :elpaca (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
   :requires ox-moderncv)
 (use-package ox-gfm
-  :demand t
   :defines org-export-backends
   :config
   (add-to-list 'org-export-backends 'md))
 (use-package ox-pandoc
-  :demand t
   :config
   (add-to-list 'org-export-backends 'pandoc))
 (use-package org-super-agenda
-  :demand t
   :functions org-super-agenda-mode
   :defines org-super-agenda-groups
   :init
@@ -714,7 +693,6 @@
 					 :tag "classes"
 					 :order 7))))
 (use-package org-download
-  :demand t
   :defines org-download-method org-download-image-dir
   :config
   (setq org-download-method 'directory
@@ -817,14 +795,19 @@
 ;;; language configuration
 
 ;; tree-sitter
-(use-package treesit-auto
-  :demand t
-  :functions global-treesit-auto-mode treesit-auto-install-all
-  :defines treesit-auto-install
-  :config
-  (setq treesit-auto-install 't)
-  (global-treesit-auto-mode)
-  (treesit-auto-install-all))
+(use-package tree-sitter
+  :functions global-tree-sitter-mode
+  :init
+  (global-tree-sitter-mode)
+  (add-hook 'tree-sitter-after-on-hook 'tree-sitter-hl-mode))
+(use-package tree-sitter-langs)
+;; (use-package treesit-auto
+;;   :functions global-treesit-auto-mode treesit-auto-install-all
+;;   :defines treesit-auto-install
+;;   :config
+;;   (setq treesit-auto-install 't)
+;;   (global-treesit-auto-mode)
+;;   (treesit-auto-install-all))
 
 ;; apheleia (formatter)
 ;; check (describe-variable (apheleia-formatters))
