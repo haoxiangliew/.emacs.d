@@ -6,7 +6,7 @@
 ;;; Code:
 
 (defvar package-quickstart)
-(defvar elpaca-aot-native-compilation)
+;; (defvar elpaca-aot-native-compilation)
 (defvar server-client-instructions)
 (defvar native-comp-async-report-warnings-errors)
 
@@ -20,7 +20,7 @@
 (setq package-enable-at-startup nil
       package-quickstart nil
       inhibit-default-init t)
-(setq elpaca-aot-native-compilation t)
+;; (setq elpaca-aot-native-compilation t)
 
 ;; inhibit messages
 (setq inhibit-message t)
