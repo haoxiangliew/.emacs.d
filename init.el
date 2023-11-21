@@ -181,6 +181,8 @@
   (setq mouse-wheel-progressive-speed t)
   (setq fast-but-imprecise-scrolling t)
   (setq redisplay-skip-fontification-on-input t)
+  (when (eq system-type 'darwin)
+    (setq mac-redisplay-dont-reset-vscroll t))
   ;; (pixel-scroll-precision-mode)
   ;; (setq pixel-scroll-precision-interpolate-page t
   ;;       pixel-scroll-precision-use-momentum t
