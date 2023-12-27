@@ -8,26 +8,111 @@
 
 ;;; Code:
 
-;; bootstrap straight and use-package
-(defvar bootstrap-version)
-(declare-function straight-use-package ())
-(defvar straight-use-package-by-default)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        (or (bound-and-true-p straight-base-dir)
-            user-emacs-directory)))
-      (bootstrap-version 7))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-(straight-use-package 'use-package)
-(setq straight-use-package-by-default t)
+;; enable AOT native compilation
+(declare-function elpaca<-build-dir ())
+(declare-function elpaca--signal ())
+(declare-function elpaca--make-process ())
+(declare-function elpaca--emacs-path ())
+(declare-function cl-loop ())
+(declare-function elpaca-dependencies ())
+(declare-function elpaca<-id ())
+(declare-function elpaca-get ())
+(declare-function elpaca--process-sentinel ())
+(defvar elpaca-build-steps)
+(defun elpaca--native-compile (e)
+  "Native compile E's package."
+  ;; Assumes all dependencies are 'built
+  (let ((default-directory (elpaca<-build-dir e)))
+    (elpaca--signal e (concat "Native compiling " default-directory) 'native-compilation)
+    (elpaca--make-process e
+      :name "native-compile"
+      :command `(,(elpaca--emacs-path) "-Q" "-L" "."
+                 ,@(cl-loop for dep in (elpaca-dependencies (elpaca<-id e) '(emacs))
+                            for item = (elpaca-get dep)
+                            for build-dir = (and item (elpaca<-build-dir item))
+                            when build-dir append (list "-L" build-dir))
+                 ;; Inherit eln load-path in child process. Otherwise, default assumed.
+                 "--eval" ,(format "%S" `(setq native-comp-eln-load-path ',native-comp-eln-load-path))
+                 "--batch" "-f" "batch-native-compile"
+                 ,@(directory-files-recursively default-directory "\\.el$"))
+      :sentinel (apply-partially #'elpaca--process-sentinel "Native compilation complete" nil))))
+
+(if (fboundp 'native-comp-available-p)
+    (setq elpaca-build-steps
+	  '(elpaca--clone
+	    elpaca--configure-remotes
+	    elpaca--checkout-ref
+	    elpaca--run-pre-build-commands
+	    elpaca--queue-dependencies
+	    elpaca--check-version
+	    elpaca--link-build-files
+	    elpaca--generate-autoloads-async
+	    elpaca--byte-compile
+	    elpaca--native-compile
+	    elpaca--compile-info
+	    elpaca--install-info
+	    elpaca--add-info-path
+	    elpaca--run-post-build-commands
+	    elpaca--activate-package)))
+
+;; bootstrap elpaca and use-package
+(declare-function elpaca-generate-autoloads ())
+(declare-function elpaca ())
+(declare-function elpaca-process-queues ())
+(defvar use-package)
+(defvar elpaca-use-package)
+(declare-function elpaca-use-package-mode ())
+(defvar elpaca-use-package-by-default)
+(declare-function elpaca-wait ())
+(defvar elpaca-installer-version 0.6)
+(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref nil
+                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                              :build (:not elpaca--activate-package)))
+(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+       (build (expand-file-name "elpaca/" elpaca-builds-directory))
+       (order (cdr elpaca-order))
+       (default-directory repo))
+  (add-to-list 'load-path (if (file-exists-p build) build repo))
+  (unless (file-exists-p repo)
+    (make-directory repo t)
+    (when (< emacs-major-version 28) (require 'subr-x))
+    (condition-case-unless-debug err
+        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                 ((zerop (call-process "git" nil buffer t "clone"
+                                       (plist-get order :repo) repo)))
+                 ((zerop (call-process "git" nil buffer t "checkout"
+                                       (or (plist-get order :ref) "--"))))
+                 (emacs (concat invocation-directory invocation-name))
+                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                 ((require 'elpaca))
+                 ((elpaca-generate-autoloads "elpaca" repo)))
+            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+          (error "%s" (with-current-buffer buffer (buffer-string))))
+      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+  (unless (require 'elpaca-autoloads nil t)
+    (require 'elpaca)
+    (elpaca-generate-autoloads "elpaca" repo)
+    (load "./elpaca-autoloads")))
+(add-hook 'after-init-hook #'elpaca-process-queues)
+(elpaca `(,@elpaca-order))
+
+;; install use-package
+(elpaca use-package)
+
+;; install use-package support
+(elpaca elpaca-use-package
+  ;; enable :elpaca use-package keyword.
+  (elpaca-use-package-mode)
+  ;; assume :elpaca t unless otherwise specified.
+  (setq elpaca-use-package-by-default t))
+
+;; process queues
+(elpaca-wait)
 
 ;; gcmh
 (use-package gcmh
@@ -64,7 +149,7 @@
 ;; emacs config
 (use-package emacs
   :hook (prog-mode . electric-pair-mode)
-  :straight (:type built-in)
+  :elpaca nil
   :init
   ;; less noise when compiling elisp
   (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
@@ -175,7 +260,7 @@
 
 ;; tramp
 (use-package tramp
-  :straight (:type built-in))
+  :elpaca nil)
 
 ;; doom-themes
 (use-package doom-themes
@@ -248,8 +333,8 @@
 
 ;; vertico
 (use-package vertico
-  :straight (vertico :files (:defaults "extensions/*")
-		     :includes (vertico-mouse))
+  :elpaca (vertico :files (:defaults "extensions/*")
+		   :includes (vertico-mouse))
   :init
   (defun crm-indicator (args)
     (cons (format "[CRM%s] %s"
@@ -282,9 +367,9 @@
 
 ;; corfu
 (use-package corfu
-  :straight (corfu :files (:defaults "extensions/*")
-		   :includes (corfu-info
-			      corfu-popupinfo))
+  :elpaca (corfu :files (:defaults "extensions/*")
+		 :includes (corfu-info
+			    corfu-popupinfo))
   :bind
   (:map corfu-map
         ("TAB" . corfu-next)
@@ -328,7 +413,7 @@
       (comint-send-input))))
   (advice-add #'corfu-insert :after #'corfu-send-shell))
 (use-package corfu-terminal
-  :straight (corfu-terminal :repo "https://codeberg.org/akib/emacs-corfu-terminal")
+  :elpaca (corfu-terminal :repo "https://codeberg.org/akib/emacs-corfu-terminal")
   :init
   (unless (display-graphic-p)
     (corfu-terminal-mode +1)))
@@ -359,7 +444,7 @@
 
 ;; eshell
 (use-package eshell
-  :straight (:type built-in)
+  :elpaca nil
   :bind
   ("C-x C-e" . eshell)
   :init
@@ -394,12 +479,12 @@
 (use-package eat
   :hook (((eshell-mode eshell-load compilation-mode) . eat-eshell-mode)
 	 ((eshell-mode eshell-load compilation-mode) . eat-eshell-visual-command-mode))
-  :straight (eat :repo "https://codeberg.org/akib/emacs-eat"
-		 :files ("*.el" ("term" "term/*.el") "*.texi"
-			 "*.ti" ("terminfo/e" "terminfo/e/*")
-			 ("terminfo/65" "terminfo/65/*")
-			 ("integration" "integration/*")
-			 (:exclude ".dir-locals.el" "*-tests.el")))
+  :elpaca (eat :repo "https://codeberg.org/akib/emacs-eat"
+	       :files ("*.el" ("term" "term/*.el") "*.texi"
+		       "*.ti" ("terminfo/e" "terminfo/e/*")
+		       ("terminfo/65" "terminfo/65/*")
+		       ("integration" "integration/*")
+		       (:exclude ".dir-locals.el" "*-tests.el")))
   :config
   (defun start-file-process-shell-command-using-eat-exec
       (name buffer command)
@@ -433,7 +518,7 @@
 ;; vterm
 (use-package vterm
   ;; if vterm is installed via nix
-  ;; :straight (:type built-in)
+  ;; :elpaca nil
   :defines vterm-eval-cmds vterm-tramp-shells vterm-kill-buffer-on-exit vterm-max-scrollback
   :bind
   ("C-x C-t" . vterm)
@@ -458,7 +543,7 @@
 
 ;; dired
 (use-package dired
-  :straight (:type built-in)
+  :elpaca nil
   :init
   (setq dired-auto-revert-buffer t
 	dired-dwim-target t
@@ -489,7 +574,7 @@
 
 ;; ibuffer
 (use-package ibuffer
-  :straight (:type built-in)
+  :elpaca nil
   :bind
   ("C-x C-b" . ibuffer)
   :config
@@ -529,10 +614,27 @@
 
 ;; project.el
 (use-package project-x
-  :straight (project-x :repo "https://github.com/karthink/project-x")
+  :elpaca (project-x :repo "https://github.com/karthink/project-x")
   :after project
   :config
   (project-x-mode 1))
+
+;; hl-todo
+(use-package hl-todo
+  :defines hl-todo-highlight-punctuation hl-todo-keyword-faces
+  :hook ((prog-mode . hl-todo-mode)
+         (yaml-mode . hl-todo-mode))
+  :config
+  (setq hl-todo-highlight-punctuation ":"
+        hl-todo-keyword-faces
+        '(("TODO" warning bold)
+          ("FIXME" error bold)
+          ("REVIEW" font-lock-keyword-face bold)
+          ("HACK" font-lock-constant-face bold)
+          ("DEPRECATED" font-lock-doc-face bold)
+          ("NOTE" success bold)
+          ("BUG" error bold)
+          ("XXX" font-lock-constant-face bold))))
 
 ;; magit
 (use-package magit
@@ -590,8 +692,8 @@
 
 ;; ligatures
 (use-package ligature
-  :straight (ligature :repo "https://github.com/mickeynp/ligature.el"
-		      :inherit nil)
+  :elpaca (ligature :repo "https://github.com/mickeynp/ligature.el"
+		    :inherit nil)
   :init
   (setq prettify-symbols-unprettify-at-point 'right-edge)
   (global-prettify-symbols-mode)
@@ -620,7 +722,7 @@
 
 ;; org-mode
 (use-package org
-  :straight (:type built-in)
+  :elpaca nil
   :bind
   ("C-x C-a" . org-agenda)
   :config
@@ -632,7 +734,7 @@
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
 (use-package ox-moderncv
-  :straight (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
+  :elpaca (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
   :requires ox-moderncv)
 (use-package ox-gfm
   :defines org-export-backends
@@ -810,7 +912,7 @@
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
-  :straight (:type built-in)
+  :elpaca nil
   :hook ((prog-mode . (lambda ()
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
@@ -822,7 +924,7 @@
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
 (use-package flymake
-  :straight (:type built-in)
+  :elpaca nil
   :hook (prog-mode . flymake-mode)
   :bind
   ("C-c ! c" . flymake-start)
@@ -834,7 +936,7 @@
 
 ;; flyspell
 (use-package flyspell
-  :straight (:type built-in)
+  :elpaca nil
   :hook (((org-mode markdown-mode TeX-mode rst-mode mu4e-compose-mode message-mode git-commit-mode) . flyspell-mode)
 	 ((yaml-mode conf-mode prog-mode) . flyspell-prog-mode))
   :config
@@ -855,8 +957,8 @@
 
 ;; copilot
 (use-package copilot
-  :straight (copilot :repo "https://github.com/zerolfx/copilot.el"
-		     :files ("dist" "*.el"))
+  :elpaca (copilot :repo "https://github.com/zerolfx/copilot.el"
+		   :files ("dist" "*.el"))
   :hook ((prog-mode . copilot-mode)
 	 (emacs-lisp-mode . (lambda ()
 			      (setq-local copilot--indent-warning-printed-p t))))
@@ -893,7 +995,7 @@
 ;; cc-mode
 (use-package cc-mode
   :after eglot apheleia
-  :straight (:type built-in)
+  :elpaca nil
   :mode
   ("\\.tpp\\'" . c++-mode)
   ("\\.txx\\'" . c++-mode)
@@ -910,6 +1012,7 @@
   (add-to-list 'apheleia-mode-alist '(c++-mode . eglot-managed))
   (add-to-list 'apheleia-mode-alist '(cc-mode . eglot-managed)))
 (use-package cmake-mode
+  :elpaca (cmake-mode :main "Auxiliary/cmake-mode.el")
   :after eglot apheleia
   :config
   (add-to-list 'apheleia-mode-alist '(cmake-mode . eglot-managed)))

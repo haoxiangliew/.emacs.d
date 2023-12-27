@@ -23,10 +23,6 @@
 ;; disable emacsclient instructions
 (setq server-client-instructions nil)
 
-;; disable regex searches of file-name-handler-alist
-(defvar default-file-name-handler-alist file-name-handler-alist)
-(setq file-name-handler-alist nil)
-
 ;; disable native-comp errors
 (setq native-comp-async-report-warnings-errors nil)
 
