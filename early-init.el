@@ -5,26 +5,20 @@
 
 ;;; Code:
 
-(defvar package-quickstart)
-;; (defvar elpaca-aot-native-compilation)
+;; declarations
 (defvar server-client-instructions)
 (defvar native-comp-async-report-warnings-errors)
 
-;; no littering
+;; disable package.el
+(setq package-enable-at-startup nil)
+
+;; no-littering
 (when (fboundp 'startup-redirect-eln-cache)
   (startup-redirect-eln-cache
    (convert-standard-filename
     (expand-file-name  "~/.cache/emacs/eln-cache/"))))
-
-;; elpaca bootstrap
-(setq package-enable-at-startup nil
-      package-quickstart nil
-      inhibit-default-init t)
-;; (setq elpaca-aot-native-compilation t)
-
-;; inhibit messages
-(setq inhibit-message t)
-(add-hook 'elpaca-after-init-hook (lambda () (setq inhibit-message nil)))
+(setq user-emacs-directory (expand-file-name "~/.cache/emacs/")
+      auto-save-list-file-prefix nil)
 
 ;; disable emacsclient instructions
 (setq server-client-instructions nil)
