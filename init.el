@@ -9,16 +9,6 @@
 ;;; Code:
 
 ;; enable AOT native compilation
-(declare-function elpaca<-build-dir ())
-(declare-function elpaca--signal ())
-(declare-function elpaca--make-process ())
-(declare-function elpaca--emacs-path ())
-(declare-function cl-loop ())
-(declare-function elpaca-dependencies ())
-(declare-function elpaca<-id ())
-(declare-function elpaca-get ())
-(declare-function elpaca--process-sentinel ())
-(defvar elpaca-build-steps)
 (defun elpaca--native-compile (e)
   "Native compile E's package."
   ;; Assumes all dependencies are 'built
@@ -56,14 +46,6 @@
 	    elpaca--activate-package)))
 
 ;; bootstrap elpaca and use-package
-(declare-function elpaca-generate-autoloads ())
-(declare-function elpaca ())
-(declare-function elpaca-process-queues ())
-(defvar use-package)
-(defvar elpaca-use-package)
-(declare-function elpaca-use-package-mode ())
-(defvar elpaca-use-package-by-default)
-(declare-function elpaca-wait ())
 (defvar elpaca-installer-version 0.6)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -116,8 +98,6 @@
 
 ;; gcmh
 (use-package gcmh
-  :functions gcmh-mode
-  :defines gcmh-idle-delay gcmh-auto-idle-delay-factor
   :init
   (gcmh-mode 1)
   :config
@@ -126,7 +106,6 @@
 
 ;; no-littering
 (use-package no-littering
-  :functions no-littering-theme-backups
   :config
   (no-littering-theme-backups))
 (setq custom-file
@@ -137,8 +116,6 @@
 
 ;; load-path
 (use-package exec-path-from-shell
-  :functions exec-path-from-shell-initialize
-  :defines exec-path-from-shell-variables
   :init
   (when (memq window-system '(mac ns x))
     (exec-path-from-shell-initialize))
@@ -151,10 +128,6 @@
   :hook (prog-mode . electric-pair-mode)
   :elpaca nil
   :init
-  ;; less noise when compiling elisp
-  (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
-        native-comp-async-report-warnings-errors nil
-	load-prefer-newer t)
   ;; safer networking
   (setq gnutls-verify-error noninteractive
 	gnutls-algorithm-priority (when (boundp 'libgnutls-version)
@@ -264,8 +237,6 @@
 
 ;; doom-themes
 (use-package doom-themes
-  :functions load-if-exists doom-themes-visual-bell-config doom-themes-org-config
-  :defines doom-themes-enable-bold doom-themes-enable-italic doom-themes-padded-modeline doom-dracula-pro-padded-modeline
   :init
   (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
@@ -281,7 +252,6 @@
 
 ;; doom-modeline
 (use-package doom-modeline
-  :functions doom-modeline-mode
   :init
   (doom-modeline-mode)
   :config
@@ -290,16 +260,12 @@
 
 ;; solaire-mode
 (use-package solaire-mode
-  :functions solaire-global-mode
-  :defines solaire-mode-themes-to-face-swap
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
   (solaire-global-mode +1))
 
 ;; spacious-padding
 (use-package spacious-padding
-  :functions spacious-padding-mode
-  :defines spacious-padding-widths spacious-padding-subtle-mode-line
   :config
   (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0)
 	spacious-padding-subtle-mode-line t)
@@ -309,14 +275,11 @@
 (use-package nerd-icons)
 (use-package nerd-icons-completion
   :after marginalia
-  :functions nerd-icons-completion-mode nerd-icons-completion-marginalia-setup
   :config
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 (use-package nerd-icons-corfu
   :after corfu
-  :functions nerd-icons-corfu-formatter
-  :defines corfu-margin-formatters
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 (use-package nerd-icons-ibuffer
@@ -351,14 +314,11 @@
   (vertico-mode)
   (vertico-mouse-mode))
 (use-package marginalia
-  :functions marginalia-mode
   :init
   (marginalia-mode))
 
 ;; which-key
 (use-package which-key
-  :functions which-key-mode
-  :defines which-key-idle-delay which-key-allow-multiple-replacements
   :init
   (which-key-mode)
   :config
@@ -421,8 +381,6 @@
 
 ;; yasnippet
 (use-package yasnippet
-  :functions yas-global-mode
-  :defines yas-triggers-in-field
   :init
   (yas-global-mode 1)
   :config
@@ -434,8 +392,6 @@
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
   :magic ("%PDF" . pdf-view-mode)
-  :functions pdf-tools-install-noverify
-  :defines pdf-view-use-scaling pdf-view-use-imagemagick
   :config
   (pdf-tools-install-noverify)
   (setq-default pdf-view-display-size 'fit-page)
@@ -519,7 +475,6 @@
 (use-package vterm
   ;; if vterm is installed via nix
   ;; :elpaca nil
-  :defines vterm-eval-cmds vterm-tramp-shells vterm-kill-buffer-on-exit vterm-max-scrollback
   :bind
   ("C-x C-t" . vterm)
   :config
@@ -561,7 +516,6 @@
 ;; ranger
 (use-package ranger
   :after dired
-  :defines image-dired-dir ranger-cleanup-on-disable ranger-excluded-extensions ranger-deer-show-details ranger-max-preview-size ranger-show-literal ranger-hide-cursor
   :config
   (unless (file-directory-p image-dired-dir)
     (make-directory image-dired-dir))
@@ -584,12 +538,9 @@
 ;; undo-fu
 (use-package undo-fu)
 (use-package undo-fu-session
-  :functions undo-fu-session-global-mode
   :init
   (undo-fu-session-global-mode))
 (use-package vundo
-  :functions vundo--current-node vundo-m-parent vundo--move-to-node vundo--refresh-buffer vundo-diff
-  :defines vundo--orig-buffer vundo--prev-mod-list vundo-mode-map vundo-glyph-alist vundo-unicode-symbols
   :bind
   ("C-x u" . vundo)
   :config
@@ -621,7 +572,6 @@
 
 ;; hl-todo
 (use-package hl-todo
-  :defines hl-todo-highlight-punctuation hl-todo-keyword-faces
   :hook ((prog-mode . hl-todo-mode)
          (yaml-mode . hl-todo-mode))
   :config
@@ -638,7 +588,6 @@
 
 ;; magit
 (use-package magit
-  :defines transient-default-level
   :bind
   ("C-x g" . magit-status)
   :init
@@ -649,7 +598,6 @@
   :hook (magit-mode . turn-on-magit-gitflow))
 (use-package magit-todos
   :after magit
-  :defines magit-todos-keyword-suffix
   :config
   (setq magit-todos-keyword-suffix "\\(?:([^)]+)\\)?:?"))
 (use-package diff-hl
@@ -657,8 +605,6 @@
   :hook (vc-dir-mode  . diff-hl-dir-mode)
   :hook (dired-mode   . diff-hl-dired-mode)
   :hook (diff-hl-mode . diff-hl-flydiff-mode)
-  :functions diff-hl-margin-local-mode diff-hl-magit-pre-refresh diff-hl-magit-post-refresh
-  :defines diff-hl-disable-on-remote vc-git-diff-switches
   :init
   (if (fboundp 'fringe-mode) (fringe-mode '5))
   (setq-default fringes-outside-margins t)
@@ -675,8 +621,6 @@
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
   :hook ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
-  :functions disable-indent-guides
-  :defines highlight-indent-guides-method highlight-indent-guides-responsive highlight-indent-guides-auto-character-face-perc highlight-indent-guides-auto-top-character-face-perc highlight-indent-guides-mode
   :init
   (setq highlight-indent-guides-method 'character
 	highlight-indent-guides-responsive 'top
@@ -737,15 +681,12 @@
   :elpaca (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
   :requires ox-moderncv)
 (use-package ox-gfm
-  :defines org-export-backends
   :config
   (add-to-list 'org-export-backends 'md))
 (use-package ox-pandoc
   :config
   (add-to-list 'org-export-backends 'pandoc))
 (use-package org-super-agenda
-  :functions org-super-agenda-mode
-  :defines org-super-agenda-groups
   :init
   (org-super-agenda-mode)
   :config
@@ -773,14 +714,11 @@
 					 :tag "classes"
 					 :order 7))))
 (use-package org-download
-  :defines org-download-method org-download-image-dir
   :config
   (setq org-download-method 'directory
 	org-download-image-dir "images"))
 (use-package org-modern
   :after org
-  :functions global-org-modern-mode
-  :defines org-modern-label-border
   :init
   (global-org-modern-mode)
   :config
@@ -788,8 +726,6 @@
 
 ;; elcord
 (use-package elcord
-  :functions elcord-mode
-  :defines elcord-use-major-mode-as-main-icon elcord--editor-name
   :init
   (elcord-mode)
   :config
@@ -798,8 +734,6 @@
 
 ;; notmuch
 (use-package notmuch
-  :functions message-remove-header message-fetch-field message-add-header message-send-and-exit notmuch-refresh-all-buffers
-  :defines +notmuch-mail-folder +notmuch-sync-backend notmuch-saved-searches notmuch-fcc-dirs message-kill-buffer-on-exit notmuch-search-result-format notmuch-tag-formats notmuch-archive-tags message-send-mail-function smtpmail-smtp-server smtpmail-stream-type smtpmail-smtp-service smtp-accounts notmuch-show-log notmuch-hello-sections notmuch-message-headers-visible notmuch-search-mode-map
   :bind
   ("C-x C-m" . notmuch-hello)
   :init
@@ -876,8 +810,6 @@
 
 ;; tree-sitter
 (use-package treesit-auto
-  :functions global-treesit-auto-mode treesit-auto-install-all
-  :defines treesit-auto-install
   :config
   (setq treesit-auto-install 't)
   (global-treesit-auto-mode)
@@ -886,8 +818,6 @@
 ;; apheleia (formatter)
 ;; check (describe-variable (apheleia-formatters))
 (use-package apheleia
-  :functions apheleia-global-mode eglot-current-server eglot-format-buffer
-  :defines apheleia-formatters apheleia-mode-alist apheleia-remote-algorithm
   :init
   (setq require-final-newline t
 	show-trailing-whitespace t)
@@ -944,12 +874,9 @@
 	flyspell-issue-message-flag nil))
 (use-package flyspell-correct
   :after flyspell
-  :defines flyspell-mode-map
   :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 (use-package flyspell-lazy
   :after flyspell
-  :functions flyspell-lazy-mode
-  :defines flyspell-lazy-idle-seconds flyspell-lazy-window-idle-seconds
   :config
   (setq flyspell-lazy-idle-seconds 1
 	flyspell-lazy-window-idle-seconds 3)
@@ -977,7 +904,6 @@
 
 ;; envrc
 (use-package envrc
-  :functions envrc-global-mode
   :config
   (envrc-global-mode))
 
@@ -988,7 +914,6 @@
 (use-package arduino-mode
   :mode
   "\\.ino\\'"
-  :defines arduino-tab-width
   :config
   (setq arduino-tab-width 4))
 
@@ -1037,14 +962,12 @@
 (use-package matlab-mode
   :mode
   "\\.m\\'"
-  :defines matlab-indent-function
   :config
   (setq matlab-indent-function t))
 
 ;; nix-mode
 (use-package nix-mode
   :after eglot apheleia
-  :defines eglot-server-programs
   :mode
   "\\.nix\\'"
   :init
@@ -1089,5 +1012,11 @@
 (use-package yaml-mode
   :mode
   "\\.yaml\\'")
+
+;; Local Variables:
+;; no-byte-compile: t
+;; no-native-compile: t
+;; no-update-autoloads: t
+;; End:
 
 ;;; init.el ends here

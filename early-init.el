@@ -5,12 +5,13 @@
 
 ;;; Code:
 
-;; declarations
-(defvar server-client-instructions)
-(defvar native-comp-async-report-warnings-errors)
-
 ;; disable package.el
 (setq package-enable-at-startup nil)
+
+;; less noise when compiling elisp
+(setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
+      native-comp-async-report-warnings-errors nil
+      load-prefer-newer t)
 
 ;; no-littering
 (when (fboundp 'startup-redirect-eln-cache)
@@ -22,9 +23,6 @@
 
 ;; disable emacsclient instructions
 (setq server-client-instructions nil)
-
-;; disable native-comp errors
-(setq native-comp-async-report-warnings-errors nil)
 
 ;; defer gc until loaded
 (setq gc-cons-threshold most-positive-fixnum
@@ -48,5 +46,11 @@
 
 ;; use bar cursor
 (setq-default cursor-type 'bar)
+
+;; Local Variables:
+;; no-byte-compile: t
+;; no-native-compile: t
+;; no-update-autoloads: t
+;; End:
 
 ;;; early-init.el ends here
