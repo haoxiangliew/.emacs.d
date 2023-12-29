@@ -175,10 +175,10 @@
   (setq user-full-name "Hao Xiang Liew"
 	user-mail-address "haoxiangliew@gmail.com")
   ;; font
-  (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-10.5"))
-  (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-10.5")
-  (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-10.5")
-  (set-face-attribute 'variable-pitch nil :font "SF Pro-10.5")
+  (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-12"))
+  (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-12")
+  (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-12")
+  (set-face-attribute 'variable-pitch nil :font "SF Pro-12")
   (setq inhibit-compacting-font-caches t)
   ;; highlight and match parentheses
   (show-paren-mode 1)
@@ -225,6 +225,8 @@
   (setq frame-resize-pixelwise t
 	cursor-in-non-selected-windows nil
 	highlight-nonselected-windows nil)
+  ;; show tab-bar
+  (setq tab-bar-show 1)
   ;; disable flashing cursor
   (blink-cursor-mode 0)
   ;; disable bidirectional text scanning
@@ -586,6 +588,10 @@
           ("NOTE" success bold)
           ("BUG" error bold)
           ("XXX" font-lock-constant-face bold))))
+
+;; rainbow-mode
+(use-package rainbow-mode
+  :hook ((css-mode html-mode sass-mode scss-mode web-mode) . rainbow-mode))
 
 ;; magit
 (use-package magit
