@@ -161,15 +161,19 @@
   (when (and (eq system-type 'darwin)
 	     (display-graphic-p))
     (defun pseudo-exit (event)
+      "Hide Emacs on macOS"
       (call-process
        "osascript" nil nil nil
        "-e" "tell application \"Finder\""
        "-e" "set visible of process \"Emacs\" to false"
        "-e" "end tell"))
-    (advice-add 'handle-delete-frame :override
-		#'pseudo-exit)
-    (advice-add 'save-buffers-kill-terminal :override
-		#'pseudo-exit))
+    (defun handle-delete-frame-wrapper (orig-fun &rest args)
+      "Only pseudo-exit when there is only one frame"
+      (if (= 1 (length (frame-list)))
+	  (pseudo-exit nil)
+	(apply orig-fun args)))
+    (advice-add 'handle-delete-frame :around #'handle-delete-frame-wrapper)
+    (advice-add 'save-buffers-kill-terminal :override #'pseudo-exit))
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
