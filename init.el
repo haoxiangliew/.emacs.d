@@ -86,6 +86,9 @@
 ;; install use-package
 (elpaca use-package)
 
+;; update jsonrpc
+(elpaca jsonrpc)
+
 ;; install use-package support
 (elpaca elpaca-use-package
   ;; enable :elpaca use-package keyword.
