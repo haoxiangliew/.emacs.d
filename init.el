@@ -748,6 +748,7 @@
 
 ;; notmuch
 (use-package notmuch
+  :disabled
   :bind
   ("C-x C-m" . notmuch-hello)
   :init
