@@ -86,8 +86,28 @@
 ;; install use-package
 (elpaca use-package)
 
-;; update jsonrpc
-(elpaca jsonrpc)
+;; update base packages
+(defun +elpaca-unload-seq (e)
+  "Unload seq package and build E package."
+  (and (featurep 'seq) (unload-feature 'seq t))
+  (elpaca--continue-build e))
+(defun +elpaca-seq-build-steps ()
+  "Build seq package."
+  (append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
+                       elpaca--pre-built-steps elpaca-build-steps))
+          (list '+elpaca-unload-seq 'elpaca--activate-package)))
+(elpaca `(seq :build ,(+elpaca-seq-build-steps)))
+
+(defun +elpaca-unload-jsonrpc (e)
+  "Unload jsonrpc package and build E package."
+  (and (featurep 'jsonrpc) (unload-feature 'jsonrpc t))
+  (elpaca--continue-build e))
+(defun +elpaca-jsonrpc-build-steps ()
+  "Build jsonrpc package."
+  (append (butlast (if (file-exists-p (expand-file-name "jsonrpc" elpaca-builds-directory))
+                       elpaca--pre-built-steps elpaca-build-steps))
+          (list '+elpaca-unload-jsonrpc 'elpaca--activate-package)))
+(elpaca `(jsonrpc :build ,(+elpaca-jsonrpc-build-steps)))
 
 ;; install use-package support
 (elpaca elpaca-use-package
@@ -98,6 +118,15 @@
 
 ;; process queues
 (elpaca-wait)
+
+;; eldoc
+(use-package eldoc
+  :preface
+  (unload-feature 'eldoc t)
+  (setq custom-delayed-init-variables '())
+  (defvar global-eldoc-mode nil)
+  :config
+  (global-eldoc-mode))
 
 ;; gcmh
 (use-package gcmh
@@ -857,7 +886,6 @@
 ;; eglot
 ;; check https://github.com/joaotavora/eglot#connecting-to-a-server
 (use-package eglot
-  :elpaca nil
   :hook ((prog-mode . (lambda ()
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
@@ -909,6 +937,7 @@
 	      ("<tab>" . 'copilot-tab)
 	      ("TAB" . 'copilot-tab))
   :config
+  (setq copilot-indent-offset-warning-disable t)
   (defun copilot-tab ()
     "Copilot completion for tab"
     (interactive)
