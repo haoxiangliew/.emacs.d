@@ -87,16 +87,16 @@
 (elpaca use-package)
 
 ;; update base packages
-(defun +elpaca-unload-seq (e)
-  "Unload seq package and build E package."
-  (and (featurep 'seq) (unload-feature 'seq t))
-  (elpaca--continue-build e))
-(defun +elpaca-seq-build-steps ()
-  "Build seq package."
-  (append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
-                       elpaca--pre-built-steps elpaca-build-steps))
-          (list '+elpaca-unload-seq 'elpaca--activate-package)))
-(elpaca `(seq :build ,(+elpaca-seq-build-steps)))
+;; (defun +elpaca-unload-seq (e)
+;;   "Unload seq package and build E package."
+;;   (and (featurep 'seq) (unload-feature 'seq t))
+;;   (elpaca--continue-build e))
+;; (defun +elpaca-seq-build-steps ()
+;;   "Build seq package."
+;;   (append (butlast (if (file-exists-p (expand-file-name "seq" elpaca-builds-directory))
+;;                        elpaca--pre-built-steps elpaca-build-steps))
+;;           (list '+elpaca-unload-seq 'elpaca--activate-package)))
+;; (elpaca `(seq :build ,(+elpaca-seq-build-steps)))
 
 (defun +elpaca-unload-jsonrpc (e)
   "Unload jsonrpc package and build E package."
@@ -929,13 +929,18 @@
 (use-package copilot
   :elpaca (copilot :repo "https://github.com/zerolfx/copilot.el"
 		   :files ("dist" "*.el"))
-  :hook ((prog-mode . copilot-mode)
+  :hook ((prog-mode . copilot-turn-on-unless-buffer-read-only)
 	 (emacs-lisp-mode . (lambda ()
 			      (setq-local copilot--indent-warning-printed-p t))))
   :bind (:map copilot-completion-map
 	      ("C-g" . 'copilot-clear-overlay)
 	      ("<tab>" . 'copilot-tab)
 	      ("TAB" . 'copilot-tab))
+  :init
+  (defun copilot-turn-on-unless-buffer-read-only ()
+    "Turn on `copilot-mode' if the buffer is writable."
+    (unless (or buffer-read-only (not (buffer-file-name (current-buffer))))
+      (copilot-mode 1)))
   :config
   (setq copilot-indent-offset-warning-disable t)
   (defun copilot-tab ()
