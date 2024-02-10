@@ -101,9 +101,9 @@
 
 ;; install use-package support
 (elpaca elpaca-use-package
-  ;; enable :elpaca use-package keyword.
+  ;; enable :ensure use-package keyword.
   (elpaca-use-package-mode)
-  ;; assume :elpaca t unless otherwise specified.
+  ;; assume :ensure t unless otherwise specified.
   (setq elpaca-use-package-by-default t))
 
 ;; process queues
@@ -148,7 +148,7 @@
 ;; emacs config
 (use-package emacs
   :hook (prog-mode . electric-pair-mode)
-  :elpaca nil
+  :ensure nil
   :init
   ;; safer networking
   (setq gnutls-verify-error noninteractive
@@ -262,7 +262,7 @@
 
 ;; tramp
 (use-package tramp
-  :elpaca nil)
+  :ensure nil)
 
 ;; doom-themes
 (use-package doom-themes
@@ -357,7 +357,7 @@
 
 ;; vertico
 (use-package vertico
-  :elpaca (vertico :files (:defaults "extensions/*")
+  :ensure (vertico :files (:defaults "extensions/*")
 		   :includes (vertico-mouse))
   :init
   (defun crm-indicator (args)
@@ -388,7 +388,7 @@
 
 ;; corfu
 (use-package corfu
-  :elpaca (corfu :files (:defaults "extensions/*")
+  :ensure (corfu :files (:defaults "extensions/*")
 		 :includes (corfu-info
 			    corfu-popupinfo))
   :bind
@@ -434,7 +434,7 @@
       (comint-send-input))))
   (advice-add #'corfu-insert :after #'corfu-send-shell))
 (use-package corfu-terminal
-  :elpaca (corfu-terminal :repo "https://codeberg.org/akib/emacs-corfu-terminal")
+  :ensure (corfu-terminal :repo "https://codeberg.org/akib/emacs-corfu-terminal")
   :init
   (unless (display-graphic-p)
     (corfu-terminal-mode +1)))
@@ -461,7 +461,7 @@
 
 ;; eshell
 (use-package eshell
-  :elpaca nil
+  :ensure nil
   :bind
   ("C-x C-e" . eshell)
   :init
@@ -496,7 +496,7 @@
 (use-package eat
   :hook (((eshell-mode eshell-load compilation-mode) . eat-eshell-mode)
 	 ((eshell-mode eshell-load compilation-mode) . eat-eshell-visual-command-mode))
-  :elpaca (eat :repo "https://codeberg.org/akib/emacs-eat"
+  :ensure (eat :repo "https://codeberg.org/akib/emacs-eat"
 	       :files ("*.el" ("term" "term/*.el") "*.texi"
 		       "*.ti" ("terminfo/e" "terminfo/e/*")
 		       ("terminfo/65" "terminfo/65/*")
@@ -535,7 +535,7 @@
 ;; vterm
 (use-package vterm
   ;; if vterm is installed via nix
-  ;; :elpaca nil
+  ;; :ensure nil
   :bind
   ("C-x C-t" . vterm)
   :config
@@ -559,7 +559,7 @@
 
 ;; dired
 (use-package dired
-  :elpaca nil
+  :ensure nil
   :init
   (setq dired-auto-revert-buffer t
 	dired-dwim-target t
@@ -589,7 +589,7 @@
 
 ;; ibuffer
 (use-package ibuffer
-  :elpaca nil
+  :ensure nil
   :bind
   ("C-x C-b" . ibuffer)
   :config
@@ -626,7 +626,7 @@
 
 ;; project.el
 (use-package project-x
-  :elpaca (project-x :repo "https://github.com/karthink/project-x")
+  :ensure (project-x :repo "https://github.com/karthink/project-x")
   :after project
   :config
   (project-x-mode 1))
@@ -701,7 +701,7 @@
 
 ;; ligatures
 (use-package ligature
-  :elpaca (ligature :repo "https://github.com/mickeynp/ligature.el"
+  :ensure (ligature :repo "https://github.com/mickeynp/ligature.el"
 		    :inherit nil)
   :init
   (setq prettify-symbols-unprettify-at-point 'right-edge)
@@ -731,7 +731,7 @@
 
 ;; org-mode
 (use-package org
-  :elpaca nil
+  :ensure nil
   :bind
   ("C-x C-a" . org-agenda)
   :config
@@ -743,7 +743,7 @@
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
 (use-package ox-moderncv
-  :elpaca (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
+  :ensure (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
   :requires ox-moderncv)
 (use-package ox-gfm
   :config
@@ -919,7 +919,7 @@
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
 (use-package flymake
-  :elpaca nil
+  :ensure nil
   :hook (prog-mode . flymake-mode)
   :bind
   ("C-c ! c" . flymake-start)
@@ -931,7 +931,7 @@
 
 ;; flyspell
 (use-package flyspell
-  :elpaca nil
+  :ensure nil
   :hook (((org-mode markdown-mode TeX-mode rst-mode mu4e-compose-mode message-mode git-commit-mode) . flyspell-mode)
 	 ((yaml-mode conf-mode prog-mode) . flyspell-prog-mode))
   :config
@@ -949,7 +949,7 @@
 
 ;; copilot
 (use-package copilot
-  :elpaca (copilot :repo "https://github.com/zerolfx/copilot.el"
+  :ensure (copilot :repo "https://github.com/zerolfx/copilot.el"
 		   :files ("dist" "*.el"))
   :hook ((prog-mode . copilot-turn-on-unless-buffer-read-only)
 	 (emacs-lisp-mode . (lambda ()
@@ -991,7 +991,7 @@
 ;; cc-mode
 (use-package cc-mode
   :after eglot apheleia
-  :elpaca nil
+  :ensure nil
   :mode
   ("\\.tpp\\'" . c++-mode)
   ("\\.txx\\'" . c++-mode)
@@ -1008,7 +1008,7 @@
   (add-to-list 'apheleia-mode-alist '(c++-mode . eglot-managed))
   (add-to-list 'apheleia-mode-alist '(cc-mode . eglot-managed)))
 (use-package cmake-mode
-  :elpaca (cmake-mode :main "Auxiliary/cmake-mode.el")
+  :ensure (cmake-mode :main "Auxiliary/cmake-mode.el")
   :after eglot apheleia
   :config
   (add-to-list 'apheleia-mode-alist '(cmake-mode . eglot-managed)))
