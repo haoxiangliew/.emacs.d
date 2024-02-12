@@ -1006,32 +1006,6 @@ changes, which means that `git-gutter' needs to be re-run.")
   :config
   (setq arduino-tab-width 4))
 
-;; platformio
-(use-package platformio-mode
-  :init
-  (defun platformio-conditionally-enable ()
-    "Enable `platformio-mode' only when a `platformio.ini' file is present in project root."
-    (condition-case nil
-	(let* ((ini "platformio.ini")
-	       (files (project-files (project-current t)))
-	       (match (string-match-p ini (format "%s" files))))
-	  (when match
-	    (platformio-mode 1)))
-      (error nil)))
-  (defun platformio--exec (target)
-    "Call `platformio ... TARGET' in the root of the project."
-    (let* ((project (project-current t))
-	   (default-directory (project-root project))
-	   (buffers (project-buffers project))
-           (cmd (concat "platformio -f -c emacs " target)))
-      (unless default-directory
-	(user-error "Not in a project, aborting"))
-      (save-some-buffers (not compilation-ask-about-save)
-			 (lambda ()
-                           (when (member (current-buffer) buffers)
-			     t)))
-      (compilation-start cmd 'platformio-compilation-mode))))
-
 ;; cc-mode
 (use-package cc-mode
   :after eglot apheleia
