@@ -109,15 +109,6 @@
 ;; process queues
 (elpaca-wait)
 
-;; eldoc
-(use-package eldoc
-  :preface
-  (unload-feature 'eldoc t)
-  (setq custom-delayed-init-variables '())
-  (defvar global-eldoc-mode nil)
-  :config
-  (global-eldoc-mode))
-
 ;; gcmh
 (use-package gcmh
   :init
@@ -665,23 +656,29 @@
   :after magit
   :config
   (setq magit-todos-keyword-suffix "\\(?:([^)]+)\\)?:?"))
-(use-package diff-hl
-  :hook (find-file    . diff-hl-mode)
-  :hook (vc-dir-mode  . diff-hl-dir-mode)
-  :hook (dired-mode   . diff-hl-dired-mode)
-  :hook (diff-hl-mode . diff-hl-flydiff-mode)
+(use-package git-gutter
   :init
-  (if (fboundp 'fringe-mode) (fringe-mode '5))
+  (if (fboundp 'fringe-mode) (fringe-mode '8))
   (setq-default fringes-outside-margins t)
+  (define-fringe-bitmap 'git-gutter-fr:added [224]
+    nil nil '(center repeated))
+  (define-fringe-bitmap 'git-gutter-fr:modified [224]
+    nil nil '(center repeated))
+  (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240]
+    nil nil 'bottom)
+  (setq git-gutter:disabled-modes '(fundamental-mode image-mode pdf-view-mode org-mode))
   :config
-  (add-hook 'diff-hl-mode-on-hook
-	    (lambda ()
-	      (unless (window-system)
-		(diff-hl-margin-local-mode))))
-  (setq diff-hl-disable-on-remote t)
-  (setq vc-git-diff-switches '("--histogram"))
-  (add-hook 'magit-pre-refresh-hook  #'diff-hl-magit-pre-refresh)
-  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
+  (setq git-gutter:handled-backends
+	(cons 'git (cl-remove-if-not #'executable-find (list 'hg 'svn 'bzr)
+				     :key #'symbol-name)))
+  (add-hook 'focus-in-hook #'git-gutter:update-all-windows)
+  (remove-hook 'post-command-hook #'git-gutter:post-command-hook)
+  (advice-remove #'quit-window #'git-gutter:quit-window)
+  (advice-remove #'switch-to-buffer #'git-gutter:switch-to-buffer)
+  (advice-add #'magit-stage-file   :after #'+vc-gutter-update-h)
+  (advice-add #'magit-unstage-file :after #'+vc-gutter-update-h)
+  (add-hook 'after-revert-hook #'+vc-gutter-update-h)
+  (global-git-gutter-mode +1))
 
 ;; highlight-indent-guides
 (use-package highlight-indent-guides
@@ -890,6 +887,29 @@
   (add-hook 'before-save-hook #'delete-trailing-whitespace)
   (apheleia-global-mode)
   :config
+  (defvar git-gutter-last-buffer-and-window nil
+    "Cons of current buffer and selected window before last command.
+This is used to detect when the current buffer or selected window
+changes, which means that `git-gutter' needs to be re-run.")
+  (defun git-gutter--on-buffer-or-window-change ()
+    "Update `git-gutter' when current buffer or selected window changes."
+    (let ((new (cons (current-buffer) (selected-window))))
+      (unless (equal new git-gutter-last-buffer-and-window)
+        (setq git-gutter-last-buffer-and-window new)
+        ;; Sometimes the current buffer has not gotten updated yet
+        ;; after switching window, for example after `quit-window'.
+        (with-current-buffer (window-buffer)
+          (when git-gutter-mode
+            (when buffer-file-name
+              (unless (file-remote-p buffer-file-name)
+                (git-gutter))))))))
+  (defun git-gutter--init-maybe ()
+    (when (and (buffer-file-name (buffer-base-buffer))
+               (file-remote-p buffer-file-name)
+               (bound-and-true-p git-gutter-mode))
+      (git-gutter-mode)))
+  (add-hook 'post-command-hook #'git-gutter--on-buffer-or-window-change)
+  (add-hook 'apheleia-post-format-hook #'git-gutter--on-buffer-or-window-change)
   (cl-defun apheleia-indent-eglot-managed-buffer
       (&key buffer scratch callback &allow-other-keys)
     "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
@@ -925,9 +945,7 @@
   ("C-c ! c" . flymake-start)
   ("C-c ! l" . flymake-show-buffer-diagnostics)
   ("C-c ! n" . flymake-goto-next-error)
-  ("C-c ! p" . flymake-goto-prev-error)
-  :config
-  (setq flymake-fringe-indicator-position 'right-fringe))
+  ("C-c ! p" . flymake-goto-prev-error))
 
 ;; flyspell
 (use-package flyspell
@@ -987,6 +1005,32 @@
   "\\.ino\\'"
   :config
   (setq arduino-tab-width 4))
+
+;; platformio
+(use-package platformio-mode
+  :init
+  (defun platformio-conditionally-enable ()
+    "Enable `platformio-mode' only when a `platformio.ini' file is present in project root."
+    (condition-case nil
+	(let* ((ini "platformio.ini")
+	       (files (project-files (project-current t)))
+	       (match (string-match-p ini (format "%s" files))))
+	  (when match
+	    (platformio-mode 1)))
+      (error nil)))
+  (defun platformio--exec (target)
+    "Call `platformio ... TARGET' in the root of the project."
+    (let* ((project (project-current t))
+	   (default-directory (project-root project))
+	   (buffers (project-buffers project))
+           (cmd (concat "platformio -f -c emacs " target)))
+      (unless default-directory
+	(user-error "Not in a project, aborting"))
+      (save-some-buffers (not compilation-ask-about-save)
+			 (lambda ()
+                           (when (member (current-buffer) buffers)
+			     t)))
+      (compilation-start cmd 'platformio-compilation-mode))))
 
 ;; cc-mode
 (use-package cc-mode
