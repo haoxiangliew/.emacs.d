@@ -109,6 +109,15 @@
 ;; process queues
 (elpaca-wait)
 
+;; eldoc
+(use-package eldoc
+  :preface
+  (unload-feature 'eldoc t)
+  (setq custom-delayed-init-variables '())
+  (defvar global-eldoc-mode nil)
+  :config
+  (global-eldoc-mode))
+
 ;; gcmh
 (use-package gcmh
   :init
@@ -257,21 +266,18 @@
 
 ;; doom-themes
 (use-package doom-themes
+  :init
+  (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t
-	doom-themes-padded-modeline t)
-  ;; (if (daemonp)
-  ;;     (add-hook 'server-after-make-frame-hook #'(lambda () (load-dark-theme)))
-  ;;   (load-dark-theme))
+	doom-themes-padded-modeline t
+	doom-dracula-pro-padded-modeline t)
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula-pro t)))
+    (load-theme 'doom-dracula-pro t))
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
-(use-package auto-dark
-  :config
-  (setq auto-dark-dark-theme 'doom-solarized-dark
-	auto-dark-light-theme 'doom-solarized-light)
-  (setq auto-dark-allow-osascript t)
-  (auto-dark-mode))
 
 ;; doom-modeline
 (use-package doom-modeline
