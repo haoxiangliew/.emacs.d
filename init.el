@@ -1020,11 +1020,7 @@ changes, which means that `git-gutter' needs to be re-run.")
   :mode
   "\\.nix\\'"
   :init
-  (add-to-list 'eglot-server-programs '(nix-mode . ("nixd")))
-  (push '(nixpkgs-format . ("nixpkgs-fmt"
-			    filepath))
-	apheleia-formatters)
-  (add-to-list 'apheleia-mode-alist '(nix-mode . nixpkgs-format)))
+  (add-to-list 'eglot-server-programs '(nix-mode . ("nixd"))))
 
 ;; rust-mode
 (use-package rust-mode
