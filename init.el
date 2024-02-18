@@ -175,8 +175,9 @@
     (advice-add 'handle-delete-frame :around #'handle-delete-frame-wrapper)
     (advice-add 'save-buffers-kill-terminal :override #'pseudo-exit))
   ;; macOS
-  (setq mac-command-modifier 'meta
-	mac-option-modifier 'super)
+  (when (eq system-type 'darwin)
+    (setq mac-command-modifier 'meta
+	  mac-option-modifier 'super))
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
@@ -215,8 +216,6 @@
   (setq mouse-wheel-progressive-speed t)
   (setq fast-but-imprecise-scrolling t)
   (setq redisplay-skip-fontification-on-input t)
-  (when (eq system-type 'darwin)
-    (setq mac-redisplay-dont-reset-vscroll t))
   (pixel-scroll-precision-mode)
   (setq pixel-scroll-precision-interpolate-page t
         pixel-scroll-precision-use-momentum t
