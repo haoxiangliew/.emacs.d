@@ -46,7 +46,6 @@
 	    elpaca--activate-package)))
 
 ;; bootstrap elpaca and use-package
-(setq package--builtin-versions (reverse package--builtin-versions)) ;; BUGFIX for Emacs 29.1
 (defvar elpaca-installer-version 0.6)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
@@ -87,18 +86,6 @@
 ;; install use-package
 (elpaca use-package)
 
-;; update base packages
-(defun +elpaca-unload-jsonrpc (e)
-  "Unload jsonrpc package and build E package."
-  (and (featurep 'jsonrpc) (unload-feature 'jsonrpc t))
-  (elpaca--continue-build e))
-(defun +elpaca-jsonrpc-build-steps ()
-  "Build jsonrpc package."
-  (append (butlast (if (file-exists-p (expand-file-name "jsonrpc" elpaca-builds-directory))
-                       elpaca--pre-built-steps elpaca-build-steps))
-          (list '+elpaca-unload-jsonrpc 'elpaca--activate-package)))
-(elpaca `(jsonrpc :build ,(+elpaca-jsonrpc-build-steps)))
-
 ;; install use-package support
 (elpaca elpaca-use-package
   ;; enable :ensure use-package keyword.
@@ -108,15 +95,6 @@
 
 ;; process queues
 (elpaca-wait)
-
-;; eldoc
-(use-package eldoc
-  :preface
-  (unload-feature 'eldoc t)
-  (setq custom-delayed-init-variables '())
-  (defvar global-eldoc-mode nil)
-  :config
-  (global-eldoc-mode))
 
 ;; gcmh
 (use-package gcmh
@@ -196,6 +174,9 @@
 	(apply orig-fun args)))
     (advice-add 'handle-delete-frame :around #'handle-delete-frame-wrapper)
     (advice-add 'save-buffers-kill-terminal :override #'pseudo-exit))
+  ;; macOS
+  (setq mac-command-modifier 'meta
+	mac-option-modifier 'super)
   :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
@@ -236,10 +217,10 @@
   (setq redisplay-skip-fontification-on-input t)
   (when (eq system-type 'darwin)
     (setq mac-redisplay-dont-reset-vscroll t))
-  ;; (pixel-scroll-precision-mode)
-  ;; (setq pixel-scroll-precision-interpolate-page t
-  ;;       pixel-scroll-precision-use-momentum t
-  ;;       pixel-scroll-precision-momentum-seconds 0.1)
+  (pixel-scroll-precision-mode)
+  (setq pixel-scroll-precision-interpolate-page t
+        pixel-scroll-precision-use-momentum t
+        pixel-scroll-precision-momentum-seconds 0.1)
   ;; yes/no -> y/n
   (defalias 'yes-or-no-p 'y-or-n-p)
   ;; optimize terminal use
@@ -601,6 +582,8 @@
 
 ;; hl-todo
 (use-package hl-todo
+  :ensure (hl-todo :depth nil
+		   :version (lambda (_) "2.0.0"))
   :hook ((prog-mode . hl-todo-mode)
          (yaml-mode . hl-todo-mode))
   :config
@@ -944,15 +927,16 @@ changes, which means that `git-gutter' needs to be re-run.")
 
 ;; copilot
 (use-package copilot
-  :ensure (copilot :repo "https://github.com/zerolfx/copilot.el"
+  :ensure (copilot :repo "https://github.com/copilot-emacs/copilot.el"
 		   :files ("dist" "*.el"))
   :hook ((prog-mode . copilot-turn-on-unless-buffer-read-only)
 	 (emacs-lisp-mode . (lambda ()
 			      (setq-local copilot--indent-warning-printed-p t))))
-  :bind (:map copilot-completion-map
-	      ("C-g" . 'copilot-clear-overlay)
-	      ("<tab>" . 'copilot-tab)
-	      ("TAB" . 'copilot-tab))
+  :bind (("C-c h" . copilot-mode)
+	 (:map copilot-completion-map
+	       ("C-g" . 'copilot-clear-overlay)
+	       ("<tab>" . 'copilot-tab)
+	       ("TAB" . 'copilot-tab)))
   :init
   (defun copilot-turn-on-unless-buffer-read-only ()
     "Turn on `copilot-mode' if the buffer is writable."
