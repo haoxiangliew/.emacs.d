@@ -442,8 +442,8 @@
 
 ;; eat
 (use-package eat
-  :hook (((eshell-mode eshell-load compilation-mode) . eat-eshell-mode)
-	 ((eshell-mode eshell-load compilation-mode) . eat-eshell-visual-command-mode))
+  :hook ((eshell-load . eat-eshell-mode)
+	 (eshell-load . eat-eshell-visual-command-mode))
   :ensure (eat :repo "https://codeberg.org/akib/emacs-eat"
 	       :files ("*.el" ("term" "term/*.el") "*.texi"
 		       "*.ti" ("terminfo/e" "terminfo/e/*")
@@ -451,34 +451,40 @@
 		       ("integration" "integration/*")
 		       (:exclude ".dir-locals.el" "*-tests.el")))
   :config
-  (defun start-file-process-shell-command-using-eat-exec
-      (name buffer command)
-    (require 'eat)
-    (with-current-buffer (eat-exec buffer name "bash" nil (list "-ilc" command))
-      (eat-emacs-mode)
-      (setq eat--synchronize-scroll-function #'eat--synchronize-scroll)
-      (get-buffer-process (current-buffer))))
-  (advice-add #'compilation-start :around
-	      (defun hijack-start-file-process-shell-command (o &rest args)
-		(advice-add #'start-file-process-shell-command :override
-                            #'start-file-process-shell-command-using-eat-exec)
-		(unwind-protect
-                    (apply o args)
-                  (advice-remove
-                   #'start-file-process-shell-command
-                   #'start-file-process-shell-command-using-eat-exec))))
-  (add-hook #'compilation-start-hook
-            (defun revert-to-eat-setup (proc)
-	      (set-process-filter proc #'eat--filter)
-	      (add-function :after (process-sentinel proc) #'eat--sentinel)))
-  (advice-add #'kill-compilation :override
-	      (defun kill-compilation-by-sending-C-c ()
-		(interactive)
-		(let ((buffer (compilation-find-buffer)))
-                  (if (get-buffer-process buffer)
-		      ;; interrupt-process does not work
-		      (process-send-string (get-buffer-process buffer) (kbd "C-c"))
-                    (error "The %s process is not running" (downcase mode-name)))))))
+  (advice-add #'compilation-start :override #'eat-compilation-start)
+  (defun eat-compilation-start (command &optional mode name-function highlight-regexp continue)
+    (let ((name-of-mode "compilation")
+          (dir default-directory)
+          outbuf)
+      (if (or (not mode) (eq mode t))
+          (setq mode #'compilation-minor-mode)
+        (setq name-of-mode (replace-regexp-in-string "-mode\\'" "" (symbol-name mode))))
+      (with-current-buffer
+          (setq outbuf
+                (get-buffer-create
+                 (compilation-buffer-name name-of-mode mode name-function)))
+        (setq default-directory dir)
+        (setq buffer-read-only nil)
+        (erase-buffer)
+        (compilation-insert-annotation
+         "-*- mode: " name-of-mode
+         "; default-directory: "
+         (prin1-to-string (abbreviate-file-name default-directory))
+         " -*-\n")
+        (compilation-insert-annotation
+         (format "%s started at %s\n\n"
+                 mode-name
+	         (substring (current-time-string) 0 19))
+         command "\n")
+        (eat-mode)
+        (eat-exec outbuf "*compile*" shell-file-name nil (list "-lc" command))
+        (run-hook-with-args 'compilation-start-hook (get-buffer-process outbuf))
+        (eat-emacs-mode)
+        (funcall mode)
+        (setq next-error-last-buffer outbuf)
+        (display-buffer outbuf '(nil (allow-no-window . t)))
+        (when-let (w (get-buffer-window outbuf))
+          (set-window-start w (point-min)))))))
 
 ;; vterm
 (use-package vterm
@@ -834,8 +840,9 @@
 (use-package treesit-auto
   :config
   (setq treesit-auto-install 't)
-  (global-treesit-auto-mode)
-  (treesit-auto-install-all))
+  (treesit-auto-install-all)
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
 
 ;; apheleia (formatter)
 ;; check (describe-variable (apheleia-formatters))
