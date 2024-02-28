@@ -901,6 +901,11 @@ changes, which means that `git-gutter' needs to be re-run.")
   (setq eglot-sync-connect 0
 	eglot-autoshutdown t
 	eglot-extend-to-xref t))
+(use-package eglot-booster
+  :ensure (eglot-booster :repo "https://github.com/jdtsmith/eglot-booster")
+  :after eglot
+  :config
+  (eglot-booster-mode))
 
 ;; flymake
 ;; check https://www.emacswiki.org/emacs/FlyMake#h5o-2
