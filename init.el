@@ -632,6 +632,30 @@
   (remove-hook 'post-command-hook #'git-gutter:post-command-hook)
   (advice-remove #'quit-window #'git-gutter:quit-window)
   (advice-remove #'switch-to-buffer #'git-gutter:switch-to-buffer)
+  (defvar git-gutter-last-buffer-and-window nil
+    "Cons of current buffer and selected window before last command.
+This is used to detect when the current buffer or selected window
+changes, which means that `git-gutter' needs to be re-run.")
+  (defun git-gutter--on-buffer-or-window-change ()
+    "Update `git-gutter' when current buffer or selected window changes."
+    (let ((new (cons (current-buffer) (selected-window))))
+      (unless (equal new git-gutter-last-buffer-and-window)
+        (setq git-gutter-last-buffer-and-window new)
+        ;; Sometimes the current buffer has not gotten updated yet
+        ;; after switching window, for example after `quit-window'.
+        (with-current-buffer (window-buffer)
+          (when git-gutter-mode
+            (when buffer-file-name
+              (unless (file-remote-p buffer-file-name)
+                (git-gutter))))))))
+  (defun git-gutter--init-maybe ()
+    (when (and (buffer-file-name (buffer-base-buffer))
+               (file-remote-p buffer-file-name)
+               (bound-and-true-p git-gutter-mode))
+      (git-gutter-mode)))
+
+  (add-hook 'post-command-hook #'git-gutter--on-buffer-or-window-change)
+  (add-hook 'apheleia-post-format-hook #'git-gutter--on-buffer-or-window-change)
   (global-git-gutter-mode +1))
 
 ;; highlight-indent-guides
@@ -842,29 +866,6 @@
   (add-hook 'before-save-hook #'delete-trailing-whitespace)
   (apheleia-global-mode)
   :config
-  (defvar git-gutter-last-buffer-and-window nil
-    "Cons of current buffer and selected window before last command.
-This is used to detect when the current buffer or selected window
-changes, which means that `git-gutter' needs to be re-run.")
-  (defun git-gutter--on-buffer-or-window-change ()
-    "Update `git-gutter' when current buffer or selected window changes."
-    (let ((new (cons (current-buffer) (selected-window))))
-      (unless (equal new git-gutter-last-buffer-and-window)
-        (setq git-gutter-last-buffer-and-window new)
-        ;; Sometimes the current buffer has not gotten updated yet
-        ;; after switching window, for example after `quit-window'.
-        (with-current-buffer (window-buffer)
-          (when git-gutter-mode
-            (when buffer-file-name
-              (unless (file-remote-p buffer-file-name)
-                (git-gutter))))))))
-  (defun git-gutter--init-maybe ()
-    (when (and (buffer-file-name (buffer-base-buffer))
-               (file-remote-p buffer-file-name)
-               (bound-and-true-p git-gutter-mode))
-      (git-gutter-mode)))
-  (add-hook 'post-command-hook #'git-gutter--on-buffer-or-window-change)
-  (add-hook 'apheleia-post-format-hook #'git-gutter--on-buffer-or-window-change)
   (cl-defun apheleia-indent-eglot-managed-buffer
       (&key buffer scratch callback &allow-other-keys)
     "Copy BUFFER to SCRATCH, then format scratch, then call CALLBACK."
