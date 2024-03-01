@@ -96,14 +96,6 @@
 ;; process queues
 (elpaca-wait)
 
-;; gcmh
-(use-package gcmh
-  :init
-  (gcmh-mode 1)
-  :config
-  (setq gcmh-idle-delay 'auto
-	gcmh-auto-idle-delay-factor 10))
-
 ;; no-littering
 (use-package no-littering
   :config

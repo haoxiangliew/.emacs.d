@@ -24,10 +24,6 @@
 ;; disable emacsclient instructions
 (setq server-client-instructions nil)
 
-;; defer gc until loaded
-(setq gc-cons-threshold most-positive-fixnum
-      gc-cons-percentage 1)
-
 ;; inhibit resize
 (setq frame-inhibit-implied-resize t)
 
