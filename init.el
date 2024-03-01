@@ -632,9 +632,6 @@
   (remove-hook 'post-command-hook #'git-gutter:post-command-hook)
   (advice-remove #'quit-window #'git-gutter:quit-window)
   (advice-remove #'switch-to-buffer #'git-gutter:switch-to-buffer)
-  (advice-add #'magit-stage-file   :after #'+vc-gutter-update-h)
-  (advice-add #'magit-unstage-file :after #'+vc-gutter-update-h)
-  (add-hook 'after-revert-hook #'+vc-gutter-update-h)
   (global-git-gutter-mode +1))
 
 ;; highlight-indent-guides
