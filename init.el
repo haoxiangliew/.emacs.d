@@ -653,7 +653,6 @@ changes, which means that `git-gutter' needs to be re-run.")
                (file-remote-p buffer-file-name)
                (bound-and-true-p git-gutter-mode))
       (git-gutter-mode)))
-
   (add-hook 'post-command-hook #'git-gutter--on-buffer-or-window-change)
   (add-hook 'apheleia-post-format-hook #'git-gutter--on-buffer-or-window-change)
   (global-git-gutter-mode +1))
