@@ -46,12 +46,12 @@
 	    elpaca--activate-package)))
 
 ;; bootstrap elpaca and use-package
-(defvar elpaca-installer-version 0.6)
+(defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil
+                              :ref nil :depth 1
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
@@ -64,8 +64,10 @@
     (when (< emacs-major-version 28) (require 'subr-x))
     (condition-case-unless-debug err
         (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                 ((zerop (call-process "git" nil buffer t "clone"
-                                       (plist-get order :repo) repo)))
+                 ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                 ,@(when-let ((depth (plist-get order :depth)))
+                                                     (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                 ,(plist-get order :repo) ,repo))))
                  ((zerop (call-process "git" nil buffer t "checkout"
                                        (or (plist-get order :ref) "--"))))
                  (emacs (concat invocation-directory invocation-name))
@@ -212,6 +214,24 @@
   (setq pixel-scroll-precision-interpolate-page t
         pixel-scroll-precision-use-momentum t
         pixel-scroll-precision-momentum-seconds 0.1)
+  (defun filter-mwheel-always-coalesce (orig &rest args)
+    "A filter function suitable for :around advices that ensures only
+   coalesced scroll events reach the advised function."
+    (if mwheel-coalesce-scroll-events
+	(apply orig args)
+      (setq mwheel-coalesce-scroll-events t)))
+  (defun filter-mwheel-never-coalesce (orig &rest args)
+    "A filter function suitable for :around advices that ensures only
+   non-coalesced scroll events reach the advised function."
+    (if mwheel-coalesce-scroll-events
+	(setq mwheel-coalesce-scroll-events nil)
+      (apply orig args)))
+  ;; Don't coalesce for high precision scrolling
+  (advice-add 'pixel-scroll-precision :around #'filter-mwheel-never-coalesce)
+  ;; Coalesce for default scrolling (which is still used for horizontal scrolling)
+  ;; and text scaling (bound to ctrl + mouse wheel by default).
+  (advice-add 'mwheel-scroll          :around #'filter-mwheel-always-coalesce)
+  (advice-add 'mouse-wheel-text-scale :around #'filter-mwheel-always-coalesce)
   ;; yes/no -> y/n
   (defalias 'yes-or-no-p 'y-or-n-p)
   ;; optimize terminal use
