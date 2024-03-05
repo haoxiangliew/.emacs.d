@@ -45,6 +45,9 @@
 	    elpaca--run-post-build-commands
 	    elpaca--activate-package)))
 
+;; set elpaca-core-date
+(setq elpaca-core-date '(format-time-string "%Y%m%d" (current-time) t))
+
 ;; bootstrap elpaca and use-package
 (defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
@@ -177,10 +180,15 @@
   (setq user-full-name "Hao Xiang Liew"
 	user-mail-address "haoxiangliew@gmail.com")
   ;; font
-  (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-12"))
-  (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-12")
-  (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-12")
-  (set-face-attribute 'variable-pitch nil :font "SF Pro-12")
+  (if (eq system-type 'darwin)
+      (progn (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-12"))
+	     (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-12")
+	     (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-12")
+	     (set-face-attribute 'variable-pitch nil :font "SF Pro-12"))
+    (progn (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-10"))
+	   (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-10")
+	   (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-10")
+	   (set-face-attribute 'variable-pitch nil :font "SF Pro-10")))
   (setq inhibit-compacting-font-caches t)
   ;; highlight and match parentheses
   (show-paren-mode 1)
@@ -620,6 +628,7 @@
   :hook ((css-mode html-mode sass-mode scss-mode web-mode) . rainbow-mode))
 
 ;; magit
+(use-package transient)
 (use-package magit
   :bind
   ("C-x g" . magit-status)
