@@ -685,7 +685,15 @@ changes, which means that `git-gutter' needs to be re-run.")
   (add-hook 'apheleia-post-format-hook #'git-gutter--on-buffer-or-window-change)
   (global-git-gutter-mode +1))
 
-;; TODO: use indent-bars here
+;; indent-bars
+(use-package indent-bars
+  :ensure (indent-bars :repo "https://github.com/jdtsmith/indent-bars")
+  :hook (prog-mode . indent-bars-mode)
+  :config
+  (setq indent-bars-treesit-support t
+	indent-bars-prefer-character t
+	indent-bars-starting-column 0
+	indent-bars-display-on-blank-lines nil))
 
 ;; ligatures
 (use-package ligature
