@@ -246,7 +246,8 @@
   (setq xterm-set-window-title t
 	visible-cursor nil)
   ;; increase process throughput
-  (setq read-process-output-max (* 1024 1024))
+  (setq read-process-output-max (* 1024 1024)
+	process-adaptive-read-buffering nil)
   ;; optimize frames
   (setq frame-resize-pixelwise t
 	cursor-in-non-selected-windows nil
@@ -270,9 +271,7 @@
   (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
   (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t
-	doom-themes-padded-modeline t
-	doom-dracula-pro-padded-modeline t)
+        doom-themes-enable-italic t)
   (if (daemonp)
       (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula-pro t)))
     (load-theme 'doom-dracula-pro t))
@@ -686,21 +685,7 @@ changes, which means that `git-gutter' needs to be re-run.")
   (add-hook 'apheleia-post-format-hook #'git-gutter--on-buffer-or-window-change)
   (global-git-gutter-mode +1))
 
-;; highlight-indent-guides
-(use-package highlight-indent-guides
-  :hook ((prog-mode text-mode conf-mode) . highlight-indent-guides-mode)
-  :init
-  (setq highlight-indent-guides-method 'character
-	highlight-indent-guides-responsive 'top
-	highlight-indent-guides-auto-character-face-perc 50
-	highlight-indent-guides-auto-top-character-face-perc 300)
-  :config
-  (defun disable-indent-guides ()
-    "Disable indent guides in org-mode"
-    (and highlight-indent-guides-mode
-	 (bound-and-true-p org-indent-mode)
-	 (highlight-indent-guides-mode -1)))
-  (add-hook 'org-mode-hook #'disable-indent-guides))
+;; TODO: use indent-bars here
 
 ;; ligatures
 (use-package ligature
@@ -915,8 +900,12 @@ changes, which means that `git-gutter' needs to be re-run.")
   :hook ((prog-mode . (lambda ()
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
+  :init
+  (fset 'jsonrpc--log-event 'ignore)
   :config
+  (setf (plist-get eglot-events-buffer-config :size) 0)
   (setq eglot-sync-connect 0
+	eglot-send-changes-idle-time 3
 	eglot-autoshutdown t
 	eglot-extend-to-xref t))
 (use-package eglot-booster
@@ -934,7 +923,9 @@ changes, which means that `git-gutter' needs to be re-run.")
   ("C-c ! c" . flymake-start)
   ("C-c ! l" . flymake-show-buffer-diagnostics)
   ("C-c ! n" . flymake-goto-next-error)
-  ("C-c ! p" . flymake-goto-prev-error))
+  ("C-c ! p" . flymake-goto-prev-error)
+  :config
+  (setq flymake-no-changes-timeout 3))
 
 ;; flyspell
 (use-package flyspell
