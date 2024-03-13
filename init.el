@@ -261,6 +261,11 @@
 		bidi-paragraph-direction 'left-to-right)
   (setq bidi-inhibit-bpa t))
 
+;; esup
+(use-package esup
+  :config
+  (setq esup-depth 0))
+
 ;; tramp
 (use-package tramp
   :ensure nil)
@@ -808,79 +813,79 @@ changes, which means that `git-gutter' needs to be re-run.")
 	elcord--editor-name (concat "Emacs " emacs-version)))
 
 ;; notmuch
-(use-package notmuch
-  :disabled
-  :bind
-  ("C-x C-m" . notmuch-hello)
-  :init
-  (setq +notmuch-mail-folder "~/.mail/")
-  (setq +notmuch-sync-backend "notmuch new")
-  (setq-default notmuch-search-oldest-first nil)
-  (setq notmuch-saved-searches
-	'((:name "inbox"   :query "tag:inbox not tag:trash" :key "i")
-	  (:name "flagged" :query "tag:flagged"             :key "f")
-	  (:name "sent"    :query "tag:sent"                :key "s")
-	  (:name "drafts"  :query "tag:draft"               :key "d")))
-  :config
-  (setq notmuch-fcc-dirs nil
-	message-kill-buffer-on-exit t
-	notmuch-search-result-format
-	'(("date" . "%12s ")
-	  ("count" . "%-7s ")
-	  ("authors" . "%-30s ")
-	  ("subject" . "%-72s ")
-	  ("tags" . "(%s)"))
-	notmuch-tag-formats
-	'(("unread" (propertize tag 'face 'notmuch-tag-unread)))
-	notmuch-archive-tags '("-inbox" "-unread"))
-  (setq message-send-mail-function 'message-smtpmail-send-it
-	smtpmail-smtp-server "smtp.gmail.com"
-	smtpmail-stream-type 'ssl
-	smtpmail-smtp-service 465)
-  (setq smtp-accounts '(("haoxiangliew@gmail.com" "smtp.gmail.com" 465 "haoxiangliew@gmail.com")
-			("haoxiangliew@vt.edu" "smtp.gmail.com" 465 "haoxiangliew@vt.edu")))
-  (defun set-smtp-server-message-send-and-exit ()
-    "Set SMTP server from list of multiple ones and send mail."
-    (interactive)
-    (message-remove-header "X-Message-SMTP-Method") ;; Remove. We always determine it by the From field
-    (let ((sender
-	   (message-fetch-field "From")))
-      (cl-loop for (addr server port usr) in smtp-accounts
-	       when (string-match addr sender)
-	       do (message-add-header (format "X-Message-SMTP-Method: smtp %s %d %s" server port usr)))
-      (let ((xmess
-	     (message-fetch-field "X-Message-SMTP-Method")))
-	(if xmess
-	    (progn
-	      (message (format "Sending message using '%s' with config '%s'" sender xmess))
-	      (message-send-and-exit))
-	  (error "Could not find SMTP Server for this Sender address: %s. You might want to correct it or add it to the SMTP Server list 'smtp-accounts'" sender)))))
-  (defun local-compose-mode ()
-    "Keys for compose mode."
-    (local-set-key (kbd "C-c C-c") 'set-smtp-server-message-send-and-exit))
-  (add-hook 'message-setup-hook 'local-compose-mode)
-  (setq notmuch-show-log nil
-	notmuch-hello-sections `(notmuch-hello-insert-saved-searches
-				 notmuch-hello-insert-alltags)
-	notmuch-message-headers-visible nil)
-  (defun notmuch-update ()
-    "Sync notmuch emails with server."
-    (interactive)
-    (let ((compilation-buffer-name-function (lambda (_) (format "*notmuch update*"))))
-      (with-current-buffer (compile (format "%s" +notmuch-sync-backend))
-	(add-hook
-	 'compilation-finish-functions
-	 (lambda (buf status)
-	   (if (equal status "finished\n")
-	       (progn
-		 (delete-windows-on buf)
-		 (bury-buffer buf)
-		 (notmuch-refresh-all-buffers)
-		 (message "Notmuch sync successful"))
-	     (user-error "Failed to sync notmuch data")))
-	 nil
-	 'local))))
-  (define-key notmuch-search-mode-map "G" 'notmuch-update))
+;; (use-package notmuch
+;;   :disabled
+;;   :bind
+;;   ("C-x C-m" . notmuch-hello)
+;;   :init
+;;   (setq +notmuch-mail-folder "~/.mail/")
+;;   (setq +notmuch-sync-backend "notmuch new")
+;;   (setq-default notmuch-search-oldest-first nil)
+;;   (setq notmuch-saved-searches
+;; 	'((:name "inbox"   :query "tag:inbox not tag:trash" :key "i")
+;; 	  (:name "flagged" :query "tag:flagged"             :key "f")
+;; 	  (:name "sent"    :query "tag:sent"                :key "s")
+;; 	  (:name "drafts"  :query "tag:draft"               :key "d")))
+;;   :config
+;;   (setq notmuch-fcc-dirs nil
+;; 	message-kill-buffer-on-exit t
+;; 	notmuch-search-result-format
+;; 	'(("date" . "%12s ")
+;; 	  ("count" . "%-7s ")
+;; 	  ("authors" . "%-30s ")
+;; 	  ("subject" . "%-72s ")
+;; 	  ("tags" . "(%s)"))
+;; 	notmuch-tag-formats
+;; 	'(("unread" (propertize tag 'face 'notmuch-tag-unread)))
+;; 	notmuch-archive-tags '("-inbox" "-unread"))
+;;   (setq message-send-mail-function 'message-smtpmail-send-it
+;; 	smtpmail-smtp-server "smtp.gmail.com"
+;; 	smtpmail-stream-type 'ssl
+;; 	smtpmail-smtp-service 465)
+;;   (setq smtp-accounts '(("haoxiangliew@gmail.com" "smtp.gmail.com" 465 "haoxiangliew@gmail.com")
+;; 			("haoxiangliew@vt.edu" "smtp.gmail.com" 465 "haoxiangliew@vt.edu")))
+;;   (defun set-smtp-server-message-send-and-exit ()
+;;     "Set SMTP server from list of multiple ones and send mail."
+;;     (interactive)
+;;     (message-remove-header "X-Message-SMTP-Method") ;; Remove. We always determine it by the From field
+;;     (let ((sender
+;; 	   (message-fetch-field "From")))
+;;       (cl-loop for (addr server port usr) in smtp-accounts
+;; 	       when (string-match addr sender)
+;; 	       do (message-add-header (format "X-Message-SMTP-Method: smtp %s %d %s" server port usr)))
+;;       (let ((xmess
+;; 	     (message-fetch-field "X-Message-SMTP-Method")))
+;; 	(if xmess
+;; 	    (progn
+;; 	      (message (format "Sending message using '%s' with config '%s'" sender xmess))
+;; 	      (message-send-and-exit))
+;; 	  (error "Could not find SMTP Server for this Sender address: %s. You might want to correct it or add it to the SMTP Server list 'smtp-accounts'" sender)))))
+;;   (defun local-compose-mode ()
+;;     "Keys for compose mode."
+;;     (local-set-key (kbd "C-c C-c") 'set-smtp-server-message-send-and-exit))
+;;   (add-hook 'message-setup-hook 'local-compose-mode)
+;;   (setq notmuch-show-log nil
+;; 	notmuch-hello-sections `(notmuch-hello-insert-saved-searches
+;; 				 notmuch-hello-insert-alltags)
+;; 	notmuch-message-headers-visible nil)
+;;   (defun notmuch-update ()
+;;     "Sync notmuch emails with server."
+;;     (interactive)
+;;     (let ((compilation-buffer-name-function (lambda (_) (format "*notmuch update*"))))
+;;       (with-current-buffer (compile (format "%s" +notmuch-sync-backend))
+;; 	(add-hook
+;; 	 'compilation-finish-functions
+;; 	 (lambda (buf status)
+;; 	   (if (equal status "finished\n")
+;; 	       (progn
+;; 		 (delete-windows-on buf)
+;; 		 (bury-buffer buf)
+;; 		 (notmuch-refresh-all-buffers)
+;; 		 (message "Notmuch sync successful"))
+;; 	     (user-error "Failed to sync notmuch data")))
+;; 	 nil
+;; 	 'local))))
+;;   (define-key notmuch-search-mode-map "G" 'notmuch-update))
 
 ;;; language configuration
 
