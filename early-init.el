@@ -8,6 +8,9 @@
 ;; disable package.el
 (setq package-enable-at-startup nil)
 
+;; optimize auto-mode-alist
+(setq auto-mode-case-fold nil)
+
 ;; less noise when compiling elisp
 (setq byte-compile-warnings '(not free-vars unresolved noruntime lexical make-local)
       native-comp-async-report-warnings-errors nil

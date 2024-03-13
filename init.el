@@ -252,6 +252,8 @@
   (setq frame-resize-pixelwise t
 	cursor-in-non-selected-windows nil
 	highlight-nonselected-windows nil)
+  (if (boundp 'pgtk-wait-for-event-timeout)
+      (setq pgtk-wait-for-event-timeout 0.001))
   ;; show tab-bar
   (setq tab-bar-show 1)
   ;; disable flashing cursor
