@@ -295,7 +295,8 @@ manual."
                              (disable-theme 'modus-vivendi)))
       (_ (error "No Modus theme is loaded; evaluate `modus-themes-load-themes' first"))))
   (setq modus-themes-italic-constructs t
-	modus-themes-bold-constructs t)
+	modus-themes-bold-constructs t
+	modus-themes-variable-pitch-ui t)
   (load-theme 'modus-operandi t t)
   (load-theme 'modus-vivendi t t)
   :config
@@ -1056,11 +1057,11 @@ changes, which means that `git-gutter' needs to be re-run.")
   "\\.md\\'")
 
 ;; matlab-mode
-(use-package matlab-mode
-  :mode
-  "\\.m\\'"
-  :config
-  (setq matlab-indent-function t))
+;; (use-package matlab-mode
+;;   :mode
+;;   "\\.m\\'"
+;;   :config
+;;   (setq matlab-indent-function t))
 
 ;; nix-mode
 (use-package nix-mode
