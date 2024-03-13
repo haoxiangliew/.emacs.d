@@ -266,7 +266,14 @@
   :ensure nil)
 
 ;; modus-themes
+(use-package auto-dark
+  :config
+  (setq auto-dark-dark-theme nil
+	auto-dark-light-theme nil)
+  (add-hook 'auto-dark-dark-mode-hook (lambda () (enable-theme 'modus-vivendi)))
+  (add-hook 'auto-dark-light-mode-hook (lambda () (enable-theme 'modus-operandi))))
 (use-package modus-themes
+  :after auto-dark
   :bind
   ("C-c t" . my-modus-themes-toggle)
   :init
@@ -288,8 +295,8 @@ manual."
   (load-theme 'modus-vivendi t t)
   :config
   (if (daemonp)
-      (add-hook 'after-init-hook #'(lambda () (enable-theme 'modus-vivendi)))
-    (enable-theme 'modus-vivendi)))
+      (add-hook 'after-init-hook #'(lambda () (auto-dark-mode t)))
+    (auto-dark-mode t)))
 
 ;; doom-modeline
 (use-package doom-modeline
