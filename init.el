@@ -265,18 +265,31 @@
 (use-package tramp
   :ensure nil)
 
-;; doom-themes
-(use-package doom-themes
+;; modus-themes
+(use-package modus-themes
+  :bind
+  ("C-c t" . my-modus-themes-toggle)
   :init
-  (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
+  (defun my-modus-themes-toggle ()
+    "Toggle between `modus-operandi' and `modus-vivendi' themes.
+This uses `enable-theme' instead of the standard method of
+`load-theme'.  The technicalities are covered in the Modus themes
+manual."
+    (interactive)
+    (pcase (modus-themes--current-theme)
+      ('modus-operandi (progn (enable-theme 'modus-vivendi)
+                              (disable-theme 'modus-operandi)))
+      ('modus-vivendi (progn (enable-theme 'modus-operandi)
+                             (disable-theme 'modus-vivendi)))
+      (_ (error "No Modus theme is loaded; evaluate `modus-themes-load-themes' first"))))
+  (setq modus-themes-italic-constructs t
+	modus-themes-bold-constructs t)
+  (load-theme 'modus-operandi t t)
+  (load-theme 'modus-vivendi t t)
   :config
-  (setq doom-themes-enable-bold t
-        doom-themes-enable-italic t)
   (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula-pro t)))
-    (load-theme 'doom-dracula-pro t))
-  (doom-themes-visual-bell-config)
-  (doom-themes-org-config))
+      (add-hook 'after-init-hook #'(lambda () (enable-theme 'modus-vivendi)))
+    (enable-theme 'modus-vivendi)))
 
 ;; doom-modeline
 (use-package doom-modeline
@@ -285,12 +298,6 @@
   :config
   (column-number-mode)
   (size-indication-mode))
-
-;; solaire-mode
-(use-package solaire-mode
-  :config
-  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-  (solaire-global-mode +1))
 
 ;; spacious-padding
 (use-package spacious-padding
