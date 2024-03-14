@@ -297,8 +297,7 @@ manual."
                              (disable-theme 'modus-vivendi)))
       (_ (error "No Modus theme is loaded; evaluate `modus-themes-load-themes' first"))))
   (setq modus-themes-italic-constructs t
-	modus-themes-bold-constructs t
-	modus-themes-variable-pitch-ui t)
+	modus-themes-bold-constructs t)
   (load-theme 'modus-operandi t t)
   (load-theme 'modus-vivendi t t)
   :config
