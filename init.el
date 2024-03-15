@@ -277,33 +277,19 @@
   :config
   (setq auto-dark-dark-theme nil
 	auto-dark-light-theme nil)
-  (add-hook 'auto-dark-dark-mode-hook (lambda () (enable-theme 'modus-vivendi)))
-  (add-hook 'auto-dark-light-mode-hook (lambda () (enable-theme 'modus-operandi))))
-(use-package modus-themes
-  :after auto-dark
-  :bind
-  ("C-c t" . my-modus-themes-toggle)
-  :init
-  (defun my-modus-themes-toggle ()
-    "Toggle between `modus-operandi' and `modus-vivendi' themes.
-This uses `enable-theme' instead of the standard method of
-`load-theme'.  The technicalities are covered in the Modus themes
-manual."
-    (interactive)
-    (pcase (modus-themes--current-theme)
-      ('modus-operandi (progn (enable-theme 'modus-vivendi)
-                              (disable-theme 'modus-operandi)))
-      ('modus-vivendi (progn (enable-theme 'modus-operandi)
-                             (disable-theme 'modus-vivendi)))
-      (_ (error "No Modus theme is loaded; evaluate `modus-themes-load-themes' first"))))
-  (setq modus-themes-italic-constructs t
-	modus-themes-bold-constructs t)
-  (load-theme 'modus-operandi t t)
-  (load-theme 'modus-vivendi t t)
+  (add-hook 'auto-dark-dark-mode-hook (lambda () (enable-theme 'doom-solarized-dark)))
+  (add-hook 'auto-dark-light-mode-hook (lambda () (enable-theme 'doom-solarized-light))))
+(use-package doom-themes
   :config
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t)
+  (load-theme 'doom-solarized-dark t t)
+  (load-theme 'doom-solarized-light t t)
   (if (daemonp)
       (add-hook 'after-init-hook #'(lambda () (auto-dark-mode t)))
-    (auto-dark-mode t)))
+    (auto-dark-mode t))
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config))
 
 ;; doom-modeline
 (use-package doom-modeline
@@ -312,6 +298,12 @@ manual."
   :config
   (column-number-mode)
   (size-indication-mode))
+
+;; solaire-mode
+(use-package solaire-mode
+  :config
+  (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
+  (solaire-global-mode +1))
 
 ;; spacious-padding
 (use-package spacious-padding
@@ -1056,13 +1048,6 @@ changes, which means that `git-gutter' needs to be re-run.")
   :mode
   ("README\\.md\\'" . gfm-mode)
   "\\.md\\'")
-
-;; matlab-mode
-;; (use-package matlab-mode
-;;   :mode
-;;   "\\.m\\'"
-;;   :config
-;;   (setq matlab-indent-function t))
 
 ;; nix-mode
 (use-package nix-mode
