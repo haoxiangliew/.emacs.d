@@ -272,24 +272,20 @@
 (use-package tramp
   :ensure nil)
 
-;; modus-themes
-(use-package auto-dark
-  :config
-  (setq auto-dark-dark-theme nil
-	auto-dark-light-theme nil)
-  (add-hook 'auto-dark-dark-mode-hook (lambda () (enable-theme 'doom-solarized-dark)))
-  (add-hook 'auto-dark-light-mode-hook (lambda () (enable-theme 'doom-solarized-light))))
+;; doom-themes
 (use-package doom-themes
   :config
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t)
-  (load-theme 'doom-solarized-dark t t)
-  (load-theme 'doom-solarized-light t t)
-  (if (daemonp)
-      (add-hook 'after-init-hook #'(lambda () (auto-dark-mode t)))
-    (auto-dark-mode t))
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
+(use-package auto-dark
+  :config
+  (setq auto-dark-dark-theme 'doom-solarized-dark
+	auto-dark-light-theme 'doom-solarized-light)
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook #'(lambda () (auto-dark-mode t)))
+    (auto-dark-mode t)))
 
 ;; doom-modeline
 (use-package doom-modeline
@@ -303,7 +299,7 @@
 (use-package solaire-mode
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
-  (solaire-global-mode +1))
+  (solaire-global-mode))
 
 ;; spacious-padding
 (use-package spacious-padding
