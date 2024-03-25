@@ -916,10 +916,7 @@ changes, which means that `git-gutter' needs to be re-run.")
   :hook ((prog-mode . (lambda ()
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
-  :init
-  (fset 'jsonrpc--log-event 'ignore)
   :config
-  (setf (plist-get eglot-events-buffer-config :size) 0)
   (setq eglot-sync-connect 0
 	eglot-send-changes-idle-time 3
 	eglot-autoshutdown t
@@ -937,9 +934,16 @@ changes, which means that `git-gutter' needs to be re-run.")
   :hook (prog-mode . flymake-mode)
   :bind
   ("C-c ! c" . flymake-start)
-  ("C-c ! l" . flymake-show-buffer-diagnostics)
+  ("C-c ! l" . flymake-show-diagnostics)
   ("C-c ! n" . flymake-goto-next-error)
   ("C-c ! p" . flymake-goto-prev-error)
+  :init
+  (defun flymake-show-diagnostics ()
+    "If in a project, flymake-show-project-diagnostics, else flymake-show-buffer-diagnostics."
+    (interactive)
+    (if (project-current)
+	(flymake-show-project-diagnostics)
+      (flymake-show-buffer-diagnostics)))
   :config
   (setq flymake-no-changes-timeout 3))
 
