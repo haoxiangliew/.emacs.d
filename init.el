@@ -273,6 +273,8 @@
 
 ;; doom-themes
 (use-package doom-themes
+  :init
+  (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t)
@@ -280,8 +282,8 @@
   (doom-themes-org-config))
 (use-package auto-dark
   :config
-  (setq auto-dark-dark-theme 'doom-solarized-dark
-	auto-dark-light-theme 'doom-solarized-light)
+  (setq auto-dark-dark-theme 'doom-dracula-pro
+	auto-dark-light-theme 'doom-one-light)
   (if (daemonp)
       (add-hook 'server-after-make-frame-hook #'(lambda () (auto-dark-mode t)))
     (auto-dark-mode t)))
