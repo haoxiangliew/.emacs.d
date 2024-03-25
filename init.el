@@ -278,15 +278,11 @@
   :config
   (setq doom-themes-enable-bold t
         doom-themes-enable-italic t)
+  (if (daemonp)
+      (add-hook 'server-after-make-frame-hook #'(lambda () (load-theme 'doom-dracula-pro t)))
+    (load-theme 'doom-dracula-pro t))
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
-(use-package auto-dark
-  :config
-  (setq auto-dark-dark-theme 'doom-dracula-pro
-	auto-dark-light-theme 'doom-one-light)
-  (if (daemonp)
-      (add-hook 'server-after-make-frame-hook #'(lambda () (auto-dark-mode t)))
-    (auto-dark-mode t)))
 
 ;; doom-modeline
 (use-package doom-modeline
