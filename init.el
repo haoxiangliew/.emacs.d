@@ -699,6 +699,9 @@ changes, which means that `git-gutter' needs to be re-run.")
   (setq indent-bars-treesit-support t
 	indent-bars-prefer-character t
 	indent-bars-starting-column 0
+	indent-bars-color-by-depth nil
+	indent-bars-highlight-current-depth '(:face default :blend 0.4)
+	indent-bars-no-descend-lists t
 	indent-bars-display-on-blank-lines nil))
 
 ;; ligatures
@@ -883,6 +886,9 @@ changes, which means that `git-gutter' needs to be re-run.")
 ;; tree-sitter
 (use-package treesit-auto
   :config
+  (delete 'janet treesit-auto-langs)
+  (delete 'latex treesit-auto-langs)
+  (delete 'markdown treesit-auto-langs)
   (setq treesit-auto-install 't)
   (treesit-auto-install-all)
   (treesit-auto-add-to-auto-mode-alist 'all)
