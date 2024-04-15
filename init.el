@@ -470,12 +470,14 @@
       (add-to-list 'eshell-command-aliases-list var)))
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases))
 (use-package eshell-prompt-extras
+  :demand t
   :after eshell
   :config
   (setq eshell-prompt-function #'epe-theme-lambda))
 
 ;; eat
 (use-package eat
+  :demand t
   :hook ((eshell-load . eat-eshell-mode)
 	 (eshell-load . eat-eshell-visual-command-mode))
   :ensure (eat :repo "https://codeberg.org/akib/emacs-eat"
@@ -715,6 +717,7 @@ changes, which means that `git-gutter' needs to be re-run.")
 
 ;; ligatures
 (use-package ligature
+  :demand t
   :ensure (ligature :repo "https://github.com/mickeynp/ligature.el"
 		    :inherit nil)
   :init
@@ -750,7 +753,7 @@ changes, which means that `git-gutter' needs to be re-run.")
   ("C-x C-a" . org-agenda)
   :config
   (setq org-startup-indented t)
-  (setq org-directory "~/haoxiangliew/org")
+  (setq org-directory "~/Documents/org")
   (setq org-agenda-files (list org-directory))
   (setq org-agenda-include-deadlines t
 	org-agenda-skip-deadline-if-done t
