@@ -152,7 +152,7 @@
   (setq initial-major-mode 'org-mode
 	initial-scratch-message (concat
 				 "#+TITLE: Welcome " user-login-name " to Emacs " emacs-version "\n"
-				 "#+SUBTITLE: Emacs loaded in " (emacs-init-time "%s seconds") " with " (format "%s" gcs-done) " garbage collection(s)." "\n\n"))
+				 "#+SUBTITLE: Emacs loaded in " (emacs-init-time "%ss") " with " (format "%s" gcs-done) " garbage collection(s) that took " (format "%ss" gc-elapsed) "\n\n"))
   ;; macOS pseudo-daemon
   (when (and (eq system-type 'darwin)
 	     (display-graphic-p))

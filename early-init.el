@@ -5,6 +5,12 @@
 
 ;;; Code:
 
+;; set gc-cons-threshold to max
+(setq gc-cons-threshold most-positive-fixnum)
+;; after init, reset gc-cons-threshold
+(add-hook 'emacs-startup-hook (lambda ()
+				(setq gc-cons-threshold (eval (car (get 'gc-cons-threshold 'standard-value))))))
+
 ;; disable package.el
 (setq package-enable-at-startup nil)
 
