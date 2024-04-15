@@ -121,35 +121,128 @@
 
 ;; emacs config
 (use-package emacs
-  :hook (prog-mode . electric-pair-mode)
+  :hook ((emacs-startup . emacs-delayed-config)
+         (prog-mode . electric-pair-mode))
   :ensure nil
-  :init
-  ;; safer networking
-  (setq gnutls-verify-error noninteractive
-	gnutls-algorithm-priority (when (boundp 'libgnutls-version)
-				    (concat "SECURE128:+SECURE192:-VERS-ALL"
-					    (if (>= libgnutls-version 30605)
-						":+VERS-TLS1.3")
-					    ":+VERS-TLS1.2"))
-	gnutls-min-prime-bits 3072
-	tls-checktrust gnutls-verify-error
-	tls-program '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
-		      "gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
---strict-tofu --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:+VERS-TLS1.3' %h"
-		      "gnutls-cli -p %p %h"))
-  (setq ffap-machine-p-known 'reject)
-  ;; load secrets
+  :config
   (defun load-if-exists (f)
     "Load file if it exists"
     (let ((full-path (expand-file-name f)))
       (if (file-exists-p full-path)
           (if (fboundp 'native-compile-async)
-              (native-compile-async full-path)
+	      (native-compile-async full-path)
             (load-file full-path)))))
-  (load-if-exists "~/.emacs.d/secrets.el")
-  (load-if-exists "~/.emacs.d/secrets.el")
-  (setq auth-sources '("~/.authinfo"))
-  (setq auth-source-save-behavior nil)
+  (defun emacs-delayed-config ()
+    ;; safer networking
+    (setq gnutls-verify-error noninteractive
+	  gnutls-algorithm-priority (when (boundp 'libgnutls-version)
+				      (concat "SECURE128:+SECURE192:-VERS-ALL"
+					      (if (>= libgnutls-version 30605)
+						  ":+VERS-TLS1.3")
+					      ":+VERS-TLS1.2"))
+	  gnutls-min-prime-bits 3072
+	  tls-checktrust gnutls-verify-error
+	  tls-program '("openssl s_client -connect %h:%p -CAfile %t -nbio -no_ssl3 -no_tls1 -no_tls1_1 -ign_eof"
+			"gnutls-cli -p %p --dh-bits=3072 --ocsp --x509cafile=%t \
+--strict-tofu --priority='SECURE192:+SECURE128:-VERS-ALL:+VERS-TLS1.2:+VERS-TLS1.3' %h"
+			"gnutls-cli -p %p %h"))
+    (setq ffap-machine-p-known 'reject)
+    ;; load secrets
+    (load-if-exists "~/.emacs.d/secrets.el")
+    (setq auth-sources '("~/.authinfo"))
+    (setq auth-source-save-behavior nil)
+    ;; macOS pseudo-daemon
+    (when (and (eq system-type 'darwin)
+	       (display-graphic-p))
+      (defun pseudo-exit (event)
+	"Hide Emacs on macOS"
+	(call-process
+	 "osascript" nil nil nil
+	 "-e" "tell application \"Finder\""
+	 "-e" "set visible of process \"Emacs\" to false"
+	 "-e" "end tell"))
+      (defun handle-delete-frame-wrapper (orig-fun &rest args)
+	"Only pseudo-exit when there is only one frame"
+	(if (= 1 (length (frame-list)))
+	    (pseudo-exit nil)
+	  (apply orig-fun args)))
+      (advice-add 'handle-delete-frame :around #'handle-delete-frame-wrapper)
+      (advice-add 'save-buffers-kill-terminal :override #'pseudo-exit))
+    ;; macOS
+    (when (eq system-type 'darwin)
+      (setq mac-command-modifier 'meta
+	    mac-option-modifier 'super))
+    ;; font
+    (if (eq system-type 'darwin)
+	(progn (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-12"))
+	       (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-12")
+	       (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-12")
+	       (set-face-attribute 'variable-pitch nil :font "SF Pro-12"))
+      (progn (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-10"))
+	     (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-10")
+	     (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-10")
+	     (set-face-attribute 'variable-pitch nil :font "SF Pro-10")))
+    (setq inhibit-compacting-font-caches t)
+    ;; highlight and match parentheses
+    (show-paren-mode 1)
+    (setq show-paren-delay 0)
+    ;; intelligent word-wrap
+    (defvar +word-wrap-extra-indent 'double)
+    (defvar +word-wrap-disabled-modes '(fundamental-mode so-long-mode))
+    (defvar +word-wrap-visual-modes '(org-mode))
+    (defvar +word-wrap-text-modes '(text-mode markdown-mode markdown-view-mode gfm-mode gfm-view-mode rst-mode latex-mode LaTeX-mode))
+    (when (memq 'visual-line-mode text-mode-hook)
+      (remove-hook 'text-mode-hook #'visual-line-mode)
+      (add-hook 'text-mode-hook #'+word-wrap-mode))
+    ;; yes/no -> y/n
+    (defalias 'yes-or-no-p 'y-or-n-p)
+    ;; fix scrolling
+    (setq hscroll-margin 1
+	  scroll-conservatively 101
+	  scroll-margin 0
+	  scroll-preserve-screen-position t
+	  auto-window-vscroll nil
+	  mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
+	  mouse-wheel-scroll-amount-horizontal 2)
+    (setq mouse-wheel-progressive-speed t)
+    (setq fast-but-imprecise-scrolling t)
+    (setq redisplay-skip-fontification-on-input t)
+    (pixel-scroll-precision-mode)
+    (setq pixel-scroll-precision-interpolate-page t
+          pixel-scroll-precision-use-momentum t
+          pixel-scroll-precision-momentum-seconds 0.1)
+    (defun filter-mwheel-always-coalesce (orig &rest args)
+      "A filter function suitable for :around advices that ensures only
+   coalesced scroll events reach the advised function."
+      (if mwheel-coalesce-scroll-events
+	  (apply orig args)
+	(setq mwheel-coalesce-scroll-events t)))
+    (defun filter-mwheel-never-coalesce (orig &rest args)
+      "A filter function suitable for :around advices that ensures only
+   non-coalesced scroll events reach the advised function."
+      (if mwheel-coalesce-scroll-events
+	  (setq mwheel-coalesce-scroll-events nil)
+	(apply orig args)))
+    ;; Don't coalesce for high precision scrolling
+    (advice-add 'pixel-scroll-precision :around #'filter-mwheel-never-coalesce)
+    ;; Coalesce for default scrolling (which is still used for horizontal scrolling)
+    ;; and text scaling (bound to ctrl + mouse wheel by default).
+    (advice-add 'mwheel-scroll          :around #'filter-mwheel-always-coalesce)
+    (advice-add 'mouse-wheel-text-scale :around #'filter-mwheel-always-coalesce)
+    ;; disable flashing cursor
+    (blink-cursor-mode 0)
+    ;; disable bidirectional text scanning
+    (setq-default bidi-display-reordering 'left-to-right
+		  bidi-paragraph-direction 'left-to-right)
+    (setq bidi-inhibit-bpa t)
+    ;; autosave
+    (setq auto-save-default t)
+    ;; use system clipboard
+    (setq select-enable-clipboard t)
+    ;; raise undo limit
+    (setq undo-limit 80000000)
+    ;; show tab-bar
+    (setq tab-bar-show 1))
   ;; configure scratch
   (setq initial-major-mode 'org-mode
 	initial-scratch-message
@@ -158,94 +251,9 @@
 		(format "%s" gcs-done)
 		" GC" (if (= gcs-done 1) "" "s") " that took "
 		(format "%ss" gc-elapsed) "\n\n"))
-  ;; macOS pseudo-daemon
-  (when (and (eq system-type 'darwin)
-	     (display-graphic-p))
-    (defun pseudo-exit (event)
-      "Hide Emacs on macOS"
-      (call-process
-       "osascript" nil nil nil
-       "-e" "tell application \"Finder\""
-       "-e" "set visible of process \"Emacs\" to false"
-       "-e" "end tell"))
-    (defun handle-delete-frame-wrapper (orig-fun &rest args)
-      "Only pseudo-exit when there is only one frame"
-      (if (= 1 (length (frame-list)))
-	  (pseudo-exit nil)
-	(apply orig-fun args)))
-    (advice-add 'handle-delete-frame :around #'handle-delete-frame-wrapper)
-    (advice-add 'save-buffers-kill-terminal :override #'pseudo-exit))
-  ;; macOS
-  (when (eq system-type 'darwin)
-    (setq mac-command-modifier 'meta
-	  mac-option-modifier 'super))
-  :config
   ;; username and email
   (setq user-full-name "Hao Xiang Liew"
 	user-mail-address "haoxiangliew@gmail.com")
-  ;; font
-  (if (eq system-type 'darwin)
-      (progn (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-12"))
-	     (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-12")
-	     (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-12")
-	     (set-face-attribute 'variable-pitch nil :font "SF Pro-12"))
-    (progn (add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-10"))
-	   (set-face-attribute 'default nil :font "JetBrainsMono Nerd Font-10")
-	   (set-face-attribute 'fixed-pitch nil :font "JetBrainsMono Nerd Font-10")
-	   (set-face-attribute 'variable-pitch nil :font "SF Pro-10")))
-  (setq inhibit-compacting-font-caches t)
-  ;; highlight and match parentheses
-  (show-paren-mode 1)
-  (setq show-paren-delay 0)
-  ;; autosave
-  (setq auto-save-default t)
-  ;; use system clipboard
-  (setq select-enable-clipboard t)
-  ;; raise undo limit
-  (setq undo-limit 80000000) ; 80mb
-  ;; intelligent word-wrap
-  (defvar +word-wrap-extra-indent 'double)
-  (defvar +word-wrap-disabled-modes '(fundamental-mode so-long-mode))
-  (defvar +word-wrap-visual-modes '(org-mode))
-  (defvar +word-wrap-text-modes '(text-mode markdown-mode markdown-view-mode gfm-mode gfm-view-mode rst-mode latex-mode LaTeX-mode))
-  (when (memq 'visual-line-mode text-mode-hook)
-    (remove-hook 'text-mode-hook #'visual-line-mode)
-    (add-hook 'text-mode-hook #'+word-wrap-mode))
-  ;; fix scrolling
-  (setq hscroll-margin 1
-	scroll-conservatively 101
-	scroll-margin 0
-	scroll-preserve-screen-position t
-	auto-window-vscroll nil
-	mouse-wheel-scroll-amount '(2 ((shift) . hscroll))
-	mouse-wheel-scroll-amount-horizontal 2)
-  (setq mouse-wheel-progressive-speed t)
-  (setq fast-but-imprecise-scrolling t)
-  (setq redisplay-skip-fontification-on-input t)
-  (pixel-scroll-precision-mode)
-  (setq pixel-scroll-precision-interpolate-page t
-        pixel-scroll-precision-use-momentum t
-        pixel-scroll-precision-momentum-seconds 0.1)
-  (defun filter-mwheel-always-coalesce (orig &rest args)
-    "A filter function suitable for :around advices that ensures only
-   coalesced scroll events reach the advised function."
-    (if mwheel-coalesce-scroll-events
-	(apply orig args)
-      (setq mwheel-coalesce-scroll-events t)))
-  (defun filter-mwheel-never-coalesce (orig &rest args)
-    "A filter function suitable for :around advices that ensures only
-   non-coalesced scroll events reach the advised function."
-    (if mwheel-coalesce-scroll-events
-	(setq mwheel-coalesce-scroll-events nil)
-      (apply orig args)))
-  ;; Don't coalesce for high precision scrolling
-  (advice-add 'pixel-scroll-precision :around #'filter-mwheel-never-coalesce)
-  ;; Coalesce for default scrolling (which is still used for horizontal scrolling)
-  ;; and text scaling (bound to ctrl + mouse wheel by default).
-  (advice-add 'mwheel-scroll          :around #'filter-mwheel-always-coalesce)
-  (advice-add 'mouse-wheel-text-scale :around #'filter-mwheel-always-coalesce)
-  ;; yes/no -> y/n
-  (defalias 'yes-or-no-p 'y-or-n-p)
   ;; optimize terminal use
   (setq xterm-set-window-title t
 	visible-cursor nil)
@@ -257,15 +265,7 @@
 	cursor-in-non-selected-windows nil
 	highlight-nonselected-windows nil)
   (if (boundp 'pgtk-wait-for-event-timeout)
-      (setq pgtk-wait-for-event-timeout 0.001))
-  ;; show tab-bar
-  (setq tab-bar-show 1)
-  ;; disable flashing cursor
-  (blink-cursor-mode 0)
-  ;; disable bidirectional text scanning
-  (setq-default bidi-display-reordering 'left-to-right
-		bidi-paragraph-direction 'left-to-right)
-  (setq bidi-inhibit-bpa t))
+      (setq pgtk-wait-for-event-timeout 0.001)))
 
 ;; esup
 (use-package esup
@@ -274,7 +274,8 @@
 
 ;; tramp
 (use-package tramp
-  :ensure nil)
+  :ensure nil
+  :defer t)
 
 ;; doom-themes
 (use-package doom-themes
@@ -322,8 +323,10 @@
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 (use-package nerd-icons-ibuffer
+  :after ibuffer
   :hook (ibuffer-mode . nerd-icons-ibuffer-mode))
 (use-package nerd-icons-dired
+  :after dired
   :hook (dired-mode . nerd-icons-dired-mode))
 
 ;; orderless
@@ -638,6 +641,7 @@
   (setq transient-default-level 5))
 (use-package magit-section)
 (use-package magit-gitflow
+  :after magit
   :hook (magit-mode . turn-on-magit-gitflow))
 (use-package magit-todos
   :after magit
@@ -796,6 +800,7 @@ changes, which means that `git-gutter' needs to be re-run.")
 
 ;; elcord
 (use-package elcord
+  :defer t
   :init
   (elcord-mode)
   :config
