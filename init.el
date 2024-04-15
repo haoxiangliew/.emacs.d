@@ -96,13 +96,16 @@
   ;; enable :ensure use-package keyword.
   (elpaca-use-package-mode)
   ;; assume :ensure t unless otherwise specified.
-  (setq elpaca-use-package-by-default t))
+  (setq elpaca-use-package-by-default t)
+  ;; defer by default
+  (setq use-package-always-defer t))
 
 ;; process queues
 (elpaca-wait)
 
 ;; no-littering
 (use-package no-littering
+  :demand t
   :config
   (no-littering-theme-backups))
 (setq custom-file
@@ -113,6 +116,7 @@
 
 ;; load-path
 (use-package exec-path-from-shell
+  :demand t
   :config
   (dolist (var '("SSH_AUTH_SOCK" "SSH_AGENT_PID" "GPG_AGENT_INFO" "CC" "CXX" "LANG" "LC_CTYPE" "LDFLAGS" "NIX_SSL_CERT_FILE" "NIX_PATH" "LIBRARY_PATH"))
     (add-to-list 'exec-path-from-shell-variables var))
@@ -274,11 +278,11 @@
 
 ;; tramp
 (use-package tramp
-  :ensure nil
-  :defer t)
+  :ensure nil)
 
 ;; doom-themes
 (use-package doom-themes
+  :demand t
   :init
   (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
@@ -300,25 +304,30 @@
 
 ;; solaire-mode
 (use-package solaire-mode
+  :demand t
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
   (solaire-global-mode))
 
 ;; spacious-padding
 (use-package spacious-padding
+  :demand t
   :config
   (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0)
 	spacious-padding-subtle-mode-line t)
   (spacious-padding-mode))
 
 ;; nerd-icons
-(use-package nerd-icons)
+(use-package nerd-icons
+  :demand t)
 (use-package nerd-icons-completion
+  :demand t
   :after marginalia
   :config
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 (use-package nerd-icons-corfu
+  :demand t
   :after corfu
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
@@ -800,7 +809,6 @@ changes, which means that `git-gutter' needs to be re-run.")
 
 ;; elcord
 (use-package elcord
-  :defer t
   :init
   (elcord-mode)
   :config
