@@ -141,18 +141,23 @@
   ;; load secrets
   (defun load-if-exists (f)
     "Load file if it exists"
-    (if (file-exists-p (expand-file-name f))
-	(if (fboundp 'native-compile-async)
-	    (native-compile-async (expand-file-name f))
-	  (load-file expand-file-name f))))
+    (let ((full-path (expand-file-name f)))
+      (if (file-exists-p full-path)
+          (if (fboundp 'native-compile-async)
+              (native-compile-async full-path)
+            (load-file full-path)))))
+  (load-if-exists "~/.emacs.d/secrets.el")
   (load-if-exists "~/.emacs.d/secrets.el")
   (setq auth-sources '("~/.authinfo"))
   (setq auth-source-save-behavior nil)
   ;; configure scratch
   (setq initial-major-mode 'org-mode
-	initial-scratch-message (concat
-				 "#+TITLE: Welcome " user-login-name " to Emacs " emacs-version "\n"
-				 "#+SUBTITLE: Emacs loaded in " (emacs-init-time "%ss") " with " (format "%s" gcs-done) " garbage collection(s) that took " (format "%ss" gc-elapsed) "\n\n"))
+	initial-scratch-message
+	(concat "#+TITLE: Welcome " user-login-name " to Emacs " emacs-version "\n"
+		"#+SUBTITLE: Emacs loaded in " (emacs-init-time "%ss") " with "
+		(format "%s" gcs-done)
+		" GC" (if (= gcs-done 1) "" "s") " that took "
+		(format "%ss" gc-elapsed) "\n\n"))
   ;; macOS pseudo-daemon
   (when (and (eq system-type 'darwin)
 	     (display-graphic-p))
@@ -451,19 +456,11 @@
 		     ("cdp" "project-find-file")
 		     ("clear" "clear-scrollback")))
       (add-to-list 'eshell-command-aliases-list var)))
-  (add-hook 'eshell-post-command-hook 'eshell-add-aliases)
+  (add-hook 'eshell-post-command-hook 'eshell-add-aliases))
+(use-package eshell-prompt-extras
+  :after eshell
   :config
-  (setq eshell-prompt-regexp "^.* λ "
-        eshell-prompt-function #'+eshell/prompt)
-  (defun +eshell/prompt ()
-    (let ((base/dir (shrink-path-prompt default-directory)))
-      (concat (propertize (car base/dir)
-			  'face 'font-lock-comment-face)
-	      (propertize (cdr base/dir)
-			  'face 'font-lock-constant-face)
-	      (propertize " λ" 'face 'eshell-prompt-face)
-	      (propertize " " 'face 'default)))))
-(use-package shrink-path)
+  (setq eshell-prompt-function #'epe-theme-lambda))
 
 ;; eat
 (use-package eat
@@ -946,7 +943,8 @@ changes, which means that `git-gutter' needs to be re-run.")
   ("C-c ! p" . flymake-goto-prev-error)
   :init
   (defun flymake-show-diagnostics ()
-    "If in a project, flymake-show-project-diagnostics, else flymake-show-buffer-diagnostics."
+    "If in a project, flymake-show-project-diagnostics,
+     else flymake-show-buffer-diagnostics."
     (interactive)
     (if (project-current)
 	(flymake-show-project-diagnostics)
