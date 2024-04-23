@@ -425,6 +425,7 @@
   (advice-add #'corfu-insert :after #'corfu-send-shell))
 (use-package corfu-terminal
   :ensure (corfu-terminal :repo "https://codeberg.org/akib/emacs-corfu-terminal")
+  :unless (display-graphic-p)
   :init
   (unless (display-graphic-p)
     (corfu-terminal-mode +1)))
@@ -748,6 +749,7 @@ changes, which means that `git-gutter' needs to be re-run.")
 
 ;; org-mode
 (use-package org
+  :demand t
   :ensure nil
   :bind
   ("C-x C-a" . org-agenda)
@@ -760,12 +762,15 @@ changes, which means that `git-gutter' needs to be re-run.")
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
 (use-package ox-moderncv
+  :demand t
   :ensure (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
-  :requires ox-moderncv)
+  :init (require 'ox-moderncv))
 (use-package ox-gfm
+  :demand t
   :config
   (add-to-list 'org-export-backends 'md))
 (use-package ox-pandoc
+  :demand t
   :config
   (add-to-list 'org-export-backends 'pandoc))
 (use-package org-super-agenda
