@@ -45,9 +45,6 @@
 	    elpaca--run-post-build-commands
 	    elpaca--activate-package)))
 
-;; set elpaca-core-date
-(setq elpaca-core-date '(format-time-string "%Y%m%d" (current-time) t))
-
 ;; bootstrap elpaca and use-package
 (defvar elpaca-installer-version 0.7)
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
