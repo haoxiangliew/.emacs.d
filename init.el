@@ -93,16 +93,13 @@
   ;; enable :ensure use-package keyword.
   (elpaca-use-package-mode)
   ;; assume :ensure t unless otherwise specified.
-  (setq elpaca-use-package-by-default t)
-  ;; defer by default
-  (setq use-package-always-defer t))
+  (setq elpaca-use-package-by-default t))
 
 ;; process queues
 (elpaca-wait)
 
 ;; no-littering
 (use-package no-littering
-  :demand t
   :config
   (no-littering-theme-backups))
 (setq custom-file
@@ -113,7 +110,6 @@
 
 ;; load-path
 (use-package exec-path-from-shell
-  :demand t
   :config
   (dolist (var '("SSH_AUTH_SOCK" "SSH_AGENT_PID" "GPG_AGENT_INFO" "CC" "CXX" "LANG" "LC_CTYPE" "LDFLAGS" "NIX_SSL_CERT_FILE" "NIX_PATH" "LIBRARY_PATH"))
     (add-to-list 'exec-path-from-shell-variables var))
@@ -279,7 +275,6 @@
 
 ;; doom-themes
 (use-package doom-themes
-  :demand t
   :init
   (load-if-exists "~/.emacs.d/doom-dracula-pro-theme.el")
   :config
@@ -301,30 +296,25 @@
 
 ;; solaire-mode
 (use-package solaire-mode
-  :demand t
   :config
   (add-to-list 'solaire-mode-themes-to-face-swap "^doom-")
   (solaire-global-mode))
 
 ;; spacious-padding
 (use-package spacious-padding
-  :demand t
   :config
   (setq spacious-padding-widths '(:internal-border-width 10 :right-divider-width 10 :scroll-bar-width 0)
 	spacious-padding-subtle-mode-line t)
   (spacious-padding-mode))
 
 ;; nerd-icons
-(use-package nerd-icons
-  :demand t)
+(use-package nerd-icons)
 (use-package nerd-icons-completion
-  :demand t
   :after marginalia
   :config
   (nerd-icons-completion-mode)
   (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 (use-package nerd-icons-corfu
-  :demand t
   :after corfu
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
@@ -468,14 +458,12 @@
       (add-to-list 'eshell-command-aliases-list var)))
   (add-hook 'eshell-post-command-hook 'eshell-add-aliases))
 (use-package eshell-prompt-extras
-  :demand t
   :after eshell
   :config
   (setq eshell-prompt-function #'epe-theme-lambda))
 
 ;; eat
 (use-package eat
-  :demand t
   :hook ((eshell-load . eat-eshell-mode)
 	 (eshell-load . eat-eshell-visual-command-mode))
   :ensure (eat :repo "https://codeberg.org/akib/emacs-eat"
@@ -642,6 +630,7 @@
   :hook ((css-mode html-mode sass-mode scss-mode web-mode) . rainbow-mode))
 
 ;; magit
+(use-package transient)
 (use-package magit
   :bind
   ("C-x g" . magit-status)
@@ -715,7 +704,6 @@ changes, which means that `git-gutter' needs to be re-run.")
 
 ;; ligatures
 (use-package ligature
-  :demand t
   :ensure (ligature :repo "https://github.com/mickeynp/ligature.el"
 		    :inherit nil)
   :init
@@ -746,7 +734,6 @@ changes, which means that `git-gutter' needs to be re-run.")
 
 ;; org-mode
 (use-package org
-  :demand t
   :ensure nil
   :bind
   ("C-x C-a" . org-agenda)
@@ -759,15 +746,12 @@ changes, which means that `git-gutter' needs to be re-run.")
 	org-agenda-skip-scheduled-if-done t
 	org-agenda-tags-column 100))
 (use-package ox-moderncv
-  :demand t
   :ensure (ox-moderncv :repo "https://github.com/haoxiangliew/org-cv")
   :init (require 'ox-moderncv))
 (use-package ox-gfm
-  :demand t
   :config
   (add-to-list 'org-export-backends 'md))
 (use-package ox-pandoc
-  :demand t
   :config
   (add-to-list 'org-export-backends 'pandoc))
 (use-package org-super-agenda
@@ -938,7 +922,9 @@ changes, which means that `git-gutter' needs to be re-run.")
                         (unless (derived-mode-p 'emacs-lisp-mode 'lisp-mode 'makefile-mode 'snippet-mode)
                           (eglot-ensure)))))
   :config
-  (setq eglot-sync-connect 0
+  (fset #'jsonrpc--log-event #'ignore)
+  (setq eglot-events-buffer-size 0
+	eglot-sync-connect 0
 	eglot-send-changes-idle-time 3
 	eglot-autoshutdown t
 	eglot-extend-to-xref t))
