@@ -978,7 +978,7 @@ changes, which means that `git-gutter' needs to be re-run.")
 (use-package copilot
   :ensure (copilot :repo "https://github.com/copilot-emacs/copilot.el"
 		   :files ("*.el"))
-  :hook ((prog-mode . copilot-turn-on-unless-buffer-read-only))
+  :hook (prog-mode . copilot-turn-on-unless-buffer-read-only)
   :bind (("C-c h" . copilot-mode)
 	 (:map copilot-completion-map
 	       ("C-g" . 'copilot-clear-overlay)
