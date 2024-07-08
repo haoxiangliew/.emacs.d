@@ -694,8 +694,9 @@ changes, which means that `git-gutter' needs to be re-run.")
   :ensure (indent-bars :repo "https://github.com/jdtsmith/indent-bars")
   :hook (prog-mode . indent-bars-mode)
   :config
+  (when (or (eq system-type 'darwin) (display-graphic-p))
+    (setq indent-bars-prefer-character t))
   (setq indent-bars-treesit-support t
-	indent-bars-prefer-character t
 	indent-bars-starting-column 0
 	indent-bars-color-by-depth nil
 	indent-bars-highlight-current-depth '(:face default :blend 0.4)
@@ -974,31 +975,24 @@ changes, which means that `git-gutter' needs to be re-run.")
   (flyspell-lazy-mode +1))
 
 ;; copilot
-;; (use-package copilot
-;;   :ensure (copilot :repo "https://github.com/copilot-emacs/copilot.el"
-;; 		   :files ("dist" "*.el"))
-;;   :hook ((prog-mode . copilot-turn-on-unless-buffer-read-only)
-;; 	 (emacs-lisp-mode . (lambda ()
-;; 			      (setq-local copilot--indent-warning-printed-p t))))
-;;   :bind (("C-c h" . copilot-mode)
-;; 	 (:map copilot-completion-map
-;; 	       ("C-g" . 'copilot-clear-overlay)
-;; 	       ("<tab>" . 'copilot-tab)
-;; 	       ("TAB" . 'copilot-tab)))
-;;   :init
-;;   (defun copilot-turn-on-unless-buffer-read-only ()
-;;     "Turn on `copilot-mode' if the buffer is writable."
-;;     (unless (or buffer-read-only (not (buffer-file-name (current-buffer))))
-;;       (copilot-mode 1)))
-;;   :config
-;;   (setq copilot-indent-offset-warning-disable t)
-;;   (defun copilot-tab ()
-;;     "Copilot completion for tab"
-;;     (interactive)
-;;     (if (copilot--overlay-visible)
-;; 	(progn
-;; 	  (copilot-accept-completion))
-;;       (copilot-complete))))
+(use-package copilot
+  :ensure (copilot :repo "https://github.com/copilot-emacs/copilot.el"
+		   :files ("*.el"))
+  :hook ((prog-mode . copilot-turn-on-unless-buffer-read-only))
+  :bind (("C-c h" . copilot-mode)
+	 (:map copilot-completion-map
+	       ("C-g" . 'copilot-clear-overlay)
+	       ("<tab>" . 'copilot-tab)
+	       ("TAB" . 'copilot-tab)))
+  :config
+  (setq copilot-indent-offset-warning-disable t)
+  (defun copilot-tab ()
+    "Copilot completion for tab"
+    (interactive)
+    (if (copilot--overlay-visible)
+	(progn
+	  (copilot-accept-completion))
+      (copilot-complete))))
 
 ;; envrc
 (use-package envrc
