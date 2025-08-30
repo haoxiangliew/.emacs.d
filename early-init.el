@@ -5,6 +5,15 @@
 
 ;;; Code:
 
+;; `clang` gcc -> `gcc`
+(setenv "LIBRARY_PATH"
+	(string-join
+	 '("/opt/homebrew/opt/gcc/lib/gcc/current"
+	   "/opt/homebrew/opt/libgccjit/lib/gcc/current"
+	   "/opt/homebrew/opt/gcc/lib/gcc/current/gcc/aarch64-apple-darwin24/15")
+	 ":"))
+(setenv "CC" "gcc-15")
+
 ;; set gc-cons-threshold to max
 (setq gc-cons-threshold most-positive-fixnum)
 ;; after init, reset gc-cons-threshold
@@ -48,6 +57,7 @@
       inhibit-startup-echo-area-message user-login-name)
 (advice-add #'display-startup-echo-area-message :override #'ignore)
 (advice-add #'display-startup-screen :override #'ignore)
+(add-to-list 'default-frame-alist '(undecorated-round . t))
 
 ;; use bar cursor
 (setq-default cursor-type 'bar)
